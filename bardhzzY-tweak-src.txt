@@ -4,10 +4,8 @@ setlocal
 :: ULTIMATE FAILSAFE: Fix broken PCs that are missing System32/PowerShell in their PATH variable
 set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
 
-:: Universal PowerShell-based Device Disabler
 set "dmv=powershell -NoProfile -Command Disable-PnpDevice -InstanceId"
 
-:: --- STEP 2: ASK FOR ADMIN RIGHTS ---
 fltmc >nul 2>&1
 if %errorlevel% neq 0 (
     title BARDHZZY Tweaks - Requesting Admin
@@ -50,7 +48,6 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: --- STEP 3: RUN YOUR TWEAKS AS ADMIN ---
 pushd "%~dp0"
 title BARDHZZY Tweaks (Admin)
 chcp 65001 >nul
@@ -58,7 +55,6 @@ reg add "HKCU\Console" /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul 2>&1
 
 echo [OK] Running as Administrator! Starting Tweaks...
 
-:: Bulletproof ANSI Escape Character Setup
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
 :: =====================================================================
 :: [!] NSUDO INTEGRATION - BULLETPROOF TRUSTED INSTALLER ENGINE
@@ -149,7 +145,35 @@ exit /b
 echo.
 echo [OK] License Verified! Welcome.
 timeout 2 >nul
-goto main
+goto init
+
+:init
+echo.
+echo Downloading Tweaking Tools
+set "UTIL_DIR=C:\bardhzzYutil_tools"
+set "GITHUB_ZIP_URL=https://github.com/bardh1xyz/bardhzzYutil_tools/archive/refs/heads/main.zip"
+
+if exist "%UTIL_DIR%" goto tools_exist
+
+call :LogInfo "Tools not found. Downloading repository from GitHub..."
+mkdir "%UTIL_DIR%" >nul 2>&1
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
+
+if %errorlevel% equ 0 (
+    if exist "%UTIL_DIR%" (
+        call :LogOK "Tools successfully downloaded and extracted."
+    ) else (
+        call :LogErr "Failed to verify directory creation."
+    )
+) else (
+    call :LogErr "Download failed. Download directly from https://github.com/bardh1xyz/bardhzzYutil_tools ^(save to c: drive^) or check network connection."
+)
+goto :main
+
+:tools_exist
+call :LogOK "bardhzzYutil_tools already exists. Skipping download."
+goto :main
 
 :main
 title bardhzzY Tweaks
@@ -270,14 +294,10 @@ goto main
 :win
 call :LogSection "Windows Tweaks"
 call :LogInfo "Checking for Winget..."
-echo You selected Windows Tweaks!
-echo [+] Checking for Winget (App Installer)...
 
-:: Check using the absolute path, as CMD doesn't refresh PATH mid-script
 if exist "%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe" goto WINGET_OK
 
 echo [!] Winget not found. Downloading prerequisites...
-:: We use a single PowerShell block so we can catch exact errors and report them back to the Batch console.
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$ProgressPreference='SilentlyContinue';" ^
     "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;" ^
@@ -291,16 +311,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "  Remove-Item \"$env:TEMP\vclibs.appx\", \"$env:TEMP\xaml.appx\", \"$env:TEMP\winget.msixbundle\" -Force -ErrorAction SilentlyContinue;" ^
     "} catch {" ^
     "  Write-Host \"[ERROR] PowerShell failed: $_\" -ForegroundColor Red;" ^
-    "  exit 1" ^
-" >nul 2>&1
+    "  exit 1" ^" >nul 2>&1
 
-:: If PowerShell threw an error (exit 1), go to fail
 if %errorlevel% neq 0 goto WINGET_FAIL
 
-:: Wait a few seconds for Windows to register the AppX package
 timeout /t 5 /nobreak >nul
 
-:: Check the absolute path again
 if exist "%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe" goto WINGET_OK
 
 :WINGET_FAIL
@@ -308,7 +324,7 @@ echo [X] Winget installation failed.
 echo     This usually happens if you are running as Administrator, or if the Microsoft Store is updating in the background.
 echo     Please install it manually from the Microsoft Store (Search for "App Installer").
 echo     Continuing with tweaks...
-timeout /t 5 >nul
+timeout /t 4 >nul
 goto WINGET_DONE
 
 :WINGET_OK
@@ -316,6 +332,7 @@ echo [OK] Winget is installed and ready.
 
 :WINGET_DONE
 call :LogInfo "Disabling unnecessary services..."
+echo "Disabling unnecessary services..."
 for %%z in (
   DoSvc
   bthserv
@@ -367,25 +384,62 @@ call :LogInfo "Installing latest Open-Shell..."
 winget install --id Open-Shell.Open-Shell-Menu --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Install Open-Shell") else (call :LogErr "Install Open-Shell")
 
-call :LogInfo "Applying core lightweight configuration..."
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "WinKey" /t REG_DWORD /d 1 /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "LeftClick" /t REG_DWORD /d 1 /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "MenuStyle" /t REG_DWORD /d 2 /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "SkinW7" /t REG_SZ /d "Metro" /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "SkinVariationW7" /t REG_SZ /d "Dark" /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "ShowRecent" /t REG_DWORD /d 0 /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "ShowFrequent" /t REG_DWORD /d 0 /f
-call :RegLog add "HKCU\Software\OpenShell\StartMenu\Settings" /v "ShowUserPic" /t REG_DWORD /d 0 /f
+call :LogInfo "Applying Custom Open-Shell Skin and XML Setup..."
+
+:: Ensure the Skins directory exists before copying
+if not exist "C:\Program Files\Open-Shell\Skins\" mkdir "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+
+if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin" (
+    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+    call :LogOK "Custom Open-Shell Skin copied."
+) else (
+    call :LogWarn "Custom Open-Shell Skin not found."
+)
+
+if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin7" (
+    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin7" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+    call :LogOK "Custom Open-Shell Skin7 copied."
+) else (
+    call :LogWarn "Custom Open-Shell Skin7 not found."
+)
+
+:: Ensure Open-Shell is installed before trying to configure it
+if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
+    :: Kill existing processes first
+    taskkill /f /im StartMenu.exe >nul 2>&1
+    timeout /t 1 /nobreak >nul
+    
+    if exist "C:\bardhzzYutil_tools\OpenShell\bardhzzYBlack.xml" (
+        :: BUGFIX: Use 'start ""' to prevent the batch script from hanging indefinitely.
+        :: StartMenu.exe is a GUI app and will block the script if run directly.
+        start "" "C:\Program Files\Open-Shell\StartMenu.exe" -xml "C:\bardhzzYutil_tools\OpenShell\bardhzzYBlack.xml"
+        call :LogOK "Custom Open-Shell XML configured."
+    ) else (
+        call :LogWarn "Custom Open-Shell XML not found. Starting normally."
+        start "" "C:\Program Files\Open-Shell\StartMenu.exe"
+    )
+) else (
+    call :LogWarn "Open-Shell StartMenu.exe not found. Installation might have failed."
+)
 
 call :LogInfo "Restarting desktop shell..."
 powershell -NoProfile -Command "Stop-Process -Name explorer -Force" >nul 2>&1
 timeout 2 >nul
 start explorer.exe
-:: Wait up to 10 seconds for explorer to come back, then launch Open-Shell
+
+:: Wait for Explorer to initialize
 powershell -NoProfile -Command "for ($i=0; $i -lt 10; $i++) { if (Get-Process -Name explorer -ErrorAction SilentlyContinue) { break }; Start-Sleep -Seconds 1 }" >nul 2>&1
-if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
-    start "" "C:\Program Files\Open-Shell\StartMenu.exe" >nul 2>&1
+
+:: Final check to ensure Open-Shell is running after Explorer restart (avoids duplicate instances)
+tasklist /FI "IMAGENAME eq StartMenu.exe" | find /i "StartMenu.exe" >nul 2>&1
+if %errorlevel% neq 0 (
+    if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
+        start "" "C:\Program Files\Open-Shell\StartMenu.exe"
+    )
 )
+
+call :LogOK "configured open-shell"
+goto skip_search
 
 :skip_search
 call :LogInfo "Removing New Media Player app..."
@@ -435,12 +489,6 @@ if "%DX_OK%"=="1" (
     call :LogErr "Failed to download DirectX. Check internet connection."
     if exist "%temp%\dxwebsetup.exe" del /q "%temp%\dxwebsetup.exe" >nul 2>&1
 )
-
-echo.
-echo ======================================================
-echo      Removing Edge and OneDrive
-echo ======================================================
-echo.
 
 call :LogInfo "Starting Microsoft bloatware removal process..."
 
@@ -919,7 +967,6 @@ powershell -NoProfile -Command "$paths = @('HKLM:\SOFTWARE\Microsoft\Windows\Cur
 if %errorlevel% equ 0 (call :LogOK "disable Audio Enhancements") else (call :LogErr "disable Audio Enhancements")
 
 call :LogInfo "Windows Tweaks section complete."
-echo All tweaks applied successfully!
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -951,138 +998,43 @@ goto gpu
 :nvid
 call :LogSection "Nvidia GPU Tweaks"
 cls
-echo ╔════════════════════════════════════════════════════════════════╗
-echo ║           NVIDIA GPU ULTIMATE OPTIMIZATION SUITE               ║
-echo ╚════════════════════════════════════════════════════════════════╝
-echo.
-call :LogInfo "Applying Driver & Profile Optimizations..."
-cd /d "%~dp0"
+call :LogInfo "Injecting Vortex profile directly into NVIDIA Kernel..."
 
-call :LogInfo "Applying Driver & Profile Optimizations..."
+:: --- Profile Inspector (Flattened Logic) ---
+if not exist "C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" goto NPI_MISSING_EXE
+if not exist "C:\bardhzzYutil_tools\Nvidia\vortex.nip" goto NPI_MISSING_NIP
 
-:: 3. Secure Downloader: Retrieve the Inspector API if missing
-if not exist "%~dp0nvidiaProfileInspector.exe" (
-    call :LogInfo "Establishing secure connection to retrieve optimization tools..."
-    
-    :: Bypass setup prompts and enforce TLS 1.2 for flawless downloads on stripped OS versions
-    powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/Orbmu2k/nvidiaProfileInspector/releases/latest/download/nvidiaProfileInspector.zip' -OutFile '%~dp0NVPI_temp.zip' -UseBasicParsing" >nul 2>&1
-    
-    if exist "%~dp0NVPI_temp.zip" (
-        call :LogOK "Download nvidiaProfileInspector"
-        call :LogInfo "Unpacking performance binaries..."
-        powershell -NoProfile -Command "$ProgressPreference = 'SilentlyContinue'; Expand-Archive -Path '%~dp0NVPI_temp.zip' -DestinationPath '%~dp0' -Force" >nul 2>&1
-        if %errorlevel% equ 0 (call :LogOK "Extract nvidiaProfileInspector") else (call :LogErr "Extract nvidiaProfileInspector")
-        del "%~dp0NVPI_temp.zip" /f /q >nul 2>&1
-    ) else (
-        call :LogErr "Download nvidiaProfileInspector (Network blocked)"
-    )
+"C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" -silentImport "C:\bardhzzYutil_tools\Nvidia\vortex.nip" >nul 2>&1
+if %errorlevel% equ 0 (
+    call :LogOK "Vortex Driver Profile Applied!"
+) else (
+    call :LogErr "Vortex Driver Profile Injection Failed"
 )
+goto NPI_CLEANUP
 
-:: Halt if network blocked the download
-if not exist "%~dp0nvidiaProfileInspector.exe" (
-    call :LogErr "nvidiaProfileInspector.exe not found. Cannot apply profile."
-    timeout /t 4 >nul
-    goto :end_nvid
-)
+:NPI_MISSING_EXE
+call :LogErr "nvidiaProfileInspector.exe not found in C:\bardhzzYutil_tools\Nvidia!"
+goto NPI_CLEANUP
 
-call :LogInfo "Generating Global Low-Latency Driver Profile..."
-(
-echo ^<?xml version="1.0" encoding="utf-16"?^>
-echo ^<ArrayOfProfile^>
-echo   ^<Profile^>
-echo     ^<ProfileName^>Base Profile^</ProfileName^>
-echo     ^<Executeables /^>
-echo     ^<Settings^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Power management mode^</SettingNameInfo^>
-echo         ^<SettingID^>274197396^</SettingID^>
-echo         ^<SettingValue^>1^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Texture filtering - Quality^</SettingNameInfo^>
-echo         ^<SettingID^>13510289^</SettingID^>
-echo         ^<SettingValue^>3^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Low Latency Mode^</SettingNameInfo^>
-echo         ^<SettingID^>1343640812^</SettingID^>
-echo         ^<SettingValue^>2^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Shader Cache Size^</SettingNameInfo^>
-echo         ^<SettingID^>547544337^</SettingID^>
-echo         ^<SettingValue^>10^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Threaded optimization^</SettingNameInfo^>
-echo         ^<SettingID^>549528094^</SettingID^>
-echo         ^<SettingValue^>1^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Ansel flags for enabled applications^</SettingNameInfo^>
-echo         ^<SettingID^>276062518^</SettingID^>
-echo         ^<SettingValue^>0^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>CUDA - Force P2 State^</SettingNameInfo^>
-echo         ^<SettingID^>50166120^</SettingID^>
-echo         ^<SettingValue^>0^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Vertical Sync^</SettingNameInfo^>
-echo         ^<SettingID^>8392392^</SettingID^>
-echo         ^<SettingValue^>0^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Preferred Refresh Rate^</SettingNameInfo^>
-echo         ^<SettingID^>12291721^</SettingID^>
-echo         ^<SettingValue^>2^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Image Scaling^</SettingNameInfo^>
-echo         ^<SettingID^>278206341^</SettingID^>
-echo         ^<SettingValue^>0^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo       ^<ProfileSetting^>
-echo         ^<SettingNameInfo^>Antialiasing - Gamma correction^</SettingNameInfo^>
-echo         ^<SettingID^>17818516^</SettingID^>
-echo         ^<SettingValue^>0^</SettingValue^>
-echo         ^<ValueType^>Dword^</ValueType^>
-echo       ^</ProfileSetting^>
-echo     ^</Settings^>
-echo   ^</Profile^>
-echo ^</ArrayOfProfile^>
-)>"%TEMP%\global_optimized.nip"
+:NPI_MISSING_NIP
+call :LogErr "vortex.nip not found in C:\bardhzzYutil_tools\Nvidia!"
 
-:: 5. Silent Kernel Injection
-call :LogInfo "Injecting profile directly into NVIDIA Kernel..."
-"%~dp0nvidiaProfileInspector.exe" -silentImport "%TEMP%\global_optimized.nip" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Driver Profile Applied!") else (call :LogErr "Driver Profile Injection Failed")
-
+:NPI_CLEANUP
 call :LogInfo "Executing clean-up protocol..."
-if exist "%TEMP%\global_optimized.nip" del "%TEMP%\global_optimized.nip" /f /q >nul 2>&1
-if exist "%~dp0nvidiaProfileInspector.exe" del "%~dp0nvidiaProfileInspector.exe" /f /q >nul 2>&1
-if exist "%~dp0Reference.xml" del "%~dp0Reference.xml" /f /q >nul 2>&1
-if exist "%~dp0CustomSettingNames_en-EN.xml" del "%~dp0CustomSettingNames_en-EN.xml" /f /q >nul 2>&1
+if exist "C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" del "C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" /f /q >nul 2>&1
+if exist "C:\bardhzzYutil_tools\Nvidia\Reference.xml" del "C:\bardhzzYutil_tools\Nvidia\Reference.xml" /f /q >nul 2>&1
+if exist "C:\bardhzzYutil_tools\Nvidia\CustomSettingNames_en-EN.xml" del "C:\bardhzzYutil_tools\Nvidia\CustomSettingNames_en-EN.xml" /f /q >nul 2>&1
 
-
-:end_nvid
-
+:: --- Telemetry Tasks (Bugfixed to loop instead of using wildcards) ---
 call :LogInfo "Disabling Nvidia Telemetry Tasks..."
-call :SchLog /change /disable /tn "NvTmMon*" 
-call :SchLog /change /disable /tn "NvTmRep*"
-call :SchLog /change /disable /tn "NvDriverUpdateCheckDaily*"
-call :SchLog /change /disable /tn "NVIDIA GeForce Experience SelfUpdate*"
+setlocal EnableDelayedExpansion
+for /f "tokens=2 delims=:" %%t in ('schtasks /query /fo list ^| findstr /i "TaskName:" ^| findstr /i "NvTmMon NvTmRep NvDriverUpdateCheckDaily GeForce Experience SelfUpdate"') do (
+    set "task=%%t"
+    :: Strip leading spaces from the task name
+    for /f "tokens=* delims= " %%s in ("!task!") do set "task=%%s"
+    if not "!task!"=="" call :SchLog /change /disable /tn "!task!"
+)
+endlocal
 
 call :LogInfo "Applying Nvidia Registry Tweaks..."
 call :RegLog add "HKLM\SOFTWARE\NVIDIA Corporation\Global\GlobalSettings" /v "ShaderCacheMaxSizeBytes" /t REG_QWORD /d 10737418240 /f
@@ -1105,14 +1057,18 @@ call :LogInfo "Applying DisableDynamicPstate to active GPU (Universal Safe)..."
 powershell -NoProfile -Command "$gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like 'PCI\VEN_10DE*' }; foreach ($gpu in $gpus) { $pnp = $gpu.PNPDeviceID; $regBase = 'HKLM:\SYSTEM\CurrentControlSet\Enum\' + $pnp; $driverVal = (Get-ItemProperty -Path $regBase -Name 'Driver' -ErrorAction SilentlyContinue).Driver; if ($driverVal) { $classPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\' + $driverVal; if (Test-Path $classPath) { Set-ItemProperty -Path $classPath -Name 'DisableDynamicPstate' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "DisableDynamicPstate applied") else (call :LogWarn "DisableDynamicPstate skipped (No matching GPU found)")
 
+:: --- MSI Mode (Bugfixed to use 'delims=' and delayed expansion) ---
 call :LogInfo "Enabling MSI Mode for NVIDIA GPU..."
-for /f "tokens=*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_10DE" ^| findstr "HKEY"') do (
-    reg query "%%a" /v "Service" 2>nul | findstr /i "nvlddmkm" >nul && (
+setlocal EnableDelayedExpansion
+for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_10DE" ^| findstr "HKEY"') do (
+    reg query "%%a" /v "Service" 2>nul | findstr /i "nvlddmkm" >nul
+    if !errorlevel! equ 0 (
         call :RegLog add "%%a\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d 1 /f
         call :RegLog add "%%a\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /t REG_DWORD /d 1 /f
         call :RegLog add "%%a\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /t REG_DWORD /d 3 /f
     )
 )
+endlocal
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\PnP\Pci" /v "GetInterruptConnectionCount" /t REG_DWORD /d 0 /f
 call :LogOK "NVIDIA GPU MSI Mode & High Priority Enabled!"
 
@@ -1137,7 +1093,8 @@ call :LogInfo "Disabling Multiplane Overlay (MPO)..."
 call :RegLog delete "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestType" /f >nul 2>&1
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "DisableOverlays" /t REG_DWORD /d "1" /f
 
-for /f "tokens=*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /f "00*" /k ^| findstr "000"') do (
+:: --- HDCP Tweaks (Bugfixed to use 'delims=') ---
+for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /f "00*" /k ^| findstr "000"') do (
     call :RegLog add "%%a" /v "RmHdcpKeybackDisable" /t REG_DWORD /d 1 /f
     call :RegLog add "%%a" /v "RMHdcpPowerSavingDisable" /t REG_DWORD /d 1 /f
 )
@@ -1191,26 +1148,27 @@ cls
 echo.
 echo [!] Searching for AMD GPU Registry Keys...
 echo.
-for /f "tokens=*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /s /f "DriverDesc" ^| findstr "HKEY"') do (
-    for /f "tokens=3" %%b in ('reg query "%%a" /v "DriverDesc" 2^>nul') do (
-        echo %%b | findstr /i "AMD" >nul && (
-            call :LogInfo "Applying Performance Tweaks to: %%a"
-            call :RegLog add "%%a" /v "PP_RTPMComputeF1Latency" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "PP_DGBMMMaxTransitionLatencyUvd" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "PP_DGBPMMaxTransitionLatencyGfx" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "DalNBLatencyForUnderFlow" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "BGM_LTRSnoopL1Latency" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "BGM_LTRSnoopL0Latency" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "BGM_LTRNoSnoopL1Latency" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "BGM_LTRNoSnoopL0Latency" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "BGM_LTRMaxSnoopLatencyValue" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "BGM_LTRMaxNoSnoopLatencyValue" /t REG_DWORD /d 1 /f
-            call :RegLog add "%%a" /v "KMD_EnableComputePreemption" /t REG_DWORD /d 0 /f
-            call :RegLog add "%%a" /v "KMD_DeLagEnabled" /t REG_DWORD /d 0 /f
-            call :RegLog add "%%a" /v "DisablePreemption" /t REG_DWORD /d 1 /f
-        )
+setlocal EnableDelayedExpansion
+for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /s /f "DriverDesc" ^| findstr "HKEY"') do (
+    reg query "%%a" /v "DriverDesc" 2>nul | findstr /i "AMD" >nul
+    if !errorlevel! equ 0 (
+        call :LogInfo "Applying Performance Tweaks to: %%a"
+        call :RegLog add "%%a" /v "PP_RTPMComputeF1Latency" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "PP_DGBMMMaxTransitionLatencyUvd" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "PP_DGBPMMaxTransitionLatencyGfx" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DalNBLatencyForUnderFlow" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "BGM_LTRSnoopL1Latency" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "BGM_LTRSnoopL0Latency" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "BGM_LTRNoSnoopL1Latency" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "BGM_LTRNoSnoopL0Latency" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "BGM_LTRMaxSnoopLatencyValue" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "BGM_LTRMaxNoSnoopLatencyValue" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "KMD_EnableComputePreemption" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "KMD_DeLagEnabled" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "DisablePreemption" /t REG_DWORD /d 1 /f
     )
 )
+endlocal
 
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "LoadDebugRuntime" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "EnablePipelineCache" /t REG_DWORD /d 1 /f
@@ -1256,7 +1214,7 @@ echo %PROCESSOR_IDENTIFIER% | findstr /i "Intel" >nul && (
 )
 
 call :LogInfo "Applying Device Priority tweaks..."
-for /f "tokens=*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_" ^| findstr "HKEY" ^| findstr /v "Parameters"') do (
+for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_" ^| findstr "HKEY" ^| findstr /v "Parameters"') do (
     call :RegLog add "%%a\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /t REG_DWORD /d 3 /f
 )
 
@@ -1315,7 +1273,6 @@ for /L %%i in (0, 1, 5) do (
 endlocal
 call :LogOK "Detected games elevated successfully."
 call :LogInfo "CPU Tweaks section complete."
-echo Tweaks applied successfully!
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -1939,8 +1896,7 @@ call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XboxNetApiSvc" /v "St
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XboxGipSvc" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XblAuthManager" /v "Start" /t REG_DWORD /d 4 /f
 
-call :LogInfo "Preparing Appx Removal (25H2 Safe)..."
-:: 25H2 Fix: Ensure AppXSvc is running so PowerShell doesn't hang
+call :LogInfo "Preparing Appx Removal..."
 sc config AppXSvc start= demand >nul 2>&1
 sc start AppXSvc >nul 2>&1
 timeout /t 2 /nobreak >nul
@@ -2134,14 +2090,45 @@ del /s /f /q "%WINDIR%\ServiceProfiles\LocalService\AppData\Local\FontCache\*.da
 net start FontCache >nul 2>&1
 del /s /f /q "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Store\*" >nul 2>&1
 
-call :LogInfo "Running DISM Component Cleanup (25H2 Safe)..."
+call :LogInfo "Running DISM Component Cleanup..."
 :: FIX: Removed /resetbase to prevent crashing, added /NoRestart
 dism /online /cleanup-image /startcomponentcleanup /NoRestart >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "DISM Component Cleanup") else (call :LogWarn "DISM Component Cleanup (Skipped or failed)")
 
-:: FIX: Removed cleanmgr /sagerun:1. It opens a GUI and hangs on stripped ISOs.
+call :LogInfo "Clearing Ghost Devices and USB cache."
+Setlocal EnableExtensions EnableDelayedExpansion
 
+echo.
+echo ==================================================
+echo   Ghost Device ^& USB Cache Cleanup
+echo ==================================================
+echo.
+
+call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "DEVMGR_SHOW_NONPRESENT_DEVICES" /t REG_SZ /d "1" /f >nul 2>&1
+
+set "Removed=0"
+
+for /f "tokens=2 delims=:" %%A in ('
+    pnputil /enum-devices /disconnected ^| findstr "\\" ^| findstr /v /i "ROOT\" ^| findstr /v /i "SWD\"
+') do (
+    set "ID=%%A"
+
+    for /f "tokens=* delims= " %%B in ("!ID!") do (
+        pnputil /remove-device "%%B" /force >nul 2>&1
+        if !errorlevel! EQU 0 (
+            set /a Removed+=1
+        )
+    )
+)
+
+echo Removed %Removed% disconnected device(s).
+
+call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2" /f >nul 2>&1
+endlocal
+call :LogOK "Ghost Devices and USB cache cleared."
 call :LogOK "Apps, Features and services removed successfully!"
+echo.
+echo Cleanup completed successfully.
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -2150,10 +2137,6 @@ goto main
 call :LogSection "Network Tweaks"
 echo You choose Network Tweaks
 
-
-:: =====================================================================
-:: [!] ETHERNET ONLY MODE - HARDWARE WIFI DISABLE
-:: =====================================================================
 echo.
 echo [+] Ethernet Only Optimization
 set /p "wifi_kill=Disable Wi-Fi adapter at hardware level for less processes? (Y/N): "
@@ -2182,7 +2165,7 @@ call :LogInfo "Enabling MSI/MSI-X for Ethernet adapters..."
 setlocal enabledelayedexpansion
 set "count=0"
 
-for /f "tokens=*" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}" /s /v "IfType" 2^>nul ^| findstr /i "HKEY_LOCAL_MACHINE"') do (
+for /f "delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}" /s /v "IfType" 2^>nul ^| findstr /i "HKEY_LOCAL_MACHINE"') do (
     reg query "%%i" /v "IfType" 2>nul | findstr /i "0x6" >nul && (
         call :RegLog add "%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d 1 /f
         set /a count+=1
@@ -2491,7 +2474,7 @@ if %errorlevel% equ 0 (call :LogOK "powercfg VIDEOIDLE 0") else (call :LogErr "p
 powercfg -setactive scheme_current >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg setactive scheme_current") else (call :LogErr "powercfg setactive scheme_current")
 
-for /f "tokens=*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "AllowIdleIrpInD3" 2^>nul ^| findstr "HKEY_LOCAL_MACHINE"') do (
+for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "AllowIdleIrpInD3" 2^>nul ^| findstr "HKEY_LOCAL_MACHINE"') do (
     call :RegLog add "%%a" /v "AllowIdleIrpInD3" /t REG_DWORD /d 0 /f
 )
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\HidUsb\Parameters" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
@@ -2501,7 +2484,7 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\501a
 powercfg -setacvalueindex scheme_current 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg ee12f906 0") else (call :LogErr "powercfg ee12f906 0")
 
-for /f "tokens=*" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "Device Parameters" /k ^| findstr "Device Parameters"') do (
+for /f "delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "Device Parameters" /k ^| findstr "Device Parameters"') do (
     call :RegLog add "%%i" /v "EnhancedPowerManagementEnabled" /t REG_DWORD /d 0 /f
     call :RegLog add "%%i" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
 )
@@ -2783,7 +2766,7 @@ echo.
 set "ISLC_PATH=%temp%\ISLC.exe"
 call :LogInfo "Downloading ISLC..."
 echo [!] Downloading ISLC...
-set "ISLC_URL=https://www.wagnardsoft.com/ISLC/ISLC v1.0.3.2.exe"
+set "ISLC_URL=https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri '%ISLC_URL%' -OutFile '%ISLC_PATH%' } catch { exit 1 }" >nul 2>&1
 
 if exist "%ISLC_PATH%" (
@@ -3413,6 +3396,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
+echo %ESC%[37m[INFO]%ESC%[0m %MSG%
 if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [INFO ] [%SEC%] %MSG%
 endlocal
 goto :eof
@@ -3433,6 +3417,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
+echo %ESC%[32m[  OK]%ESC%[0m %MSG%
 if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [  OK ] [%SEC%] %MSG%
 endlocal
 goto :eof
@@ -3453,6 +3438,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
+echo %ESC%[31m[FAIL]%ESC%[0m %MSG%
 if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [FAILED] [%SEC%] %MSG%
 if "%LOG_ENABLED%"=="1" >>"%LOG_ERR%" echo [%LOG_NOW%] [%SEC%] %MSG%
 endlocal
@@ -3474,6 +3460,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
+echo %ESC%[33m[WARN]%ESC%[0m %MSG%
 if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [ WARN] [%SEC%] %MSG%
 endlocal
 goto :eof
@@ -3494,6 +3481,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
+echo %ESC%[90m[SKIP]%ESC%[0m %MSG%
 if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [ SKIP] [%SEC%] %MSG%
 endlocal
 goto :eof

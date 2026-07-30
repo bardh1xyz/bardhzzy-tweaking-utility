@@ -310,6 +310,7 @@ if !totalRAM! LSS 3 (
 ) else if !totalRAM! LSS 9 (
     reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "8388608" /f >nul 2>&1
     reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f >nul 2>&1
+    reg add "HKLM\SYSTEM\CurrentControlSet\Control" /v "SvcHostSplitThresholdInKB" /t REG_DWORD /d 8400000 /f
 ) else (
     :: 16GB+
     set /a iopll=!totalRAM! * 1048576
@@ -319,6 +320,7 @@ if !totalRAM! LSS 3 (
     powershell -NoProfile -Command "Disable-MMAgent -MemoryCompression" >nul 2>&1
     powershell -NoProfile -Command "Disable-MMAgent -PageCombining" >nul 2>&1
     wmic pagefilesetting where name="C:\\pagefile.sys" set InitialSize=4096,MaximumSize=4096 >nul 2>&1
+    reg add "HKLM\SYSTEM\CurrentControlSet\Control" /v "SvcHostSplitThresholdInKB" /t REG_DWORD /d 0xFFFFFFFF /f
 )
 
 echo [*] Applying fsutil storage optimizations...
@@ -482,6 +484,9 @@ for %%P in (
 ) do (
   reg add "%regKeyGP%" /v "%%~P" /t REG_SZ /d "GpuPreference=2" /f >nul 2>&1
 )
+
+reg add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestMode" /t REG_DWORD /d 5 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "DisableOverlays" /t REG_DWORD /d 1 /f
 
 :: Fortnite QoS
 sc config Psched start= system >nul 2>&1
@@ -670,6 +675,8 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProf
 :: Disable Discord Hardware Acceleration overlay bloat by adding QoS policies
 powershell -NoProfile -Command "New-NetQosPolicy -Name 'DiscordVoice' -AppPathName 'Discord.exe' -DSCPAction 46 -NetworkProfile All -ErrorAction SilentlyContinue" >nul 2>&1
 
+reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Clock Rate" /t REG_DWORD /d 2710 /f
+
 :: Kill Microsoft Edge background processes completely
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "BackgroundModeEnabled" /t REG_DWORD /d 0 /f >nul 2>&1
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "StartupBoostEnabled" /t REG_DWORD /d 0 /f >nul 2>&1
@@ -690,6 +697,7 @@ powercfg -setactive scheme_current >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "PlatformTimer" /t REG_DWORD /d 1 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "TimerSetCoalesce" /t REG_DWORD /d 0 /f >nul 2>&1
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "LazyModeTimeout" /t REG_DWORD /d 100 /f >nul 2>&1
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel" /v "DebugPollInterval" /t REG_DWORD /d 0x3e8 /f
 
 sc config Sense start= disabled >nul 2>&1
 sc stop Sense >nul 2>&1
