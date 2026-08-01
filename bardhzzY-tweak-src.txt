@@ -1636,6 +1636,8 @@ call :TIScLog stop "FrameServer"
 call :TIScLog config "FrameServer" start= disabled
 call :TIScLog stop "wisvc"
 call :TIScLog config "wisvc" start= disabled
+call :TIScLog stop whesvc
+call :TIScLog config whesvc start= disabled
 call :TIRegLog add "HKLM\System\CurrentControlSet\Services\WpnUserService" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\System\CurrentControlSet\Services\MessagingService" /v "Start" /t REG_DWORD /d 4 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f
