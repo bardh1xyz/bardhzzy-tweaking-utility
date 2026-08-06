@@ -1,7 +1,6 @@
 @ECHO off
 setlocal
 
-:: ULTIMATE FAILSAFE: Fix broken PCs that are missing System32/PowerShell in their PATH variable
 set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
 
 set "dmv=powershell -NoProfile -Command Disable-PnpDevice -InstanceId"
@@ -66,7 +65,7 @@ if not exist "%NSUDO_EXE%" (
     echo [+] Initializing NSudo Framework...
     mkdir "%NSUDO_DIR%" >nul 2>&1
     
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Invoke-WebRequest -Uri 'https://github.com/M2Team/NSudo/releases/download/8.2/NSudo_8.2_All_Components.zip' -OutFile $env:TEMP\NSudo.zip -UseBasicParsing; Expand-Archive -Path $env:TEMP\NSudo.zip -DestinationPath $env:TEMP\NSudoExtract -Force; $arch='x64'; if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { $arch='ARM64' } elseif ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { $arch='Win32' }; $exe = Get-ChildItem -Path $env:TEMP\NSudoExtract -Recurse -Filter 'NSudoLC.exe' | Where-Object { $_.FullName -like ('*\' + $arch + '\*') } | Select-Object -First 1; if ($exe) { Copy-Item $exe.FullName $env:ProgramData\NSudo\NSudoLC.exe -Force; 'NSUDO_OK' } else { 'NSUDO_FAIL' } } catch { 'NSUDO_FAIL' }" > "%TEMP%\nsudo_status.txt"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Invoke-WebRequest -Uri 'https://github.com/M2Team/NSudo/releases/download/8.2/NSudo_8.2_All_Components.zip' -OutFile $env:TEMP\NSudo.zip -UseBasicParsing; Expand-Archive -Path $env:TEMP\NSudo.zip -DestinationPath $env:TEMP\NSudoExtract -Force; $arch='x64'; if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { $arch='ARM64' } elseif ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { $arch='Win32' }; $exe = Get-ChildItem -Path $env:TEMP\NSudoExtract -Recurse -Filter 'NSudoLC.exe' | Where-Object { $_.FullName -like ('*\' + $arch + '\*') } | Select-Object -First 1; if ($exe) { Copy-Item $exe.FullName "$env:ProgramData\NSudo\NSudoLC.exe" -Force; 'NSUDO_OK' } else { 'NSUDO_FAIL' } } catch { 'NSUDO_FAIL' }" > "%TEMP%\nsudo_status.txt"
 
     
     findstr "NSUDO_OK" "%TEMP%\nsudo_status.txt" >nul 2>&1
@@ -109,14 +108,9 @@ echo ======================================================
 echo.
 set "user_key="
 set /p "user_key=Enter your License Key: "
-
-:: =====================================================================
-:: [!] THE TRAP FIXER (Strips accidental quotes and spaces)
-:: =====================================================================
 if defined user_key set "user_key=%user_key:"=%"
 if defined user_key set "user_key=%user_key: =%"
 
-:: Validation List (Sanitized of all hidden browser spaces)
 for %%k in (
     "1B99-QBRX-5YP7-YB07" "WITN-7N8Z-R8Q1-FRXX" "U3IG-J0E7-LWRO-9X27" "B21U-EY2U-C3J6-9ZTO"
     "0DC0-JVR3-QNJV-XCLK" "4Z29-1O7A-Z4XA-45QG" "BIS7-L7C3-JJNR-2JWY" "PKVJ-503R-ELHE-42GE"
@@ -139,7 +133,7 @@ for %%k in (
 echo.
 echo [ERROR] Invalid License Key! Access Denied.
 pause
-exit /b
+goto license
 
 :valid
 echo.
@@ -382,28 +376,47 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "Cor
 
 call :LogInfo "Installing latest Open-Shell..."
 winget install --id Open-Shell.Open-Shell-Menu --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Install Open-Shell") else (call :LogErr "Install Open-Shell")
+if not exist "C:\Program Files\Open-Shell\StartMenu.exe" (
+    call :LogWarn "Winget failed or timed out. Attempting direct download from GitHub..."
+    
+    powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { $r = Invoke-RestMethod -Uri 'https://api.github.com/repos/Open-Shell/Open-Shell-Menu/releases/latest' -UseBasicParsing; $a = $r.assets | Where-Object { $_.name -like 'OpenShellSetup*.exe' } | Select-Object -First 1; Invoke-WebRequest -Uri $a.browser_download_url -OutFile $env:TEMP\OpenShellSetup.exe -UseBasicParsing } catch { exit 1 }" >nul 2>&1
+    
+    if exist "%TEMP%\OpenShellSetup.exe" (
+        call :LogInfo "Running Open-Shell silent installer..."
+        start /wait "" "%TEMP%\OpenShellSetup.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+        
+        if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
+            call :LogOK "Open-Shell installed via GitHub fallback."
+        ) else (
+            call :LogErr "Open-Shell silent installer failed."
+        )
+        del /q "%TEMP%\OpenShellSetup.exe" >nul 2>&1
+    ) else (
+        call :LogErr "Failed to download Open-Shell from GitHub. Check internet connection."
+    )
+) else (
+    call :LogOK "Open-Shell installed via Winget."
+)
+timeout /t 4 /nobreak >nul
 
 call :LogInfo "Applying Custom Open-Shell Skin and XML Setup..."
 
-:: Ensure the Skins directory exists before copying
 if not exist "C:\Program Files\Open-Shell\Skins\" mkdir "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
 
-if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin" (
-    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin" (
+    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
     call :LogOK "Custom Open-Shell Skin copied."
 ) else (
     call :LogWarn "Custom Open-Shell Skin not found."
 )
 
-if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin7" (
-    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Refresh_1.6b.2.skin7" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin7" (
+    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin7" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
     call :LogOK "Custom Open-Shell Skin7 copied."
 ) else (
     call :LogWarn "Custom Open-Shell Skin7 not found."
 )
 
-:: Ensure Open-Shell is installed before trying to configure it
 if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
     :: Kill existing processes first
     taskkill /f /im StartMenu.exe >nul 2>&1
@@ -443,9 +456,9 @@ goto skip_search
 
 :skip_search
 call :LogInfo "Removing New Media Player app..."
-powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneVideo* | Remove-AppxPackage" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneVideo* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove ZuneVideo") else (call :LogErr "Remove ZuneVideo")
-powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneMusic* | Remove-AppxPackage" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneMusic* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove ZuneMusic") else (call :LogErr "Remove ZuneMusic")
 
 call :LogInfo "Enabling Legacy Media Player feature..."
@@ -492,71 +505,100 @@ if "%DX_OK%"=="1" (
 
 call :LogInfo "Starting Microsoft bloatware removal process..."
 
-:: --- 1. Remove Microsoft OneDrive ---
 call :LogInfo "Forcefully removing Microsoft OneDrive..."
 taskkill /f /im OneDrive.exe >nul 2>&1
 if exist "%SystemRoot%\System32\OneDriveSetup.exe" (
     "%SystemRoot%\System32\OneDriveSetup.exe" /uninstall >nul 2>&1
     if %errorlevel% equ 0 (call :LogOK "OneDrive uninstalled via setup") else (call :LogErr "OneDrive uninstall failed")
 )
-powershell -NoProfile -Command "Get-AppxPackage *Microsoft.OneDrive* | Remove-AppxPackage" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage *Microsoft.OneDrive* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "OneDrive Appx removed") else (call :LogWarn "OneDrive Appx removal skipped")
 
-:: Clean up leftover OneDrive folders
 rd /s /q "%LOCALAPPDATA%\Microsoft\OneDrive" >nul 2>&1
 rd /s /q "%PROGRAMDATA%\Microsoft OneDrive" >nul 2>&1
 call :LogOK "OneDrive leftover directories cleaned"
 
-:: Remove OneDrive from Windows Explorer side panel (Requires TrustedInstaller)
 call :TIRegLog delete "HKCR\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}" /f
 call :TIRegLog delete "HKCR\Wow6432Node\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}" /f
 
-call :LogSection "Microsoft Edge Removal"
-call :LogInfo "Stopping Edge processes (preserving WebView2)..."
+call :LogSection "Microsoft Edge & WebView2 Complete Removal"
+call :LogInfo "Stopping all Edge/WebView2 processes..."
 taskkill /F /IM msedge.exe /T >nul 2>&1
+taskkill /F /IM msedgewebview2.exe /T >nul 2>&1
 taskkill /F /IM EdgeUpdate.exe /T >nul 2>&1
 
-call :LogInfo "Searching for Edge installation versions..."
-set "edge_found=0"
-setlocal EnableDelayedExpansion
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\EdgeUpdateDev" /v "AllowUninstall" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\EdgeUpdate" /v "DoNotUpdateToEdgeWithChromium" /t REG_DWORD /d 1 /f
 
-:: Check standard Program Files directories for the setup.exe
-for %%P in ("C:\Program Files (x86)\Microsoft\Edge\Application" "C:\Program Files\Microsoft\Edge\Application") do (
+setlocal EnableDelayedExpansion
+set "edge_found=0"
+
+for %%P in (
+    "C:\Program Files (x86)\Microsoft\Edge\Application"
+    "C:\Program Files\Microsoft\Edge\Application"
+) do (
     if exist "%%~P" (
-        for /f "delims=" %%V in ('dir /b /ad "%%~P" 2^>nul ^| findstr /r "^[0-9].*"') do (
+        for /f "delims=" %%V in ('dir /b /ad "%%~P" 2^>nul ^| findstr /r "^[0-9][0-9]*\.[0-9]"') do (
             if exist "%%~P\%%V\Installer\setup.exe" (
                 call :LogInfo "Found Edge version: %%V. Executing silent uninstall..."
-                powershell -NoProfile -Command "Start-Process -FilePath '%%~P\%%V\Installer\setup.exe' -ArgumentList '--uninstall --system-level --verbose-logging --force-uninstall' -Wait -NoNewWindow" >nul 2>&1
-                if !errorlevel! equ 0 (call :LogOK "Edge setup.exe uninstall complete") else (call :LogWarn "Edge setup.exe returned non-zero exit code")
+                powershell -NoProfile -Command "$p = Start-Process -FilePath '%%~P\%%V\Installer\setup.exe' -ArgumentList '--uninstall --system-level --verbose-logging --force-uninstall' -Wait -PassThru -WindowStyle Hidden; exit $p.ExitCode" >nul 2>&1
                 set "edge_found=1"
             )
         )
     )
 )
 
-if "!edge_found!"=="0" call :LogWarn "Standard Edge setup.exe not found. Proceeding with Appx cleanup..."
-
-call :LogInfo "Removing Edge Appx Packages (Strictly preserving WebView2)..."
-:: FIXED: Removed the wildcard. Now it strictly targets the browser package, leaving WebView2 alone.
-powershell -NoProfile -Command "Get-AppxPackage Microsoft.MicrosoftEdge -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue" >nul 2>&1
-
-call :LogInfo "Removing Provisioned Packages (prevents auto-reinstall on update)..."
-powershell -NoProfile -Command "Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq 'Microsoft.MicrosoftEdge' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-
-call :LogInfo "Cleaning up leftover Edge directories (Preserving EdgeWebView)..."
-:: FIXED: Added safety checks to ONLY delete Edge, NOT EdgeWebView.
-if exist "C:\Program Files (x86)\Microsoft\Edge\" %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\Edge\"" >nul 2>&1
-if exist "C:\Program Files\Microsoft\Edge\" %TI% cmd.exe /c "rd /s /q \"C:\Program Files\Microsoft\Edge\"" >nul 2>&1
-rd /s /q "%LOCALAPPDATA%\Microsoft\Edge" >nul 2>&1
-
-:: ==============================================================================
-:: WARNING: DO NOT disable edgeupdate services or delete EdgeUpdate registry keys.
-:: WebView2 Runtime relies on them to function. Snipping Tool needs WebView2.
-:: ==============================================================================
-
+for %%P in (
+    "C:\Program Files (x86)\Microsoft\EdgeWebView\Application"
+    "C:\Program Files\Microsoft\EdgeWebView\Application"
+) do (
+    if exist "%%~P" (
+        for /f "delims=" %%V in ('dir /b /ad "%%~P" 2^>nul ^| findstr /r "^[0-9][0-9]*\.[0-9]"') do (
+            if exist "%%~P\%%V\Installer\setup.exe" (
+                call :LogInfo "Found WebView2 version: %%V. Executing silent uninstall..."
+                powershell -NoProfile -Command "$p = Start-Process -FilePath '%%~P\%%V\Installer\setup.exe' -ArgumentList '--uninstall --msedgewebview --system-level --verbose-logging --force-uninstall' -Wait -PassThru -WindowStyle Hidden; exit $p.ExitCode" >nul 2>&1
+                set "edge_found=1"
+            )
+        )
+    )
+)
 endlocal
 
-call :LogOK "Microsoft Edge, OneDrive, News/Widgets successfully removed and disabled!"
+call :LogInfo "Removing Edge & WebView2 Appx packages..."
+powershell -NoProfile -Command "Get-AppxPackage Microsoft.MicrosoftEdge -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage Microsoft.Win32WebViewHost -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.MicrosoftEdge|Microsoft.Win32WebViewHost' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
+
+call :LogInfo "Nuking leftover directories..."
+if exist "C:\Program Files (x86)\Microsoft\Edge\"         %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\Edge\"" >nul 2>&1
+if exist "C:\Program Files\Microsoft\Edge\"               %TI% cmd.exe /c "rd /s /q \"C:\Program Files\Microsoft\Edge\"" >nul 2>&1
+if exist "C:\Program Files (x86)\Microsoft\EdgeWebView\"  %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\EdgeWebView\"" >nul 2>&1
+if exist "C:\Program Files\Microsoft\EdgeWebView\"        %TI% cmd.exe /c "rd /s /q \"C:\Program Files\Microsoft\EdgeWebView\"" >nul 2>&1
+if exist "C:\Program Files (x86)\Microsoft\EdgeUpdate\"   %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\EdgeUpdate\"" >nul 2>&1
+rd /s /q "%LOCALAPPDATA%\Microsoft\Edge" >nul 2>&1
+rd /s /q "%LOCALAPPDATA%\Microsoft\EdgeWebView" >nul 2>&1
+
+call :LogInfo "Hardening against Windows Update reinstalls..."
+%TI% icacls "C:\Program Files (x86)\Microsoft\Edge" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+%TI% icacls "C:\Program Files\Microsoft\Edge" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+%TI% icacls "C:\Program Files (x86)\Microsoft\EdgeWebView" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+%TI% icacls "C:\Program Files\Microsoft\EdgeWebView" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+
+call :LogInfo "Disabling EdgeUpdate & Elevation services..."
+call :TIScLog stop "edgeupdate"
+call :TIScLog config "edgeupdate" start= disabled
+call :TIScLog stop "edgeupdatem"
+call :TIScLog config "edgeupdatem" start= disabled
+call :TIScLog stop "MicrosoftEdgeElevationService"
+call :TIScLog config "MicrosoftEdgeElevationService" start= disabled
+
+call :SchLog /Change /TN "MicrosoftEdgeUpdateTaskMachineCore" /Disable
+call :SchLog /Change /TN "MicrosoftEdgeUpdateTaskMachineUA" /Disable
+
+del /q /f "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Microsoft Edge.lnk" >nul 2>&1
+del /q /f "%PUBLIC%\Desktop\Microsoft Edge.lnk" >nul 2>&1
+
+call :LogOK "Microsoft Edge and WebView2 completely eradicated!"
 
 call :LogInfo "Applying registry optimizations..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization" /v "NoLockScreen" /t REG_DWORD /d 1 /f
@@ -634,7 +676,6 @@ call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\PrintWorkflowUserSvc"
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\SCardSvr" /v "Start" /t REG_DWORD /d "4" /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\ScDeviceEnum" /v "Start" /t REG_DWORD /d "4" /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\SCPolicySvc" /v "Start" /t REG_DWORD /d "4" /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\PrintNotify" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\CertPropSvc" /v "Start" /t REG_DWORD /d "4" /f
 
 call :LogInfo "Cleaning Windows Search Index..."
@@ -1073,21 +1114,9 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\PnP\Pci" /v "GetInterrup
 call :LogOK "NVIDIA GPU MSI Mode & High Priority Enabled!"
 
 call :LogInfo "Applying DirectX Optimizations..."
-setlocal EnableDelayedExpansion
-set "F_PATH=HKCU\Software\Microsoft\DirectX\UserGpuPreferences"
-set "F_NAME=DirectXUserGlobalSettings"
-set "F_TWEAK=SwapEffectUpgradeEnable=1;VRROptimizeEnable=0;"
-for /f "tokens=2,*" %%A in ('reg query "%F_PATH%" /v "%F_NAME%" 2^>nul') do set "F_DATA=%%B"
-if defined F_DATA (
-    set "F_DATA=!F_DATA:VRROptimizeEnable=1;=!"
-    set "F_DATA=!F_DATA:VRROptimizeEnable=0;=!"
-    set "F_DATA=!F_DATA:SwapEffectUpgradeEnable=1;=!"
-    set "F_DATA=!F_DATA:SwapEffectUpgradeEnable=0;=!"
-    call :RegLog add "%F_PATH%" /v "%F_NAME%" /t REG_SZ /d "!F_DATA!%F_TWEAK%" /f
-) else (
-    call :RegLog add "%F_PATH%" /v "%F_NAME%" /t REG_SZ /d "%F_TWEAK%" /f
-)
-endlocal
+powershell -NoProfile -Command "$p='HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'; $n='DirectXUserGlobalSettings'; $tweak='SwapEffectUpgradeEnable=1;VRROptimizeEnable=0;'; $val=(Get-ItemProperty -Path $p -Name $n -ErrorAction SilentlyContinue).$n; if($val){ $parts=$val -split ';' | Where-Object { $_ -notmatch 'SwapEffectUpgradeEnable' -and $_ -notmatch 'VRROptimizeEnable' }; $new=($parts -join ';').';'+$tweak } else { $new=$tweak }; Set-ItemProperty -Path $p -Name $n -Value $new -Type String -Force" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "DirectX Global Settings applied") else (call :LogErr "DirectX Global Settings failed")
+
 call :RegLog add "HKCU\Software\Microsoft\DXGIExtensions" /v "ForceIndependentFlip" /t REG_DWORD /d 1 /f
 call :LogInfo "Disabling Multiplane Overlay (MPO)..."
 call :RegLog delete "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestType" /f >nul 2>&1
@@ -1188,7 +1217,7 @@ goto main
 call :LogSection "CPU Tweaks"
 echo You selected CPU Tweaks!
 call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "IOMMUFlags" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "MSISupport" /t REG_DWORD /d 1 /f
+call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "MSISupported" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Control Panel\Accessibility\StickyKeys" /v "Flags" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Accessibility\ToggleKeys" /v "Flags" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Accessibility\HighContrast" /v "Flags" /t REG_SZ /d "0" /f
@@ -1198,12 +1227,6 @@ call :RegLog add "HKCU\Control Panel\Accessibility\TimeOut" /v "Flags" /t REG_SZ
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "LbrEnabled" /t REG_DWORD /d 0 /f
 powercfg /setacvalueindex scheme_current sub_pciexpress aspm 0
 if %errorlevel% equ 0 (call :LogOK "powercfg sub_pciexpress") else (call :LogErr "powercfg sub_pciexpress")
-
-set "CPU_CORES=%NUMBER_OF_PROCESSORS%"
-set /a "SYS_THREADS=CPU_CORES * 12"
-
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Executive" /v "AdditionalCriticalWorkerThreads" /t REG_DWORD /d %SYS_THREADS% /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Executive" /v "AdditionalDelayedWorkerThreads" /t REG_DWORD /d %SYS_THREADS% /f
 
 echo %PROCESSOR_IDENTIFIER% | findstr /i "AMD" >nul && (
     call :LogInfo "AMD CPU detected - Applying AMD-specific tweaks..."
@@ -1251,7 +1274,7 @@ if %errorlevel% equ 0 (call :LogOK "bcdedit hypervisor off") else (call :LogErr 
 
 call :LogInfo "Scanning for common games to apply High Priority..."
 setlocal enabledelayedexpansion
-set "games[0]=C:\Riot Games\VALORANT\live\VALORANT.exe"
+set "games[0]=C:\Riot Games\VALORANT\live\Game\Binaries\Win64\VALORANT-Win64-Shipping.exe"
 set "games[1]=C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto V\GTA5.exe"
 set "games[2]=C:\Program Files (x86)\Steam\steamapps\common\Apex Legends\r5apex.exe"
 set "games[3]=C:\Program Files (x86)\Steam\steamapps\common\Counter-Strike Global Offensive\game\bin\win64\cs2.exe"
@@ -1482,6 +1505,7 @@ goto main
 :clean
 call :LogSection "Clean Up"
 echo You Selected Cleanup!
+call :TIScLog stop "wuauserv"
 call :TIScLog config "wuauserv" start= demand
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v "NoAutoUpdate" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v "AUOptions" /t REG_DWORD /d 2 /f
@@ -1597,7 +1621,6 @@ call :TIScLog config DsmSvc start= disabled
 call :TIScLog config AJRouter start= demand
 call :TIScLog config ALG start= demand
 call :TIScLog config AppIDSvc start= demand
-call :TIScLog config BDESVC start= demand
 call :TIScLog config CertPropSvc start= demand
 call :TIScLog config EntAppSvc start= demand
 call :TIScLog config LxpSvc start= demand
@@ -1891,7 +1914,6 @@ call :TIScLog config WSearch start= disabled
 call :TIScLog stop W32Time
 call :TIScLog config W32Time start= disabled
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Spooler" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\PrintNotify" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\MapsBroker" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\GpuEnergyDrv" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XboxNetApiSvc" /v "Start" /t REG_DWORD /d 4 /f
@@ -1975,8 +1997,10 @@ powershell -NoProfile -Command "Get-AppxPackage *ConnectivityStore* | Remove-App
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: ConnectivityStore") else (call :LogErr "Remove Appx: ConnectivityStore")
 powershell -NoProfile -Command "Get-AppxPackage *ContentDeliveryManager* | Remove-AppxPackage" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: ContentDeliveryManager") else (call :LogErr "Remove Appx: ContentDeliveryManager")
-powershell -NoProfile -Command "Get-AppxPackage *Microsoft.WindowsStore* | Remove-AppxPackage" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage *Microsoft.WindowsStore* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.WindowsStore") else (call :LogErr "Remove Appx: Microsoft.WindowsStore")
+powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.WindowsStore' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
+call :LogOK "Microsoft Store completely eradicated (Provisioned Package removed)!"
 powershell -NoProfile -Command "Get-AppxPackage Microsoft.OneDrive | Remove-AppxPackage" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.OneDrive") else (call :LogErr "Remove Appx: Microsoft.OneDrive")
 powershell -NoProfile -Command "Get-AppxPackage Clipchamp | Remove-AppxPackage" >nul 2>&1
@@ -2193,15 +2217,15 @@ call :TIRegLog add "HKLM\SYSTEM\ControlSet001\Services\Ndu" /v "Start" /t REG_DW
 netsh advfirewall firewall set rule group="Network Discovery" new enable=no >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "netsh advfirewall Network Discovery") else (call :LogErr "netsh advfirewall Network Discovery")
 netsh int tcp set supplemental Template=Compat CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh bbr2 Compat") else (call :LogErr "netsh bbr2 Compat")
+if %errorlevel% equ 0 (call :LogOK "netsh cubic Compat") else (call :LogErr "netsh cubic Compat")
 netsh int tcp set supplemental Template=Internet CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh bbr2 Internet") else (call :LogErr "netsh bbr2 Internet")
+if %errorlevel% equ 0 (call :LogOK "netsh cubic Internet") else (call :LogErr "netsh cubic Internet")
 netsh int tcp set supplemental Template=Datacenter CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh bbr2 Datacenter") else (call :LogErr "netsh bbr2 Datacenter")
+if %errorlevel% equ 0 (call :LogOK "netsh cubic Datacenter") else (call :LogErr "netsh cubic Datacenter")
 netsh int tcp set supplemental Template=InternetCustom CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh bbr2 InternetCustom") else (call :LogErr "netsh bbr2 InternetCustom")
+if %errorlevel% equ 0 (call :LogOK "netsh cubic InternetCustom") else (call :LogErr "netsh cubic InternetCustom")
 netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh bbr2 DatacenterCustom") else (call :LogErr "netsh bbr2 DatacenterCustom")
+if %errorlevel% equ 0 (call :LogOK "netsh cubic DatacenterCustom") else (call :LogErr "netsh cubic DatacenterCustom")
 netsh int tcp set global ecncapability=disabled >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "netsh ecncapability=disabled") else (call :LogErr "netsh ecncapability=disabled")
 netsh int tcp set global autotuninglevel=normal >nul 2>&1
@@ -2257,8 +2281,8 @@ for %%a in (
     "PowerSaving"
     "GreenEthernet"
 ) do (
-    powershell -NoProfile -Command "Get-NetAdapterAdvancedProperty -DisplayName '*%%a*' | Set-NetAdapterAdvancedProperty -RegistryValue 0 -ErrorAction SilentlyContinue" >nul 2>&1
-    if !errorlevel! equ 0 (call :LogOK "Disable NetAdapter %%~a") else (call :LogErr "Disable NetAdapter %%~a")
+    powershell -NoProfile -Command "$p = Get-NetAdapterAdvancedProperty -DisplayName '*%%~a*' -ErrorAction SilentlyContinue; if ($p) { $p | Set-NetAdapterAdvancedProperty -RegistryValue 0 -ErrorAction SilentlyContinue; exit 0 } else { exit 1 }" >nul 2>&1
+    if !errorlevel! equ 0 (call :LogOK "Disable NetAdapter %%~a") else (call :LogWarn "Skip NetAdapter %%~a (Not supported by NIC)")
 )
 
 ipconfig /flushdns >nul 2>&1
@@ -2278,8 +2302,6 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "NtfsDisa
 
 fsutil behavior set memoryusage 2 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "fsutil memoryusage 2") else (call :LogErr "fsutil memoryusage 2")
-fsutil behavior set mftzone 4 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil mftzone 4") else (call :LogErr "fsutil mftzone 4")
 fsutil behavior set Disabledeletenotify 0 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "fsutil Disabledeletenotify 0") else (call :LogErr "fsutil Disabledeletenotify 0")
 fsutil behavior set encryptpagingfile 0 >nul 2>&1
@@ -2310,8 +2332,8 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /
 
 fsutil behavior set disablelastaccess 1 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "fsutil disablelastaccess 1") else (call :LogErr "fsutil disablelastaccess 1")
-fsutil behavior set mtfzone 1 > nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil mtfzone 1") else (call :LogErr "fsutil mtfzone 1")
+fsutil behavior set mftzone 1 > nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "fsutil mftzone 1") else (call :LogErr "fsutil mftzone 1")
 fsutil behavior set disable8dot3 1 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "fsutil disable8dot3 1") else (call :LogErr "fsutil disable8dot3 1")
 
@@ -2384,7 +2406,7 @@ call :RegLog add "HKCU\Software\Microsoft\Multimedia\Audio" /v "Ducking" /t REG_
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Audio" /v "DisableAudioEnhancements" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Priority" /t REG_DWORD /d 4 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Scheduling Category" /t REG_SZ /d "Medium" /f
-powershell -NoProfile -Command "Get-PnpDevice -Class HIDClass | Where-Object {$_.Status -eq 'OK'} | ForEach-Object { $path = $_.GetDeviceProperties('DEVPKEY_DeviceClass').DeviceInstance; powercfg /devicedisablewake '$path' }"
+powershell -NoProfile -Command "Get-PnpDevice -Class HIDClass | Where-Object {$_.Status -eq 'OK'} | ForEach-Object { powercfg /devicedisablewake $_.FriendlyName }"
 if %errorlevel% equ 0 (call :LogOK "powercfg hid device power") else (call :LogErr "powercfg hid device power")
 
 call :LogOK "Input tweaks applied successfully!"
@@ -2399,7 +2421,6 @@ call :RegLog add "HKCU\Control Panel\Mouse" /v "MouseSpeed" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Mouse" /v "MouseThreshold1" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Mouse" /v "MouseThreshold2" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Mouse" /v "MouseSensitivity" /t REG_SZ /d "10" /f
-call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "IOMMUFlags" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Control Panel\Accessibility\StickyKeys" /v "Flags" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Accessibility\ToggleKeys" /v "Flags" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Accessibility\HighContrast" /v "Flags" /t REG_SZ /d "0" /f
@@ -2452,13 +2473,15 @@ powercfg /hibernate off >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg hibernate off") else (call :LogErr "powercfg hibernate off")
 
 call :LogInfo "Configuring Core parking..."
+call :LogInfo "Applying Core Unparking Registry Keys..."
 call :RegLog add "HKLM\System\CurrentControlSet\Control\Power\PowerSettings\54533251-82be-4824-96c1-47b60b740d00\0cc5b647-c1df-4637-891a-dec35c318583" /v "Attributes" /t REG_DWORD /d 0 /f
+if %errorlevel% equ 0 (call :LogOK "reg CPMINCORES 0") else (call :LogErr "reg CPMINCORES 0")
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Power\PowerSettings\54533251-82be-4824-96c1-47b60b740d00\0cc5b647-c1df-4637-891a-dec35c318583" /v "ValueMax" /t REG_DWORD /d 100 /f
+if %errorlevel% equ 0 (call :LogOK "reg CPMAXCORES 100") else (call :LogErr "reg CPMAXCORES 100")
 powercfg -setacvalueindex scheme_current sub_processor CPMINCORES 100 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg CPMINCORES 100") else (call :LogErr "powercfg CPMINCORES 100")
 powercfg -setacvalueindex scheme_current sub_processor CPMAXCORES 100 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
-powercfg -setacvalueindex scheme_current 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg 48e6b7a6 0") else (call :LogErr "powercfg 48e6b7a6 0")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_PCIEXPRESS ASPM 0 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg ASPM 0") else (call :LogErr "powercfg ASPM 0")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP RTCWAKE 0 >nul 2>&1
@@ -2730,10 +2753,6 @@ echo ====================================================== > "%LOGFILE%"
 echo TimerRes Setup Log >> "%LOGFILE%"
 echo ====================================================== >> "%LOGFILE%"
 echo. >> "%LOGFILE%"
-
-call :LogInfo "Administrator privileges confirmed."
-echo [✓] Administrator privileges confirmed.
-echo.
 
 call :LogInfo "Checking internet connectivity..."
 echo [!] Checking internet connectivity...
@@ -3251,7 +3270,7 @@ echo           BARDHZZY Tweaks - Revert / Undo Mode
 echo ======================================================
 echo.
 echo [!] WARNING: This will forcefully overwrite your current
-echo     registry with the backup made when you first opened this tool.
+echo     registry with the backup created via Option 16.
 echo.
 echo [!] NOTE: If you used the 'Clean Up' tool to remove Windows Apps,
 echo     those specific apps will NOT be reinstalled by this process.
@@ -3550,6 +3569,13 @@ goto :eof
 
 :TIScLog
 setlocal DISABLEDELAYEDEXPANSION
+set "ARGS=%*"
+echo %ARGS% | findstr /i "config start= disabled" >nul 2>&1
+if %errorlevel% equ 0 (
+    for /f "tokens=2" %%S in ("%ARGS%") do (
+        sc stop "%%~S" >nul 2>&1
+    )
+)
 set BARDHZZ_CMD=sc %*
 if defined TI set BARDHZZ_CMD=%TI% sc %*
 %BARDHZZ_CMD% >nul 2>&1
