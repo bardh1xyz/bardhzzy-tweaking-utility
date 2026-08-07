@@ -171,89 +171,64 @@ goto :main
 
 :main
 title bardhzzY Tweaks
-
-MODE 150,40
-
+MODE 100, 40
 echo %ESC%[0m
 cls
 color 09
+
 echo.
 echo        ██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗
 echo        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝
-echo        ██████╔╝███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
+echo        ██████╔╗███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
 echo        ██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  
 echo        ██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   
 echo        ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   
 echo.
-
-set "build=0"
-for /f "tokens=3" %%A in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v "CurrentBuild" 2^>nul ^| findstr "REG_SZ"') do set "build=%%A"
-
-if %build% GEQ 22000 (
-    set "os_ver=Win11"
-) else (
-    set "os_ver=Win10"
-)
-
-:: =====================================================================
-:: [!] PROFESSIONAL LOGGING SYSTEM - INITIALIZE
-:: =====================================================================
-if not defined LOG_INITIALIZED call :LogInit
-:: =====================================================================
-echo.                                         
+echo  %ESC%[34mSYSTEM TWEAKS                 %ESC%[0m %ESC%[34mNETWORK ^& LATENCY%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m 1%ESC%[37m] Windows Tweaks            %ESC%[37m [%ESC%[36m 6%ESC%[37m] Network Tweaks
+echo  %ESC%[37m [%ESC%[36m 2%ESC%[37m] GPU Tweaks                %ESC%[37m [%ESC%[36m 7%ESC%[37m] Storage Tweaks
+echo  %ESC%[37m [%ESC%[36m 3%ESC%[37m] CPU Tweaks                %ESC%[37m [%ESC%[36m 8%ESC%[37m] Input Lag Tweaks
+echo  %ESC%[37m [%ESC%[36m 4%ESC%[37m] RAM Tweaks                %ESC%[37m [%ESC%[36m 9%ESC%[37m] KBM Tweaks
+echo  %ESC%[37m [%ESC%[36m 5%ESC%[37m] Power Tweaks              %ESC%[37m [%ESC%[36m10%ESC%[37m] Timer Resolution
 echo.
-echo.                %ESC%[34m[%ESC%[37m 1 %ESC%[34m]%ESC%[37m Windows Tweaks       %ESC%[34m^|       [%ESC%[37m 2 %ESC%[34m] %ESC%[37m GPU Tweaks       %ESC%[34m^|       [%ESC%[37m 3 %ESC%[34m] %ESC%[37m CPU Tweaks%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
+echo  %ESC%[34mGAMING ^& CLEANUP             %ESC%[0m %ESC%[34mSAFETY ^& UTILITIES%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer       %ESC%[37m [%ESC%[36m13%ESC%[37m] Restore Point
+echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction        %ESC%[37m [%ESC%[36m14%ESC%[37m] Registry Backup
+echo  %ESC%[37m                               %ESC%[37m [%ESC%[36m15%ESC%[37m] Revert Tweaks
 echo.
-echo.                %ESC%[34m[%ESC%[37m 4 %ESC%[34m]%ESC%[37m RAM Tweaks           %ESC%[34m^|       [%ESC%[37m 5 %ESC%[34m] %ESC%[37m Clean Up         %ESC%[34m^|       [%ESC%[37m 6 %ESC%[34m] %ESC%[37m Network Tweaks%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
+echo  %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m16%ESC%[37m] Restart PC       %ESC%[37m [%ESC%[36m17%ESC%[37m] View Log         %ESC%[37m [%ESC%[36m18%ESC%[37m] View Errors
+echo  %ESC%[37m [%ESC%[36m19%ESC%[37m] Summary          %ESC%[37m [%ESC%[36m20%ESC%[37m] Quit             %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord
 echo.
-echo.                %ESC%[34m[%ESC%[37m 7 %ESC%[34m]%ESC%[37m Storage Tweaks       %ESC%[34m^|       [%ESC%[37m 8 %ESC%[34m] %ESC%[37m Input Lag Tweaks %ESC%[34m^|       [%ESC%[37m 9 %ESC%[34m] %ESC%[37m KBM Tweaks%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
-echo.
-echo. 			   [%ESC%[37m 10 %ESC%[34m] %ESC%[37m Power Tweaks%ESC%[0m        %ESC%[34m^|       [%ESC%[37m 11 %ESC%[34m] %ESC%[37m Restore Point%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
-echo.
-echo.                %ESC%[34m[%ESC%[37m 12 %ESC%[34m]%ESC%[37m Fortnite Optimizer  %ESC%[34m^|       [%ESC%[37m 13 %ESC%[34m] %ESC%[37m Timer Resolution%ESC%[0m       %ESC%[34m[%ESC%[37m 14 %ESC%[34m]%ESC%[37m Restart PC%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
-echo.
-echo.                                %ESC%[34m[%ESC%[37m 15 %ESC%[34m]%ESC%[37m Revert Tweaks (Undo)     %ESC%[34m[%ESC%[37m 16 %ESC%[34m]%ESC%[37m Create Registry Backup%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
-echo.
-echo.                                %ESC%[34m[%ESC%[37m 17 %ESC%[34m]%ESC%[37m View Log File             %ESC%[34m[%ESC%[37m 18 %ESC%[34m]%ESC%[37m View Error Log%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
-echo.
-echo.                                %ESC%[34m[%ESC%[37m 19 %ESC%[34m]%ESC%[37m Generate Summary          %ESC%[34m[%ESC%[37m 20 %ESC%[34m]%ESC%[37m Quit (with Summary)%ESC%[0m
-echo.                %ESC%[34m^______________________________________________________________________________________
-echo.
-echo.                                    %ESC%[37mIf You Need %ESC%[34mSUPPORT%ESC%[37m Open A %ESC%[34mTICKET%ESC%[37m In Our %ESC%[34mDISCORD%ESC%[37m.%ESC%[0m
-echo.                                    %ESC%[34m^_________________________________________________
-echo.
-echo.                                                    %ESC%[34m[%ESC%[37m D %ESC%[34m]%ESC%[37m Discord%ESC%[0m
-echo.                                                    %ESC%[34m^______________
+echo  %ESC%[90mCopyright © 2026 bardhzzY Tweaks. All rights reserved.%ESC%[0m
 echo.
 set "input="
-set /p input=
-if defined input set "input=%input:"=%"
-if defined input set "input=%input:&=%"
-if defined input set "input=%input:|=%"
-if defined input set "input=%input:^=%"
+set /p "input=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+if not defined input goto main
+set "input=%input:"=%"
+set "input=%input:&=%"
+set "input=%input:|=%"
+set "input=%input:^=%"
+set "input=%input:<=%"
+set "input=%input:>=%"
+
 if /i "%input%"=="1" goto win
 if /i "%input%"=="2" goto gpu
 if /i "%input%"=="3" goto cpu
 if /i "%input%"=="4" goto ram
-if /i "%input%"=="5" goto clean
+if /i "%input%"=="5" goto pwr
 if /i "%input%"=="6" goto netw
 if /i "%input%"=="7" goto stor
 if /i "%input%"=="8" goto input
 if /i "%input%"=="9" goto kbm
-if /i "%input%"=="10" goto pwr
-if /i "%input%"=="11" goto srp
-if /i "%input%"=="12" goto fortnite
-if /i "%input%"=="13" goto timerres
-if /i "%input%"=="14" goto restartpc
+if /i "%input%"=="10" goto timerres
+if /i "%input%"=="11" goto fortnite
+if /i "%input%"=="12" goto services
+if /i "%input%"=="13" goto srp
+if /i "%input%"=="14" goto backup
 if /i "%input%"=="15" goto revert
-if /i "%input%"=="16" goto backup
+if /i "%input%"=="16" goto restartpc
 if /i "%input%"=="17" (
     call :LogView
     goto main
@@ -600,6 +575,11 @@ del /q /f "%PUBLIC%\Desktop\Microsoft Edge.lnk" >nul 2>&1
 
 call :LogOK "Microsoft Edge and WebView2 completely eradicated!"
 
+call :LogInfo "Disabling User Account Control (UAC)..."
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableLUA" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin" /t REG_DWORD /d "0" /f
+call :LogWarn "UAC Disabled. A system restart is required for this to take effect"
+
 call :LogInfo "Applying registry optimizations..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization" /v "NoLockScreen" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "RotatingLockScreenOverlayEnabled" /t REG_DWORD /d 0 /f
@@ -841,6 +821,15 @@ call :RegLog add "HKU\.DEFAULT\Control Panel\Keyboard" /v "InitialKeyboardIndica
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v NoDriveTypeAutoRun /t REG_DWORD /d 255 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows Search" /v "SetupCompletedSuccessfully" /t REG_DWORD /d 1 /f
 
+call :LogInfo "Disabling Windows System Sounds"
+call :RegLog add "HKCU\AppEvents\Schemes" /ve /d ".None" /f
+
+powershell -NoProfile -Command "Get-ChildItem 'HKCU:\AppEvents\Schemes\Apps\.Default' -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -eq '.Current' } | Remove-Item -Force -ErrorAction SilentlyContinue" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "System sound assignments cleared") else (call :LogWarn "System sound assignments already cleared")
+
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v "DisableStartupSound" /t REG_DWORD /d "1" /f
+call :LogOK "Windows Startup Sound disabled"
+
 call :LogInfo "Disabling Telemetry..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\AppCompat" /v "DisableInventoryCollection" /t REG_DWORD /d 1 /f
@@ -953,6 +942,36 @@ call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OneDrive" /v "Disable
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SidebarEnabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "LongPathsEnabled" /t REG_DWORD /d 1 /f
 
+
+setlocal enabledelayedexpansion
+
+call :LogInfo "Applying Additional OS Registry Keys..."
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching" /v "SearchOrderConfig" /t REG_DWORD /d 1 /f
+call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" /v "fAllowToGetHelp" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager" /v "EnthusiastMode" /t REG_DWORD /d 1 /f
+call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "HideSCAMeetNow" /t REG_DWORD /d 1 /f
+call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ClearPageFileAtShutdown" /t REG_DWORD /d 0 /f
+
+call :LogInfo "Disabling Background Startup Apps..."
+for /f "tokens=2 delims==" %%I in ('wmic startup get caption /format:list 2^>nul ^| find "="') do (
+    set "app=%%I"
+    for /f "delims=" %%A in ("!app!") do (
+        set "app_name=%%A"
+        reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "!app_name!" >nul 2>&1
+        if !errorlevel! equ 0 (
+            reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "!app_name!" /t REG_BINARY /d "0300000000000000" /f >nul 2>&1
+            if !errorlevel! equ 0 (call :LogOK "Disable Startup App: !app_name!") else (call :LogErr "Disable Startup App: !app_name!")
+        )
+        reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "!app_name!" >nul 2>&1
+        if !errorlevel! equ 0 (
+            reg add "HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "!app_name!" /t REG_BINARY /d "0300000000000000" /f >nul 2>&1
+            if !errorlevel! equ 0 (call :LogOK "Disable Startup App [HKLM]: !app_name!") else (call :LogErr "Disable Startup App [HKLM]: !app_name!")
+        )
+    )
+)
+
+endlocal
+
 call :LogInfo "Disabling PnP Devices..."
 %dmv% "SWD\MSRRAS\MS_IKEEV2_MINIPORT" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable MS_IKEEV2_MINIPORT") else (call :LogErr "Disable MS_IKEEV2_MINIPORT")
@@ -1014,26 +1033,42 @@ goto main
 
 :gpu
 cls
+echo %ESC%[0m
+color 09
+
 echo.
-echo        ██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗
-echo        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝
-echo        ██████╔╝███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
-echo        ██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  
-echo        ██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   
-echo        ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
-echo.                                           %ESC%[34m[%ESC%[37m 1 %ESC%[34m]%ESC%[37m AMD       %ESC%[34m^|       [%ESC%[37m 2 %ESC%[34m] %ESC%[37m Nvidia
-echo.                                           %ESC%[34m^_____________________________________
+echo  %ESC%[34mSELECT GPU MANUFACTURER%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Nvidia          %ESC%[37m [%ESC%[36m2%ESC%[37m] AMD             %ESC%[37m [%ESC%[36m3%ESC%[37m] Intel
 echo.
-echo.                                                        %ESC%[34m[%ESC%[37m 3 %ESC%[34m]%ESC%[37m EXIT%ESC%[0m
-echo.
+echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Exit to Main Menu
 echo.
 set "input="
-set /p input=
-if /i "%input%"=="1" goto amd
-if /i "%input%"=="2" goto nvid
-if /i "%input%"=="3" goto main
+set /p "input=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+:: Sanitize input to prevent "is not recognized" errors
+if not defined input goto gpu
+set "input=%input:"=%"
+set "input=%input:&=%"
+set "input=%input:|=%"
+set "input=%input:^=%"
+set "input=%input:<=%"
+set "input=%input:>=%"
+
+if /i "%input%"=="1" goto nvid
+if /i "%input%"=="2" goto amd
+if /i "%input%"=="3" goto intel
+if /i "%input%"=="4" goto main
+
+echo.
 echo "%input%" isn't a right choice, try again!
+timeout 2 >nul
 goto gpu
 
 :nvid
@@ -1155,8 +1190,6 @@ call :RegLog add "HKLM\SOFTWARE\Microsoft\DirectDraw" /v "EmulationOnly" /t REG_
 
 call :ScLog config NvBackend start= disabled
 call :ScLog stop NvBackend
-call :ScLog config nvcontainer start= disabled
-call :ScLog stop nvcontainer
 call :ScLog config NVDisplay.ContainerLocalSystem start= demand
 
 for %%v in (ActivelyUsed IdleLongTime IdleMonitorOff IdleShortTime IdleVeryLongTime IdleNoContext) do (
@@ -1193,7 +1226,7 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
         call :RegLog add "%%a" /v "BGM_LTRMaxSnoopLatencyValue" /t REG_DWORD /d 1 /f
         call :RegLog add "%%a" /v "BGM_LTRMaxNoSnoopLatencyValue" /t REG_DWORD /d 1 /f
         call :RegLog add "%%a" /v "KMD_EnableComputePreemption" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "KMD_DeLagEnabled" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "KMD_DeLagEnabled" /t REG_DWORD /d 1 /f
         call :RegLog add "%%a" /v "DisablePreemption" /t REG_DWORD /d 1 /f
     )
 )
@@ -1209,6 +1242,29 @@ call :ScLog stop "AMD External Events Utility"
 call :LogInfo "Enabling Windowed Game Optimizations"
 call :RegLog add "HKCU\SOFTWARE\Microsoft\DirectX\UserGpuPreferences" /v "DirectXUserGlobalSettings" /t REG_SZ /d "VRROptimizeEnable=0;SwapEffectUpgradeEnable=1;" /f
 call :LogOK "AMD Tweaks Applied Successfully!"
+timeout /t 1 /nobreak > NUL
+pause
+goto main
+
+:intel
+call :LogSection "Intel iGPU Tweaks"
+cls
+call :LogInfo "Applying Intel iGPU Registry Tweaks (Laptops/Hybrid Systems)..."
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "Disable_OverlayDSQualityEnhancement" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "IncreaseFixedSegment" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "AdaptiveVsyncEnable" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DisablePFonDP" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableCompensationForDVI" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "NoFastLinkTrainingForeDP" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "ACPowerPolicyVersion" /t REG_DWORD /d "16898" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DCPowerPolicyVersion" /t REG_DWORD /d "16642" /f
+call :RegLog add "HKLM\Software\Intel\GMM" /v "DedicatedSegmentSize" /t REG_DWORD /d "512" /f
+
+call :LogInfo "Setting interrupt policies for Intel GPU..."
+for /f %%g in ('wmic path win32_VideoController get PNPDeviceID ^| findstr /L "VEN_8086"') do (
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Enum\%%g\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d "1" /f
+)
+call :LogOK "Intel iGPU Tweaks Applied Successfully!"
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -1272,6 +1328,53 @@ if %errorlevel% equ 0 (call :LogOK "Disable Hyper-V feature") else (call :LogErr
 bcdedit /set hypervisorlaunchtype off >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "bcdedit hypervisor off") else (call :LogErr "bcdedit hypervisor off")
 
+setlocal enabledelayedexpansion
+
+call :LogInfo "Applying Intel iGPU Registry Tweaks (for laptops/hybrid systems)..."
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "Disable_OverlayDSQualityEnhancement" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "IncreaseFixedSegment" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "AdaptiveVsyncEnable" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DisablePFonDP" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableCompensationForDVI" /t REG_DWORD /d "1" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "NoFastLinkTrainingForeDP" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "ACPowerPolicyVersion" /t REG_DWORD /d "16898" /f
+call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DCPowerPolicyVersion" /t REG_DWORD /d "16642" /f
+call :RegLog add "HKLM\Software\Intel\GMM" /v "DedicatedSegmentSize" /t REG_DWORD /d "512" /f
+
+call :LogInfo "Setting Background Apps to Power Saving / Low Priority..."
+set "discordPath="
+set "robloxPath="
+for /f "delims=" %%i in ('dir /b /s "%USERPROFILE%\AppData\Local\Roblox\Versions\RobloxPlayerBeta.exe" 2^>nul') do set "robloxPath=%%i"
+for /f "delims=" %%i in ('dir /b /s "%USERPROFILE%\AppData\Local\Discord\Discord.exe" 2^>nul') do set "discordPath=%%i"
+
+set "apps[0]=!discordPath!"
+set "apps[1]=%USERPROFILE%\AppData\Roaming\Spotify\Spotify.exe"
+set "apps[2]=C:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe"
+set "apps[3]=C:\Program Files\obs-studio\bin\64bit\obs64.exe"
+set "apps[4]=C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe"
+set "apps[5]=C:\Program Files (x86)\Epic Games\Launcher\Engine\Binaries\Win64\EpicWebHelper.exe"
+set "apps[6]=C:\Program Files (x86)\Steam\Steam.exe"
+set "apps[7]=C:\Program Files (x86)\Battle.net\Battle.net.exe"
+set "apps[8]=C:\Program Files\Google\Chrome\Application\chrome.exe"
+set "apps[9]=C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+
+set "regKeyGP=HKCU\SOFTWARE\Microsoft\DirectX\UserGpuPreferences"
+set "regKeyPR=HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options"
+
+for /L %%i in (0, 1, 9) do (
+    set "currentPath=!apps[%%i]!"
+    if not "!currentPath!"=="" (
+        if exist "!currentPath!" (
+            for %%a in ("!currentPath!") do set "exeName=%%~nxa"
+            reg add "!regKeyGP!" /v "!currentPath!" /t REG_SZ /d "GpuPreference=1" /f >nul 2>&1
+            reg add "!regKeyPR!\!exeName!\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "1" /f >nul 2>&1
+            call :LogOK "Power Saving / Low Priority: !exeName!"
+        )
+    )
+)
+
+endlocal
+
 call :LogInfo "Scanning for common games to apply High Priority..."
 setlocal enabledelayedexpansion
 set "games[0]=C:\Riot Games\VALORANT\live\Game\Binaries\Win64\VALORANT-Win64-Shipping.exe"
@@ -1302,37 +1405,36 @@ goto main
     
 :ram
 cls
+echo %ESC%[0m
+color 09
+
 echo.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╝███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
-echo        ██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗
-echo        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝
-echo        ██████╔╝███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
-echo        ██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  
-echo        ██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   
-echo        ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   
-echo.                                            
+echo  %ESC%[34mSELECT RAM AMOUNT%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m 1%ESC%[37m] 2 GB               %ESC%[37m [%ESC%[36m 4%ESC%[37m] 6 GB               %ESC%[37m [%ESC%[36m 7%ESC%[37m] 24 GB
+echo  %ESC%[37m [%ESC%[36m 2%ESC%[37m] 3 GB               %ESC%[37m [%ESC%[36m 5%ESC%[37m] 8 GB               %ESC%[37m [%ESC%[36m 8%ESC%[37m] 32 GB
+echo  %ESC%[37m [%ESC%[36m 3%ESC%[37m] 4 GB               %ESC%[37m [%ESC%[36m 6%ESC%[37m] 16 GB              %ESC%[37m [%ESC%[36m 9%ESC%[37m] 64 GB
 echo.
-echo.                             %ESC%[34m[%ESC%[37m 1 %ESC%[34m]%ESC%[37m 2 GB       %ESC%[34m^|       [%ESC%[37m 2 %ESC%[34m] %ESC%[37m 3 GB       %ESC%[34m^|       [%ESC%[37m 3 %ESC%[34m] %ESC%[37m 4 GB%ESC%[0m
-echo.                             %ESC%[34m^_______________________________________________________________
-echo.
-echo.                             %ESC%[34m[%ESC%[37m 4 %ESC%[34m]%ESC%[37m 6 GB       %ESC%[34m^|       [%ESC%[37m 5 %ESC%[34m] %ESC%[37m 8 GB       %ESC%[34m^|       [%ESC%[37m 6 %ESC%[34m] %ESC%[37m 16 GB%ESC%[0m
-echo.                             %ESC%[34m^_______________________________________________________________
-echo.
-echo.                             %ESC%[34m[%ESC%[37m 7 %ESC%[34m]%ESC%[37m 24 GB      %ESC%[34m^|       [%ESC%[37m 8 %ESC%[34m] %ESC%[37m 32 GB      %ESC%[34m^|       [%ESC%[37m 9 %ESC%[34m] %ESC%[37m 64 GB%ESC%[0m
-echo.                             %ESC%[34m^_______________________________________________________________
-echo.
-echo.                                                        %ESC%[34m[%ESC%[37m 10 %ESC%[34m]%ESC%[37m EXIT%ESC%[0m
-echo.
-echo.
-echo.
-echo.
+echo  %ESC%[37m [%ESC%[36m10%ESC%[37m] Exit to Main Menu
 echo.
 set "input="
-set /p input=
-if defined input set "input=%input:"=%"
-if defined input set "input=%input:&=%"
-if defined input set "input=%input:|=%"
-if defined input set "input=%input:^=%"
+set /p "input=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+:: Sanitize input to prevent "is not recognized" errors
+if not defined input goto ram
+set "input=%input:"=%"
+set "input=%input:&=%"
+set "input=%input:|=%"
+set "input=%input:^=%"
+set "input=%input:<=%"
+set "input=%input:>=%"
+
 if /i "%input%"=="1" goto 2g
 if /i "%input%"=="2" goto 3g
 if /i "%input%"=="3" goto 4g
@@ -1343,8 +1445,11 @@ if /i "%input%"=="7" goto 24g
 if /i "%input%"=="8" goto 32g
 if /i "%input%"=="9" goto 64g
 if /i "%input%"=="10" goto main
+
+echo.
 echo "%input%" isn't a right choice, try again!
-goto main
+timeout 2 >nul
+goto ram
 
 :2g
 call :LogSection "RAM Tweaks (2GB)"
@@ -1502,9 +1607,8 @@ pause
 goto main
 
 
-:clean
-call :LogSection "Clean Up"
-echo You Selected Cleanup!
+:services
+call :LogSection "Service Reduction"
 call :TIScLog stop "wuauserv"
 call :TIScLog config "wuauserv" start= demand
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v "NoAutoUpdate" /t REG_DWORD /d 1 /f
@@ -1920,6 +2024,143 @@ call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XboxNetApiSvc" /v "St
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XboxGipSvc" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\XblAuthManager" /v "Start" /t REG_DWORD /d 4 /f
 
+call :LogInfo "Disabling OEM / App Bloat Services (HP, Gigabyte, CCleaner, Logitech)..."
+for %%S in (
+    HPAppHelperCap
+    HPDiagsCap
+    HpTouchpointAnalyticsService
+    HPNetworkCap
+    HPOmenCap
+    HPSysInfoCap
+    cFosSpeedS
+    GigabyteUpdateService
+    ccleaner
+    ccleanerm
+    CCleanerPerformanceOptimizerService
+    logi_lamparray_service
+) do (
+    call :TIScLog stop "%%S"
+    call :TIScLog config "%%S" start= disabled
+)
+
+call :LogInfo "Disabling Intel Management & Graphics Bloat Services..."
+for %%S in (
+    jhi_service
+    WMIRegistrationService
+    ipfsvc
+    igccservice
+    cplspcon
+    esifsvc
+    LMS
+    ibtsiva
+    IntelAudioService
+    cphs
+    DSAService
+    DSAUpdateService
+    igfxCUIService2.0.0.0
+    RstMwService
+    SystemUsageReportSvc_QUEENCREEK
+    iaStorAfsService
+) do (
+    call :TIScLog stop "%%S"
+    call :TIScLog config "%%S" start= disabled
+)
+
+call :LogInfo "Disabling Spaced Intel Services"
+for %%S in (
+    "Intel(R) TPM Provisioning Service"
+    "Intel(R) Platform License Manager Service"
+    "Intel(R) Capability Licensing Service TCP IP Interface"
+    "Intel(R) SUR QC SAM"
+) do (
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\%%~S" /v "Start" /t REG_DWORD /d "4" /f
+)
+
+call :LogInfo "Disabling Browser Background Updater Services..."
+for %%S in (
+    gupdate
+    gupdatem
+    GoogleChromeElevationService
+    brave
+    bravem
+    BraveElevationService
+) do (
+    call :TIScLog stop "%%S"
+    call :TIScLog config "%%S" start= disabled
+)
+
+call :LogInfo "Disabling Realtek Audio Background Service..."
+call :TIScLog stop "RealtekAudioUniversalService"
+call :TIScLog config "RealtekAudioUniversalService" start= disabled
+
+call :LogInfo "Disabling Windows Update Health & File History leftovers..."
+for %%S in (
+    uhssvc
+    upfc
+    ossrs
+    fhsvc
+    seclogon
+    TieringEngineService
+) do (
+    call :TIScLog stop "%%S"
+    call :TIScLog config "%%S" start= disabled
+)
+
+call :TIScLog config "StorSvc" start= demand
+if %errorlevel% equ 0 (call :LogOK "StorSvc set to demand") else (call :LogErr "StorSvc config failed")
+
+call :TIScLog stop "AppReadiness"
+call :TIScLog config "AppReadiness" start= disabled
+
+call :TIScLog stop "LanmanServer"
+call :TIScLog config "LanmanServer" start= disabled
+
+call :LogInfo "Nuking GameBarPresenceWriter..."
+set "fileToDelete=%SystemRoot%\System32\GameBarPresenceWriter.exe"
+if exist "%fileToDelete%" (
+    %TI% takeown /F "%fileToDelete%" >nul 2>&1
+    %TI% icacls "%fileToDelete%" /grant administrators:F >nul 2>&1
+    %TI% cmd.exe /c del "%fileToDelete%" /f /q >nul 2>&1
+    if exist "%fileToDelete%" (call :LogWarn "Failed to delete GameBarPresenceWriter.exe") else (call :LogOK "GameBarPresenceWriter.exe deleted")
+) else (
+    call :LogSkip "GameBarPresenceWriter.exe not found"
+)
+
+call :LogInfo "Nuking UsoClient and MoUsoCoreWorker..."
+set "usoClientFile=C:\Windows\System32\UsoClient.exe"
+set "usoCoreWorkerFile=C:\Windows\UUS\amd64\MoUsoCoreWorker.exe"
+
+if exist "%usoClientFile%" (
+    %TI% takeown /F "%usoClientFile%" >nul 2>&1
+    %TI% icacls "%usoClientFile%" /grant administrators:F >nul 2>&1
+    %TI% cmd.exe /c del "%usoClientFile%" /f /q >nul 2>&1
+    if exist "%usoClientFile%" (call :LogWarn "Failed to delete UsoClient.exe") else (call :LogOK "UsoClient.exe deleted")
+) else (
+    call :LogSkip "UsoClient.exe not found"
+)
+
+if exist "%usoCoreWorkerFile%" (
+    %TI% takeown /F "%usoCoreWorkerFile%" >nul 2>&1
+    %TI% icacls "%usoCoreWorkerFile%" /grant administrators:F >nul 2>&1
+    %TI% cmd.exe /c del "%usoCoreWorkerFile%" /f /q >nul 2>&1
+    if exist "%usoCoreWorkerFile%" (call :LogWarn "Failed to delete MoUsoCoreWorker.exe") else (call :LogOK "MoUsoCoreWorker.exe deleted")
+) else (
+    call :LogSkip "MoUsoCoreWorker.exe not found"
+)
+
+call :LogInfo "Nuking AutoLogger-Diagtrack..."
+set "autoLoggerDir=%PROGRAMDATA%\Microsoft\Diagnosis\ETLLogs\AutoLogger"
+if exist "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" (
+    %TI% cmd.exe /c del /q "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" >nul 2>&1
+    call :LogOK "AutoLogger ETL deleted"
+) else (
+    call :LogSkip "AutoLogger ETL not found"
+)
+%TI% icacls "%autoLoggerDir%" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "AutoLogger SYSTEM permissions denied") else (call :LogErr "AutoLogger permission deny failed")
+
+call :LogOK "Manufactor bloat and more services disabled!"
+
 call :LogInfo "Preparing Appx Removal..."
 sc config AppXSvc start= demand >nul 2>&1
 sc start AppXSvc >nul 2>&1
@@ -2039,8 +2280,6 @@ powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Whiteboard* | Remove-
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Whiteboard") else (call :LogErr "Remove AppxProv: Whiteboard")
 powershell -NoProfile -Command "Get-AppxPackage -AllUsers *MixedReality.Portal* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*MixedReality.Portal*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: MixedReality.Portal") else (call :LogErr "Remove AppxProv: MixedReality.Portal")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *SpotifyMusic* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*SpotifyMusic*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: SpotifyMusic") else (call :LogErr "Remove AppxProv: SpotifyMusic")
 powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DisneyMagicKingdoms* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*DisneyMagicKingdoms*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: DisneyMagicKingdoms") else (call :LogErr "Remove AppxProv: DisneyMagicKingdoms")
 winget uninstall --silent --accept-source-agreements "Windows web experience Pack" >nul 2>&1
@@ -2154,7 +2393,7 @@ endlocal
 call :LogOK "Ghost Devices and USB cache cleared."
 call :LogOK "Apps, Features and services removed successfully!"
 echo.
-echo Cleanup completed successfully.
+echo Service Reduction completed successfully.
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -3051,31 +3290,31 @@ goto :FN_Download_Failed
 
 :FN_Start_Screen
 cls
-color 9
+color 09
 chcp 65001 >nul 2>&1
 echo.
 echo.
-echo.                             ███████╗ ██████╗ ██████╗ ████████╗███╗   ██╗██╗████████╗███████╗       
-echo.                             ██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝████╗  ██║██║╚══██╔══╝██╔════╝       
-echo.                             █████╗  ██║   ██║██████╔╝   ██║   ██╔██╗ ██║██║   ██║   █████╗         
-echo.                             ██╔══╝  ██║   ██║██╔══██╗   ██║   ██║╚██╗██║██║   ██║   ██╔══╝         
-echo.                             ██║     ╚██████╔╝██║  ██║   ██║   ██║ ╚████║██║   ██║   ███████╗       
-echo.                             ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚══════╝       
+echo.                             %ESC%[34m███████╗ ██████╗ ██████╗ ████████╗███╗   ██╗██╗████████╗███████╗       %ESC%[0m
+echo.                             %ESC%[34m██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝████╗  ██║██║╚══██╔══╝██╔════╝       %ESC%[0m
+echo.                             %ESC%[34m██████╗ ██║   ██║██████╔╝   ██║   ██╔██╗ ██║██║   ██║   █████╗         %ESC%[0m
+echo.                             %ESC%[34m██╔══╝  ██║   ██║██╔══██╗   ██║   ██║╚██╗██║██║   ██║   ██╔══╝         %ESC%[0m
+echo.                             %ESC%[34m██║     ╚██████╔╝██║  ██║   ██║   ██║ ╚████║██║   ██║   ███████╗       %ESC%[0m
+echo.                             %ESC%[34m╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚══════╝       %ESC%[0m
 echo.                                                                       
-echo.                             ██████╗ ██████╗ ████████╗██╗███╗   ███╗██╗███████╗███████╗██████╗     
-echo.                            ██╔═══██╗██╔══██╗╚══██╔══╝██║████╗ ████║██║╚══███╔╝██╔════╝██╔══██╗    
-echo.                            ██║   ██║██████╔╝   ██║   ██║██╔████╔██║██║  ███╔╝ █████╗  ██████╔╝    
-echo.                            ██║   ██║██╔═══╝    ██║   ██║██║╚██╔╝██║██║ ███╔╝  ██╔══╝  ██╔══██╗    
-echo.                            ╚██████╔╝██║        ██║   ██║██║ ╚═╝ ██║██║███████╗███████╗██║  ██║    
-echo.                             ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝╚══════╝╚═╝  ╚═╝    
+echo.                             %ESC%[34m██████╗  ██████╗ ████████╗██╗███╗   ███╗██╗███████╗███████╗██████╗     %ESC%[0m
+echo.                             %ESC%[34m██╔═══██╗██╔══██╗╚══██╔══╝██║████╗ ████║██║╚══███╔╝██╔════╝██╔══██╗    %ESC%[0m
+echo.                             %ESC%[34m██║   ██║██████╔╝   ██║   ██║██╔████╔██║██║  ███╔╝ █████╗  ██████╔╝    %ESC%[0m
+echo.                             %ESC%[34m██║   ██║██╔═══╝    ██║   ██║██║╚██╔╝██║██║ ███╔╝  ██╔══╝  ██╔══██╗    %ESC%[0m
+echo.                             %ESC%[34m╚██████╔╝██║        ██║   ██║██║ ╚═╝ ██║██║███████╗███████╗██║  ██║    %ESC%[0m
+echo.                             %ESC%[34m ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝╚══════╝╚═╝  ╚═╝    %ESC%[0m
 echo. 
-echo.                                  ╔════════════════════════════════════════════════════╗
-echo.                                  ║              Version 2.1 - By Quaked               ║
-echo.                                  ╚════════════════════════════════════════════════════╝
+echo.                                  %ESC%[34m╔════════════════════════════════════════════════════╗%ESC%[0m
+echo.                                  %ESC%[34m║%ESC%[0m              %ESC%[37mVersion 2.1 - By Quaked%ESC%[0m               %ESC%[34m║%ESC%[0m
+echo.                                  %ESC%[34m╚════════════════════════════════════════════════════╝%ESC%[0m
 echo.
-echo. ╔═════════╗                                                                        
-echo. ║ Loading ║                                              
-echo. ╚═════════╝
+echo. %ESC%[34m╔═════════╗%ESC%[0m                                                                        
+echo. %ESC%[34m║%ESC%[0m %ESC%[37mLoading %ESC%[34m║%ESC%[0m                                              
+echo. %ESC%[34m╚═════════╝%ESC%[0m
 timeout 2 > nul
 
 cls
