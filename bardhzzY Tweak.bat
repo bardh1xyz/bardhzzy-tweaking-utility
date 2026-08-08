@@ -47,7 +47,6 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-pushd "%~dp0"
 title bardhzzY Tweaks (Admin)
 chcp 65001 >nul
 reg add "HKCU\Console" /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul 2>&1
@@ -512,10 +511,8 @@ if "%DX_OK%"=="1" (
     start /wait "" "%temp%\dxwebsetup.exe" /Q /R:N
     set "DX_EXIT_CODE=!errorlevel!"
     
-    :: Cleanup
     del /q "%temp%\dxwebsetup.exe" >nul 2>&1
     
-    :: Flawless exit code evaluation
     if "!DX_EXIT_CODE!"=="0" (
         call :LogOK "DirectX installed successfully."
     ) else (
@@ -1019,7 +1016,6 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explor
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ClearPageFileAtShutdown" /t REG_DWORD /d 0 /f
 
 call :LogInfo "Disabling Background Startup Apps..."
-setlocal enabledelayedexpansion
 
 for /f "delims=" %%I in ('powershell -NoProfile -Command "Get-CimInstance Win32_StartupCommand | Select-Object -ExpandProperty Caption" 2^>nul') do (
     set "app_name=%%I"
@@ -1143,7 +1139,6 @@ call :LogSection "Nvidia GPU Tweaks"
 cls
 call :LogInfo "Injecting Vortex profile directly into NVIDIA Kernel..."
 
-:: --- Profile Inspector (Flattened Logic) ---
 if not exist "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" goto NPI_MISSING_EXE
 if not exist "C:\bardhzzY Utility Tools\Nvidia\vortex.nip" goto NPI_MISSING_NIP
 
@@ -1173,7 +1168,6 @@ call :LogInfo "Disabling Nvidia Telemetry Tasks..."
 setlocal EnableDelayedExpansion
 for /f "tokens=2 delims=:" %%t in ('schtasks /query /fo list ^| findstr /i "TaskName:" ^| findstr /i "NvTmMon NvTmRep NvDriverUpdateCheckDaily GeForce Experience SelfUpdate"') do (
     set "task=%%t"
-    :: Strip leading spaces from the task name
     for /f "tokens=* delims= " %%s in ("!task!") do set "task=%%s"
     if not "!task!"=="" call :SchLog /change /disable /tn "!task!"
 )
@@ -1200,7 +1194,7 @@ call :LogInfo "Applying DisableDynamicPstate to active GPU (Universal Safe)..."
 powershell -NoProfile -Command "$gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like 'PCI\VEN_10DE*' }; foreach ($gpu in $gpus) { $pnp = $gpu.PNPDeviceID; $regBase = 'HKLM:\SYSTEM\CurrentControlSet\Enum\' + $pnp; $driverVal = (Get-ItemProperty -Path $regBase -Name 'Driver' -ErrorAction SilentlyContinue).Driver; if ($driverVal) { $classPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\' + $driverVal; if (Test-Path $classPath) { Set-ItemProperty -Path $classPath -Name 'DisableDynamicPstate' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "DisableDynamicPstate applied") else (call :LogWarn "DisableDynamicPstate skipped (No matching GPU found)")
 
-:: --- MSI Mode (Bugfixed to use 'delims=' and delayed expansion) ---
+:: --- MSI Mode
 call :LogInfo "Enabling MSI Mode for NVIDIA GPU..."
 setlocal EnableDelayedExpansion
 for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_10DE" ^| findstr "HKEY"') do (
@@ -2519,13 +2513,22 @@ setlocal enabledelayedexpansion
 set "count=0"
 
 for /f "delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}" /s /v "IfType" 2^>nul ^| findstr /i "HKEY_LOCAL_MACHINE"') do (
-    reg query "%%i" /v "IfType" 2>nul | findstr /i "0x6" >nul && (
-        call :RegLog add "%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d 1 /f
-        set /a count+=1
+    reg query "%%i" /v "IfType" 2>nul | findstr /i /r "REG_DWORD *0x6[ ]*$" >nul && (
+        for /f "tokens=2*" %%A in ('reg query "%%i" /v "PnPInstanceID" 2>nul ^| findstr /i "PnPInstanceID"') do (
+            set "MSI_REG_PATH=HKLM\SYSTEM\CurrentControlSet\Enum\%%B\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
+            
+            reg query "!MSI_REG_PATH!" >nul 2>&1
+            if !errorlevel! equ 0 (
+                call :RegLog add "!MSI_REG_PATH!" /v "MSISupported" /t REG_DWORD /d 1 /f
+                set /a count+=1
+            ) else (
+                call :LogSkip "Adapter %%B lacks MSI structures. Unsafe to force."
+            )
+        )
     )
 )
 if %count%==0 (
-    call :LogWarn "No physical Ethernet adapters found."
+    call :LogWarn "No physical Ethernet adapters found or applied."
 ) else (
     call :LogOK "Successfully applied MSI mode to %count% adapter(s)."
 )
@@ -3887,7 +3890,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.8.3"
+set "SCRIPT_VERSION=2.8.4"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
