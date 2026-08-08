@@ -55,6 +55,27 @@ reg add "HKCU\Console" /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul 2>&1
 echo [OK] Running as Administrator! Starting Tweaks...
 
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
+
+call :LogInit
+
+for /f "tokens=4-5 delims=. " %%i in ('ver') do set "os_ver=%%i.%%j"
+
+if not "%os_ver%"=="10.0" goto :os_check_done
+
+for /f "tokens=3" %%a in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentBuild 2^>nul ^| find "CurrentBuild"') do set "win_build=%%a"
+
+if not defined win_build (
+    set "os_ver=Win10"
+    goto :os_check_done
+)
+
+if %win_build% GEQ 22000 (
+    set "os_ver=Win11"
+) else (
+    set "os_ver=Win10"
+)
+
+:os_check_done
 :: =====================================================================
 :: [!] NSUDO INTEGRATION - BULLETPROOF TRUSTED INSTALLER ENGINE
 :: =====================================================================
@@ -100,14 +121,14 @@ goto license
 
 :license
 cls
-MODE 60,12
+MODE 65,12
 echo.
-echo ======================================================
-echo            BARDHZZY Tweaks - License Required
-echo ======================================================
+echo  %ESC%[34m======================================================%ESC%[0m
+echo  %ESC%[34m          %ESC%[37mBARDHZZY Tweaks - License Required%ESC%[34m         %ESC%[0m
+echo  %ESC%[34m======================================================%ESC%[0m
 echo.
 set "user_key="
-set /p "user_key=Enter your License Key: "
+set /p "user_key=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Enter your License Key: %ESC%[0m"
 if defined user_key set "user_key=%user_key:"=%"
 if defined user_key set "user_key=%user_key: =%"
 
@@ -131,21 +152,21 @@ for %%k in (
 
 :invalid
 echo.
-echo [ERROR] Invalid License Key! Access Denied.
+echo  %ESC%[31m[ERROR]%ESC%[0m Invalid License Key! Access Denied.
 pause
 goto license
 
 :valid
 echo.
-echo [OK] License Verified! Welcome.
+echo  %ESC%[32m[  OK]%ESC%[0m License Verified! Welcome.
 timeout 2 >nul
 goto init
 
 :init
 echo.
 echo Downloading Tweaking Tools
-set "UTIL_DIR=C:\bardhzzYutil_tools"
-set "GITHUB_ZIP_URL=https://github.com/bardh1xyz/bardhzzYutil_tools/archive/refs/heads/main.zip"
+set "UTIL_DIR=C:\bardhzzY Utility Tools"
+set "GITHUB_ZIP_URL=https://github.com/bardh1xyz/bardhzzY-Utility-Tools/archive/refs/heads/main.zip"
 
 if exist "%UTIL_DIR%" goto tools_exist
 
@@ -161,17 +182,17 @@ if %errorlevel% equ 0 (
         call :LogErr "Failed to verify directory creation."
     )
 ) else (
-    call :LogErr "Download failed. Download directly from https://github.com/bardh1xyz/bardhzzYutil_tools ^(save to c: drive^) or check network connection."
+    call :LogErr "Download failed. Download directly from https://github.com/bardh1xyz/bardhzzY-Utility-Tools ^(save to c: drive^) or check network connection."
 )
 goto :main
 
 :tools_exist
-call :LogOK "bardhzzYutil_tools already exists. Skipping download."
+call :LogOK "bardhzzY Utility Tools already exists. Skipping download."
 goto :main
 
 :main
 title bardhzzY Tweaks
-MODE 100, 40
+MODE 100,40
 echo %ESC%[0m
 cls
 color 09
@@ -179,9 +200,9 @@ color 09
 echo.
 echo        ██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗
 echo        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝
-echo        ██████╔╗███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
+echo        ██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
 echo        ██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  
-echo        ██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   
+echo        ██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   
 echo        ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   
 echo.
 echo  %ESC%[34mSYSTEM TWEAKS                 %ESC%[0m %ESC%[34mNETWORK ^& LATENCY%ESC%[0m
@@ -192,13 +213,13 @@ echo  %ESC%[37m [%ESC%[36m 4%ESC%[37m] RAM Tweaks                %ESC%[37m [%ESC
 echo  %ESC%[37m [%ESC%[36m 5%ESC%[37m] Power Tweaks              %ESC%[37m [%ESC%[36m10%ESC%[37m] Timer Resolution
 echo.
 echo  %ESC%[34mGAMING ^& CLEANUP             %ESC%[0m %ESC%[34mSAFETY ^& UTILITIES%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer       %ESC%[37m [%ESC%[36m13%ESC%[37m] Restore Point
-echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction        %ESC%[37m [%ESC%[36m14%ESC%[37m] Registry Backup
-echo  %ESC%[37m                               %ESC%[37m [%ESC%[36m15%ESC%[37m] Revert Tweaks
+echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer       %ESC%[37m [%ESC%[36m14%ESC%[37m] Restore Point
+echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction        %ESC%[37m [%ESC%[36m15%ESC%[37m] Registry Backup
+echo  %ESC%[37m [%ESC%[36m13%ESC%[37m] Device Manager Tweak     %ESC%[37m [%ESC%[36m16%ESC%[37m] Revert Tweaks
 echo.
 echo  %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m16%ESC%[37m] Restart PC       %ESC%[37m [%ESC%[36m17%ESC%[37m] View Log         %ESC%[37m [%ESC%[36m18%ESC%[37m] View Errors
-echo  %ESC%[37m [%ESC%[36m19%ESC%[37m] Summary          %ESC%[37m [%ESC%[36m20%ESC%[37m] Quit             %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord
+echo  %ESC%[37m [%ESC%[36m17%ESC%[37m] Restart PC       %ESC%[37m [%ESC%[36m18%ESC%[37m] View Log         %ESC%[37m [%ESC%[36m19%ESC%[37m] View Errors
+echo  %ESC%[37m [%ESC%[36m20%ESC%[37m] Summary          %ESC%[37m [%ESC%[36m21%ESC%[37m] Quit             %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord
 echo.
 echo  %ESC%[90mCopyright © 2026 bardhzzY Tweaks. All rights reserved.%ESC%[0m
 echo.
@@ -225,24 +246,25 @@ if /i "%input%"=="9" goto kbm
 if /i "%input%"=="10" goto timerres
 if /i "%input%"=="11" goto fortnite
 if /i "%input%"=="12" goto services
-if /i "%input%"=="13" goto srp
-if /i "%input%"=="14" goto backup
-if /i "%input%"=="15" goto revert
-if /i "%input%"=="16" goto restartpc
-if /i "%input%"=="17" (
+if /i "%input%"=="13" goto devmgmt
+if /i "%input%"=="14" goto srp
+if /i "%input%"=="15" goto backup
+if /i "%input%"=="16" goto revert
+if /i "%input%"=="17" goto restartpc
+if /i "%input%"=="18" (
     call :LogView
     goto main
 )
-if /i "%input%"=="18" (
+if /i "%input%"=="19" (
     call :LogViewErrors
     goto main
 )
-if /i "%input%"=="19" (
+if /i "%input%"=="20" (
     call :LogSummary
     pause
     goto main
 )
-if /i "%input%"=="20" (
+if /i "%input%"=="21" (
     call :LogSummary
     echo.
     echo Thank you for using BARDHZZY Tweaks!
@@ -261,45 +283,75 @@ timeout 2 >nul
 goto main
 
 :win
-call :LogSection "Windows Tweaks"
-call :LogInfo "Checking for Winget..."
+call :LogSection "Package Manager (Winget) Setup"
+call :LogInfo "Verifying Winget availability..."
 
-if exist "%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe" goto WINGET_OK
+where curl >nul 2>&1
+if %errorlevel% neq 0 (
+    call :LogErr "CURL.exe not found. Winget cannot be downloaded automatically."
+    goto WINGET_DONE
+)
 
-echo [!] Winget not found. Downloading prerequisites...
+winget --version >nul 2>&1
+if %errorlevel% equ 0 (
+    call :LogOK "Winget is already installed and functional."
+    goto WINGET_INITIALIZE
+)
+
+call :LogWarn "Winget command not found. Starting Ultimate Repair/Installation..."
+
+call :LogInfo "Ensuring Windows Install services are active..."
+for %%s in (AppXSvc, wuauserv, bits) do (
+    sc config %%s start= demand >nul 2>&1
+    sc start %%s >nul 2>&1
+)
+
+set "W_TEMP=%TEMP%\winget_auto_repair"
+if exist "%W_TEMP%" rd /s /q "%W_TEMP%"
+mkdir "%W_TEMP%"
+call :LogInfo "Downloading latest Microsoft App Installer bundle..."
+
+curl -L -f -s -o "%W_TEMP%\winget.msixbundle" "https://aka.ms/getwinget"
+if %errorlevel% neq 0 (
+    call :LogErr "Network error: Failed to download Winget bundle."
+    goto WINGET_FAIL
+)
+
+call :LogInfo "Installing App Installer bundle (this may take 30s)..."
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$ProgressPreference='SilentlyContinue';" ^
-    "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;" ^
-    "try {" ^
-    "  Invoke-WebRequest -Uri 'https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx' -OutFile \"$env:TEMP\vclibs.appx\" -UseBasicParsing;" ^
-    "  Invoke-WebRequest -Uri 'https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.3/Microsoft.UI.Xaml.2.8.x64.appx' -OutFile \"$env:TEMP\xaml.appx\" -UseBasicParsing;" ^
-    "  Invoke-WebRequest -Uri 'https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle' -OutFile \"$env:TEMP\winget.msixbundle\" -UseBasicParsing;" ^
-    "  Add-AppxPackage -Path \"$env:TEMP\vclibs.appx\" -ForceApplicationShutdown -ErrorAction Stop;" ^
-    "  Add-AppxPackage -Path \"$env:TEMP\xaml.appx\" -ForceApplicationShutdown -ErrorAction Stop;" ^
-    "  Add-AppxPackage -Path \"$env:TEMP\winget.msixbundle\" -ForceApplicationShutdown -ErrorAction Stop;" ^
-    "  Remove-Item \"$env:TEMP\vclibs.appx\", \"$env:TEMP\xaml.appx\", \"$env:TEMP\winget.msixbundle\" -Force -ErrorAction SilentlyContinue;" ^
-    "} catch {" ^
-    "  Write-Host \"[ERROR] PowerShell failed: $_\" -ForegroundColor Red;" ^
-    "  exit 1" ^" >nul 2>&1
+    "try { Add-AppxPackage -Path '%W_TEMP%\winget.msixbundle' -ForceUpdateFromAnyVersion -ErrorAction Stop; exit 0 } catch { exit 1 }"
 
-if %errorlevel% neq 0 goto WINGET_FAIL
+if %errorlevel% neq 0 (
+    call :LogErr "Installation failed. Windows components may be too corrupted."
+    goto WINGET_FAIL
+)
 
-timeout /t 5 /nobreak >nul
+set "PATH=%PATH%;%LOCALAPPDATA%\Microsoft\WindowsApps;C:\Program Files\WindowsApps"
+timeout /t 2 /nobreak >nul
 
-if exist "%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe" goto WINGET_OK
+winget --version >nul 2>&1
+if %errorlevel% equ 0 (
+    call :LogOK "Winget successfully installed and injected into session."
+    goto WINGET_INITIALIZE
+) else (
+    call :LogErr "Installation reported success, but command remains unresponsive."
+    goto WINGET_FAIL
+)
 
-:WINGET_FAIL
-echo [X] Winget installation failed. 
-echo     This usually happens if you are running as Administrator, or if the Microsoft Store is updating in the background.
-echo     Please install it manually from the Microsoft Store (Search for "App Installer").
-echo     Continuing with tweaks...
-timeout /t 4 >nul
+:WINGET_INITIALIZE
+call :LogInfo "Initializing Winget sources..."
+winget source reset --force >nul 2>&1
+winget search "test" --accept-source-agreements >nul 2>&1
+call :LogOK "Winget is fully operational."
 goto WINGET_DONE
 
-:WINGET_OK
-echo [OK] Winget is installed and ready.
+:WINGET_FAIL
+call :LogErr "Winget setup failed. Most Software installs will fail."
+goto WINGET_DONE
 
 :WINGET_DONE
+if exist "%W_TEMP%" rd /s /q "%W_TEMP%"
+
 call :LogInfo "Disabling unnecessary services..."
 echo "Disabling unnecessary services..."
 for %%z in (
@@ -330,6 +382,7 @@ for %%t in (
 
 echo.
 echo Configuring Universal Search and Open-Shell...
+set "search_choice="
 set /p "search_choice=Apply this optimization? (Y/N): "
 if /i not "%search_choice%"=="Y" goto skip_search
 
@@ -378,29 +431,26 @@ call :LogInfo "Applying Custom Open-Shell Skin and XML Setup..."
 
 if not exist "C:\Program Files\Open-Shell\Skins\" mkdir "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
 
-if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin" (
-    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+if exist "C:\bardhzzY Utility Tools\OpenShell\Fluent-Metro.skin" (
+    copy /y "C:\bardhzzY Utility Tools\OpenShell\Fluent-Metro.skin" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
     call :LogOK "Custom Open-Shell Skin copied."
 ) else (
     call :LogWarn "Custom Open-Shell Skin not found."
 )
 
-if exist "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin7" (
-    copy /y "C:\bardhzzYutil_tools\OpenShell\Fluent-Metro.skin7" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
+if exist "C:\bardhzzY Utility Tools\OpenShell\Fluent-Metro.skin7" (
+    copy /y "C:\bardhzzY Utility Tools\OpenShell\Fluent-Metro.skin7" "C:\Program Files\Open-Shell\Skins\" >nul 2>&1
     call :LogOK "Custom Open-Shell Skin7 copied."
 ) else (
     call :LogWarn "Custom Open-Shell Skin7 not found."
 )
 
 if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
-    :: Kill existing processes first
     taskkill /f /im StartMenu.exe >nul 2>&1
     timeout /t 1 /nobreak >nul
     
-    if exist "C:\bardhzzYutil_tools\OpenShell\bardhzzYBlack.xml" (
-        :: BUGFIX: Use 'start ""' to prevent the batch script from hanging indefinitely.
-        :: StartMenu.exe is a GUI app and will block the script if run directly.
-        start "" "C:\Program Files\Open-Shell\StartMenu.exe" -xml "C:\bardhzzYutil_tools\OpenShell\bardhzzYBlack.xml"
+    if exist "C:\bardhzzY Utility Tools\OpenShell\bardhzzYBlack.xml" (
+        start "" "C:\Program Files\Open-Shell\StartMenu.exe" -xml "C:\bardhzzY Utility Tools\OpenShell\bardhzzYBlack.xml"
         call :LogOK "Custom Open-Shell XML configured."
     ) else (
         call :LogWarn "Custom Open-Shell XML not found. Starting normally."
@@ -415,10 +465,8 @@ powershell -NoProfile -Command "Stop-Process -Name explorer -Force" >nul 2>&1
 timeout 2 >nul
 start explorer.exe
 
-:: Wait for Explorer to initialize
 powershell -NoProfile -Command "for ($i=0; $i -lt 10; $i++) { if (Get-Process -Name explorer -ErrorAction SilentlyContinue) { break }; Start-Sleep -Seconds 1 }" >nul 2>&1
 
-:: Final check to ensure Open-Shell is running after Explorer restart (avoids duplicate instances)
 tasklist /FI "IMAGENAME eq StartMenu.exe" | find /i "StartMenu.exe" >nul 2>&1
 if %errorlevel% neq 0 (
     if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
@@ -477,6 +525,7 @@ if "%DX_OK%"=="1" (
     call :LogErr "Failed to download DirectX. Check internet connection."
     if exist "%temp%\dxwebsetup.exe" del /q "%temp%\dxwebsetup.exe" >nul 2>&1
 )
+endlocal
 
 call :LogInfo "Starting Microsoft bloatware removal process..."
 
@@ -484,7 +533,7 @@ call :LogInfo "Forcefully removing Microsoft OneDrive..."
 taskkill /f /im OneDrive.exe >nul 2>&1
 if exist "%SystemRoot%\System32\OneDriveSetup.exe" (
     "%SystemRoot%\System32\OneDriveSetup.exe" /uninstall >nul 2>&1
-    if %errorlevel% equ 0 (call :LogOK "OneDrive uninstalled via setup") else (call :LogErr "OneDrive uninstall failed")
+    if errorlevel 1 (call :LogErr "OneDrive uninstall failed") else (call :LogOK "OneDrive uninstalled via setup")
 )
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.OneDrive* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "OneDrive Appx removed") else (call :LogWarn "OneDrive Appx removal skipped")
@@ -586,7 +635,7 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDelivery
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "RotatingLockScreenEnabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableFirstLogonAnimation" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "ShowTips" /t REG_DWORD /d 0 /f
-call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People" /v "PeopleBand" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "PeopleBand" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\TabletTip\1.7" /v "EnableDesktopModeAutoInvoke" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\TabletPC" /v "TurnOffHandwritingRecognitionFeature" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize" /v "StartupDelayInMSec" /t REG_DWORD /d 0 /f
@@ -835,6 +884,23 @@ call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v "A
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\AppCompat" /v "DisableInventoryCollection" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\AppCompat" /v "DisableEngine" /t REG_DWORD /d 1 /f
 
+call :LogInfo "Applying Custom Wallpaper..."
+set "WALLPAPER_PATH=C:\bardhzzY Utility Tools\Wallpaper\bardhzzY Utility Blue.png"
+
+if exist "%WALLPAPER_PATH%" (
+    call :RegLog add "HKCU\Control Panel\Desktop" /v Wallpaper      /t REG_SZ /d "%WALLPAPER_PATH%" /f
+    call :RegLog add "HKCU\Control Panel\Desktop" /v WallpaperStyle /t REG_SZ /d "10" /f
+    call :RegLog add "HKCU\Control Panel\Desktop" /v TileWallpaper  /t REG_SZ /d "0"  /f
+    powershell -command "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class Wallpaper { [DllImport(\"user32.dll\", CharSet=CharSet.Auto)] public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni); }'; [Wallpaper]::SystemParametersInfo(20, 0, \"$WALLPAPER_PATH\", 3)"
+    if errorlevel 1 (
+        call :LogWarn "Wallpaper registry set, but live refresh failed. Will apply on next reboot."
+    ) else (
+        call :LogOK "Custom wallpaper applied successfully."
+    )
+) else (
+    call :LogWarn "Custom wallpaper not found at %WALLPAPER_PATH%"
+)
+
 call :LogInfo "Applying Performance Visuals..."
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v "EnableTransparency" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v "VisualFXSetting" /t REG_DWORD /d 2 /f
@@ -870,7 +936,7 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskba
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "SubscribedContent-310093Enabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement" /v "ScoobeSystemSettingEnabled" /t REG_DWORD /d 0 /f
 call :LogInfo "Disabling Meet Now and Teams startup..."
-call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Taskband" /v "TaskbandDa" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarDa" /t REG_DWORD /d 0 /f
 call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "com.squirrel.Teams.Teams" /f
 
 call :LogInfo "Disabling Windows Defender..."
@@ -953,10 +1019,11 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explor
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ClearPageFileAtShutdown" /t REG_DWORD /d 0 /f
 
 call :LogInfo "Disabling Background Startup Apps..."
-for /f "tokens=2 delims==" %%I in ('wmic startup get caption /format:list 2^>nul ^| find "="') do (
-    set "app=%%I"
-    for /f "delims=" %%A in ("!app!") do (
-        set "app_name=%%A"
+setlocal enabledelayedexpansion
+
+for /f "delims=" %%I in ('powershell -NoProfile -Command "Get-CimInstance Win32_StartupCommand | Select-Object -ExpandProperty Caption" 2^>nul') do (
+    set "app_name=%%I"
+    if not "!app_name!"=="" (
         reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "!app_name!" >nul 2>&1
         if !errorlevel! equ 0 (
             reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "!app_name!" /t REG_BINARY /d "0300000000000000" /f >nul 2>&1
@@ -1077,10 +1144,10 @@ cls
 call :LogInfo "Injecting Vortex profile directly into NVIDIA Kernel..."
 
 :: --- Profile Inspector (Flattened Logic) ---
-if not exist "C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" goto NPI_MISSING_EXE
-if not exist "C:\bardhzzYutil_tools\Nvidia\vortex.nip" goto NPI_MISSING_NIP
+if not exist "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" goto NPI_MISSING_EXE
+if not exist "C:\bardhzzY Utility Tools\Nvidia\vortex.nip" goto NPI_MISSING_NIP
 
-"C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" -silentImport "C:\bardhzzYutil_tools\Nvidia\vortex.nip" >nul 2>&1
+"C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" -silentImport "C:\bardhzzY Utility Tools\Nvidia\vortex.nip" >nul 2>&1
 if %errorlevel% equ 0 (
     call :LogOK "Vortex Driver Profile Applied!"
 ) else (
@@ -1089,19 +1156,19 @@ if %errorlevel% equ 0 (
 goto NPI_CLEANUP
 
 :NPI_MISSING_EXE
-call :LogErr "nvidiaProfileInspector.exe not found in C:\bardhzzYutil_tools\Nvidia!"
+call :LogErr "nvidiaProfileInspector.exe not found in C:\bardhzzY Utility Tools\Nvidia!"
 goto NPI_CLEANUP
 
 :NPI_MISSING_NIP
-call :LogErr "vortex.nip not found in C:\bardhzzYutil_tools\Nvidia!"
+call :LogErr "vortex.nip not found in C:\bardhzzY Utility Tools\Nvidia!"
 
 :NPI_CLEANUP
 call :LogInfo "Executing clean-up protocol..."
-if exist "C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" del "C:\bardhzzYutil_tools\Nvidia\nvidiaProfileInspector.exe" /f /q >nul 2>&1
-if exist "C:\bardhzzYutil_tools\Nvidia\Reference.xml" del "C:\bardhzzYutil_tools\Nvidia\Reference.xml" /f /q >nul 2>&1
-if exist "C:\bardhzzYutil_tools\Nvidia\CustomSettingNames_en-EN.xml" del "C:\bardhzzYutil_tools\Nvidia\CustomSettingNames_en-EN.xml" /f /q >nul 2>&1
+timeout /t 1 >nul
+if exist "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" del "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" /f /q >nul 2>&1
+if exist "C:\bardhzzY Utility Tools\Nvidia\Reference.xml" del "C:\bardhzzY Utility Tools\Nvidia\Reference.xml" /f /q >nul 2>&1
+if exist "C:\bardhzzY Utility Tools\Nvidia\CustomSettingNames_en-EN.xml" del "C:\bardhzzY Utility Tools\Nvidia\CustomSettingNames_en-EN.xml" /f /q >nul 2>&1
 
-:: --- Telemetry Tasks (Bugfixed to loop instead of using wildcards) ---
 call :LogInfo "Disabling Nvidia Telemetry Tasks..."
 setlocal EnableDelayedExpansion
 for /f "tokens=2 delims=:" %%t in ('schtasks /query /fo list ^| findstr /i "TaskName:" ^| findstr /i "NvTmMon NvTmRep NvDriverUpdateCheckDaily GeForce Experience SelfUpdate"') do (
@@ -1235,7 +1302,7 @@ endlocal
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "LoadDebugRuntime" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "EnablePipelineCache" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\DirectDraw" /v "EmulationOnly" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestType" /t REG_DWORD /d 00000005 /f
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestMode" /t REG_DWORD /d 5 /f
 call :ScLog config "AMD External Events Utility" start= disabled
 call :ScLog stop "AMD External Events Utility"
 
@@ -1261,7 +1328,7 @@ call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11c
 call :RegLog add "HKLM\Software\Intel\GMM" /v "DedicatedSegmentSize" /t REG_DWORD /d "512" /f
 
 call :LogInfo "Setting interrupt policies for Intel GPU..."
-for /f %%g in ('wmic path win32_VideoController get PNPDeviceID ^| findstr /L "VEN_8086"') do (
+for /f "delims=" %%g in ('powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like '*VEN_8086*' } | Select-Object -ExpandProperty PNPDeviceID" 2^>nul') do (
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Enum\%%g\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d "1" /f
 )
 call :LogOK "Intel iGPU Tweaks Applied Successfully!"
@@ -1289,7 +1356,17 @@ echo %PROCESSOR_IDENTIFIER% | findstr /i "AMD" >nul && (
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" /v "PowerThrottlingOff" /t REG_DWORD /d 1 /f
 )
 echo %PROCESSOR_IDENTIFIER% | findstr /i "Intel" >nul && (
-    call :LogInfo "Intel CPU detected - Applying Intel-specific tweaks..."
+    call :LogInfo "Intel CPU detected - Applying Hybrid CPU Scheduler Tweaks..."
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel" /v "DynamicHeteroCpuPolicyMask" /t REG_DWORD /d "3" /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel" /v "DefaultDynamicHeteroCpuPolicy" /t REG_DWORD /d "3" /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel" /v "DynamicHeteroCpuPolicyImportant" /t REG_DWORD /d "1" /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel" /v "DynamicHeteroCpuPolicyImportantShort" /t REG_DWORD /d "1" /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel" /v "DynamicHeteroCpuPolicyImportantPriority" /t REG_DWORD /d "8" /f
+)
+
+call :LogInfo "Disabling unnecessary legacy drivers & Network Data Usage Monitor..."
+for %%S in (Ndu 1394ohci fdc flpydisk sfloppy HidBth HidIr) do (
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\%%S" /v "Start" /t REG_DWORD /d "4" /f
 )
 
 call :LogInfo "Applying Device Priority tweaks..."
@@ -1514,7 +1591,7 @@ goto main
 call :LogSection "RAM Tweaks (16GB)"
 echo You selected 16 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "16777216" /f
-powershell -NoProfile -Command "Disable-MMAgent -mc" >nul 2>&1
+powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 echo Disabling Memory Compression
@@ -1538,7 +1615,7 @@ goto main
 call :LogSection "RAM Tweaks (24GB)"
 echo You selected 24 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "25165824" /f
-powershell -NoProfile -Command "Disable-MMAgent -mc" >nul 2>&1
+powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
@@ -1562,7 +1639,7 @@ goto main
 call :LogSection "RAM Tweaks (32GB)"
 echo You selected 32 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "33554432" /f
-powershell -NoProfile -Command "Disable-MMAgent -mc" >nul 2>&1
+powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
@@ -1586,7 +1663,7 @@ goto main
 call :LogSection "RAM Tweaks (64GB)"
 echo You selected 64 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "67108864" /f
-powershell -NoProfile -Command "Disable-MMAgent -mc" >nul 2>&1
+powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
@@ -1637,8 +1714,8 @@ call :TIScLog config WpcMonSvc start= disabled
 call :TIScLog config wcnsvc start= disabled
 call :TIScLog config SessionEnv start= disabled
 call :TIScLog config MicrosoftEdgeElevationService start= disabled
-call :TIScLog config edgeupdate start= demand
-call :TIScLog config edgeupdatem start= demand
+call :TIScLog config edgeupdate start= disabled
+call :TIScLog config edgeupdatem start= disabled
 call :TIScLog config autotimesvc start= disabled
 call :TIScLog config CscService start= disabled
 call :TIScLog config TermService start= disabled
@@ -1722,20 +1799,17 @@ call :TIScLog config wercplsupport start= disabled
 call :TIScLog config WpnUserService_5f1ad start= disabled
 call :TIScLog config WinHttpAutoProxySvc start= disabled
 call :TIScLog config DsmSvc start= disabled
-call :TIScLog config AJRouter start= demand
 call :TIScLog config ALG start= demand
 call :TIScLog config AppIDSvc start= demand
 call :TIScLog config CertPropSvc start= demand
 call :TIScLog config EntAppSvc start= demand
 call :TIScLog config LxpSvc start= demand
 call :TIScLog config PimIndexMaintenanceSvc start= demand
-call :TIScLog config RasAuto start= demand
 call :TIScLog config RasMan start= demand
 call :TIScLog config RemoteAccess start= demand
 call :TIScLog config RmSvc start= demand
 call :TIScLog config SNMPTRAP start= demand
 call :TIScLog config UPnPHost start= demand
-call :TIScLog config WebClient start= demand
 call :TIScLog config WinRM start= demand
 call :TIScLog config PolicyAgent start= disabled
 call :TIScLog stop PolicyAgent
@@ -1783,7 +1857,6 @@ call :TIScLog config BthPan start= disabled
 call :TIScLog config rfcomm start= disabled
 call :TIScLog config iprip start= disabled
 call :TIScLog config simptcp start= disabled
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control" /v "SvcHostSplitThresholdInKB" /t REG_DWORD /d "512000" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\AutoLogger-Diagtrack-Listener" /v "Start" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\WindowsInkWorkspace" /v "AllowWindowsInkWorkspace" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DiagHub" /v "Start" /t REG_DWORD /d 4 /f
@@ -2266,29 +2339,27 @@ powershell -NoProfile -Command "Get-AppxPackage *Microsoft.XboxGameOverlay* | Re
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.XboxGameOverlay") else (call :LogErr "Remove Appx: Microsoft.XboxGameOverlay")
 powershell -NoProfile -Command "Get-AppxPackage *GamingServices* | Remove-AppxPackage" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: GamingServices") else (call :LogErr "Remove Appx: GamingServices")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *549981C3F5F10* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*549981C3F5F10*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*549981C3F5F10*'; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: 549981C3F5F10") else (call :LogErr "Remove AppxProv: 549981C3F5F10")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DevHome* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*DevHome*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DevHome* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DevHome*' -or $_.PackageName -like '*DevHome*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: DevHome") else (call :LogErr "Remove AppxProv: DevHome")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *OutlookForWindows* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*OutlookForWindows*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *OutlookForWindows* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*OutlookForWindows*' -or $_.PackageName -like '*OutlookForWindows*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: OutlookForWindows") else (call :LogErr "Remove AppxProv: OutlookForWindows")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *PowerAutomateDesktop* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*PowerAutomateDesktop*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *PowerAutomateDesktop* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*PowerAutomateDesktop*' -or $_.PackageName -like '*PowerAutomateDesktop*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: PowerAutomateDesktop") else (call :LogErr "Remove AppxProv: PowerAutomateDesktop")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Todos* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*Todos*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Todos* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*Todos*' -or $_.PackageName -like '*Todos*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Todos") else (call :LogErr "Remove AppxProv: Todos")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Whiteboard* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*Whiteboard*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Whiteboard* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*Whiteboard*' -or $_.PackageName -like '*Whiteboard*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Whiteboard") else (call :LogErr "Remove AppxProv: Whiteboard")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *MixedReality.Portal* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*MixedReality.Portal*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *MixedReality.Portal* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*MixedReality.Portal*' -or $_.PackageName -like '*MixedReality.Portal*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: MixedReality.Portal") else (call :LogErr "Remove AppxProv: MixedReality.Portal")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DisneyMagicKingdoms* | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*DisneyMagicKingdoms*' | Remove-AppxProvisionedPackage -Online" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DisneyMagicKingdoms* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DisneyMagicKingdoms*' -or $_.PackageName -like '*DisneyMagicKingdoms*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: DisneyMagicKingdoms") else (call :LogErr "Remove AppxProv: DisneyMagicKingdoms")
 winget uninstall --silent --accept-source-agreements "Windows web experience Pack" >nul 2>&1
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
 if %errorlevel% equ 0 (call :LogOK "Winget uninstall: Web Exp Pack") else (call :LogErr "Winget uninstall: Web Exp Pack")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.GetHelp* | Remove-AppxPackage" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: GetHelp") else (call :LogErr "Remove Appx: GetHelp")
-powershell -NoProfile -Command "Get-AppxPackage *Microsoft.WindowsTerminal* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsTerminal") else (call :LogErr "Remove Appx: WindowsTerminal")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.Todos* | Remove-AppxPackage" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove Appx: Todos") else (call :LogErr "Remove Appx: Todos")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.BingNews* | Remove-AppxPackage" >nul 2>&1
@@ -2305,13 +2376,33 @@ call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v "A
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "AllowRecall" /t REG_DWORD /d 0 /f
 call :LogOK "AI Features Disabled!"
 
-call :LogInfo "Cleaning Temporary Files (25H2 Safe)..."
-:: FIX: Safely delete temp contents WITHOUT deleting the temp folder itself or the log folder!
-for /d %%D in ("%temp%\*") do if /i not "%%~nxD"=="BARDHZZY_Logs" rd /s /q "%%D" >nul 2>&1
-del /q /f "%temp%\*.*" >nul 2>&1
-del /s /f /q "C:\Windows\Temp\*.*" >nul 2>&1
-del /s /f /q "C:\Windows\Prefetch\*.*" >nul 2>&1
-del /s /f /q "C:\Windows\SoftwareDistribution\Download\*.*" >nul 2>&1
+call :LogInfo "Cleaning Temporary Files (Flawless Execution)..."
+
+for /d %%D in ("%temp%\*") do (
+    if /i not "%%~nxD"=="BARDHZZY_Logs" (
+        rd /s /q "%%D" >nul 2>&1
+    )
+)
+
+for %%F in ("%temp%\*.*") do (
+    if /i not "%%~xF"==".bat" if /i not "%%~xF"==".cmd" if /i not "%%~xF"==".ps1" (
+        del /q /f /a "%%F" >nul 2>&1
+    )
+)
+del /q /f /a "%temp%\*.tmp" >nul 2>&1
+
+%TI% cmd.exe /c "del /s /f /q /a C:\Windows\Temp\*.*" >nul 2>&1
+for /d %%D in ("C:\Windows\Temp\*") do %TI% cmd.exe /c "rd /s /q \"%%D\"" >nul 2>&1
+
+%TI% cmd.exe /c "del /s /f /q /a C:\Windows\Prefetch\*.*" >nul 2>&1
+for /d %%D in ("C:\Windows\Prefetch\*") do %TI% cmd.exe /c "rd /s /q \"%%D\"" >nul 2>&1
+
+%TI% sc stop wuauserv >nul 2>&1
+%TI% sc stop BITS >nul 2>&1
+timeout /t 1 /nobreak >nul
+%TI% cmd.exe /c "del /s /f /q /a C:\Windows\SoftwareDistribution\Download\*.*" >nul 2>&1
+
+call :LogOK "Temporary files cleared."
 
 call :LogInfo "Clearing Windows Event Logs..."
 for /f "tokens=*" %%G in ('wevtutil el') do (wevtutil cl "%%G" >nul 2>&1)
@@ -2400,25 +2491,22 @@ goto main
 
 :netw
 call :LogSection "Network Tweaks"
-echo You choose Network Tweaks
-
 echo.
-echo [+] Ethernet Only Optimization
+call :LogInfo "[+] Ethernet Only Optimization"
+set "wifi_kill="
 set /p "wifi_kill=Disable Wi-Fi adapter at hardware level for less processes? (Y/N): "
 if /i "%wifi_kill%"=="Y" (
-    call :LogInfo "Disabling Wi-Fi Adapters at hardware level..."
-    echo [+] Searching for Wi-Fi adapters and disabling them...
+    call :LogInfo "[+] Searching for Wi-Fi adapters and disabling them..."
     
-    :: This finds any active Network adapter with Wi-Fi/Wireless/WLAN in the name and disables it
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-PnpDevice -Class Net | Where-Object { $_.FriendlyName -match 'Wi-Fi|Wireless|WLAN|802.11' -and $_.Status -eq 'OK' } | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false }"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$devs = Get-PnpDevice -Class Net | Where-Object { $_.FriendlyName -match 'Wi-Fi|Wireless|WLAN|802.11' -and $_.Status -eq 'OK' }; if (-not $devs) { exit 2 } else { try { $devs | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction Stop }; exit 0 } catch { exit 1 } }"
     
-    if %errorlevel% equ 0 (
-        call :LogOK "Wi-Fi Hardware Disabled"
-        echo [OK] Wi-Fi adapter disabled! You are now strictly on Ethernet.
-        echo     (Note: To re-enable Wi-Fi later, go to Device Manager -> Network Adapters -> Right-Click your Wi-Fi adapter -> Enable)
+    if errorlevel 2 (
+        call :LogWarn "[!] No active Wi-Fi adapter found. Nothing to disable."
+    ) else if errorlevel 1 (
+        call :LogErr "[X] Could not disable Wi-Fi. It might be protected or already in use. Check Device Manager."
     ) else (
-        call :LogWarn "Wi-Fi disable failed or no adapter found"
-        echo [!] Could not disable Wi-Fi. It might already be disabled or not detected.
+        call :LogOK "[OK] Wi-Fi adapter disabled! You are now strictly on Ethernet."
+        call :LogWarn "(Note: To re-enable Wi-Fi later, go to Device Manager -^> Network Adapters -^> Right-Click your Wi-Fi adapter -^> Enable)"
     )
     timeout /t 2 /nobreak >nul
 )
@@ -2451,7 +2539,7 @@ for /f "skip=2 delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Servic
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "NetworkThrottlingIndex" /t REG_DWORD /d 0xffffffff /f
 
 call :LogInfo "Disabling Network Diagnostic Usage (NDU)..."
-call :TIRegLog add "HKLM\SYSTEM\ControlSet001\Services\Ndu" /v "Start" /t REG_DWORD /d 4 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Ndu" /v "Start" /t REG_DWORD /d 4 /f
 
 netsh advfirewall firewall set rule group="Network Discovery" new enable=no >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "netsh advfirewall Network Discovery") else (call :LogErr "netsh advfirewall Network Discovery")
@@ -2645,7 +2733,7 @@ call :RegLog add "HKCU\Software\Microsoft\Multimedia\Audio" /v "Ducking" /t REG_
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Audio" /v "DisableAudioEnhancements" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Priority" /t REG_DWORD /d 4 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Scheduling Category" /t REG_SZ /d "Medium" /f
-powershell -NoProfile -Command "Get-PnpDevice -Class HIDClass | Where-Object {$_.Status -eq 'OK'} | ForEach-Object { powercfg /devicedisablewake $_.FriendlyName }"
+powershell -NoProfile -Command "Get-PnpDevice -Class HIDClass | Where-Object {$_.Status -eq 'OK'} | ForEach-Object { powercfg /devicedisablewake \"$($_.FriendlyName)\" }"
 if %errorlevel% equ 0 (call :LogOK "powercfg hid device power") else (call :LogErr "powercfg hid device power")
 
 call :LogOK "Input tweaks applied successfully!"
@@ -2696,6 +2784,82 @@ call :RegLog add "HKCU\Control Panel\Mouse" /v "Beep" /t REG_SZ /d "0" /f
 call :RegLog add "HKCU\Control Panel\Mouse" /v "ExtendedSounds" /t REG_SZ /d "0" /f
 call :LogOK "KBM tweaks applied successfully!"
 timeout /t 1 /nobreak > NUL
+pause
+goto main
+
+:devmgmt
+call :LogSection "Device Manager Tweaks"
+cls
+color 09
+echo.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo.
+echo  %ESC%[91m[!] BARDHZZY Tweaks - Aggressive Warning%ESC%[0m
+echo ======================================================
+echo.
+echo  %ESC%[91m[!]%ESC%[0m The following tweaks will disable hardware devices:
+echo      - High Precision Event Timer (HPET)
+echo      - System Timer
+echo      - Direct Memory Access (DMA) Controller
+echo      - Numeric Data Processor
+echo      - Composite Bus Enumerator
+echo      - Microsoft GS Wavetable Synth
+echo.
+echo  %ESC%[91m[!] RISKS:%ESC%[0m
+echo      Disabling HPET and System Timers is highly debated.
+echo      On modern Windows, the OS relies on these for scheduling.
+echo      This can either fix micro-stutters completely OR cause
+echo      system freezes, DPC watchdog violations, and audio issues.
+echo.
+echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Continue (I understand the risks)
+echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Go Back to Main Menu
+echo.
+set "pnp_choice="
+set /p "pnp_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+if not defined pnp_choice goto devmgmt
+set "pnp_choice=%pnp_choice:"=%"
+set "pnp_choice=%pnp_choice: =%"
+
+if /i "%pnp_choice%"=="1" goto devmgmt_apply
+if /i "%pnp_choice%"=="2" goto main
+
+echo.
+echo "%pnp_choice%" isn't a right choice, try again!
+timeout 2 >nul
+goto devmgmt
+
+:devmgmt_apply
+cls
+echo.
+echo [+] Scanning for active system devices...
+call :LogInfo "Preparing Device Manager PnP Tweaks..."
+
+:: Flawless PowerShell execution: No pipes to confuse CMD, handles multiple instances, forces UTF-8 output
+powershell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $devices = @('High Precision Event Timer', 'System Timer', 'Direct memory access controller', 'Numeric Data Processor', 'Composite Bus Enumerator', 'Microsoft GS Wavetable Synth'); $found=0; foreach ($d in $devices) { $devs = Get-PnpDevice -FriendlyName $d -ErrorAction SilentlyContinue; foreach ($dev in $devs) { if ($dev.Status -eq 'OK') { try { Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop; Write-Output ('OK:' + $d); $found=1 } catch { Write-Output ('FAIL:' + $d); $found=1 } } } }; if ($found -eq 0) { Write-Output 'WARN:No active target devices were found.' }" > "%TEMP%\bardhzz_pnp_log.txt"
+
+:: Parse the results flawlessly
+set "pnp_processed=0"
+for /f "tokens=1,* delims=:" %%A in ('type "%TEMP%\bardhzz_pnp_log.txt" 2^>nul') do (
+    set "pnp_processed=1"
+    if "%%A"=="OK" call :LogOK "Disabled Device: %%B"
+    if "%%A"=="FAIL" call :LogErr "Failed to disable: %%B"
+    if "%%A"=="WARN" call :LogWarn "%%B"
+)
+
+if "%pnp_processed%"=="0" (
+    call :LogErr "PowerShell execution failed or returned empty."
+)
+
+del /q "%TEMP%\bardhzz_pnp_log.txt" >nul 2>&1
+call :LogOK "Device Manager Tweaks section complete."
+echo.
+timeout /t 2 /nobreak >nul
 pause
 goto main
 
@@ -2948,7 +3112,7 @@ if exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
     echo     %BACKUP_DIR%
     echo     Creating a new backup will overwrite the old one.
     echo.
-    choice /c YN /n /m "Do you want to overwrite the existing backup Y/N: "
+    choice /c YN /m "Do you want to overwrite the existing backup"
     if errorlevel 2 goto main
 )
 
@@ -2976,117 +3140,260 @@ echo Press any key to return to the main menu...
 pause >nul
 goto main
 
+
 :timerres
+setlocal EnableDelayedExpansion
 call :LogSection "Timer Resolution"
 cls
-setlocal EnableExtensions EnableDelayedExpansion
-title Latency & Timer Resolution Tools
-
-echo ======================================================
-echo          LATENCY ^& TIMER RESOLUTION TOOLS
-echo ======================================================
 echo.
-
-set "LOGFILE=%temp%\timerres_setup.log"
-echo ====================================================== > "%LOGFILE%"
-echo TimerRes Setup Log >> "%LOGFILE%"
-echo ====================================================== >> "%LOGFILE%"
-echo. >> "%LOGFILE%"
-
-call :LogInfo "Checking internet connectivity..."
-echo [!] Checking internet connectivity...
-ping -n 1 1.1.1.1 >nul 2>&1
-if errorlevel 1 (
-    call :LogErr "No internet connection detected. Cannot continue with downloads."
-    echo [X] No internet connection detected.
-    echo [X] Cannot continue with downloads.
-    echo [X] No internet connection >> "%LOGFILE%"
-    pause
-    goto main
-)
-
-call :LogOK "Internet connection detected."
-echo [✓] Internet connection detected.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo.
+echo  %ESC%[34mLATENCY ^& TIMER RESOLUTION TOOLS%ESC%[0m
 echo.
 
 call :LogInfo "Enabling support for global timer resolution requests..."
-echo [!] Enabling support for global timer resolution requests...
 %TI% reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d 1 /f >nul 2>&1
-if errorlevel 1 (
-    call :LogErr "Failed to enable GlobalTimerResolutionRequests."
-    echo [X] Failed to enable GlobalTimerResolutionRequests.
-    echo [X] Registry modification failed >> "%LOGFILE%"
-) else (
+if %errorlevel% equ 0 (
     call :LogOK "GlobalTimerResolutionRequests enabled."
-    echo [✓] GlobalTimerResolutionRequests enabled.
-    echo [✓] Registry modification successful >> "%LOGFILE%"
-)
-echo.
-
-set "ISLC_PATH=%temp%\ISLC.exe"
-call :LogInfo "Downloading ISLC..."
-echo [!] Downloading ISLC...
-set "ISLC_URL=https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri '%ISLC_URL%' -OutFile '%ISLC_PATH%' } catch { exit 1 }" >nul 2>&1
-
-if exist "%ISLC_PATH%" (
-    call :LogOK "ISLC downloaded successfully."
-    echo [✓] ISLC downloaded successfully.
-    echo [✓] ISLC downloaded >> "%LOGFILE%"
-    echo [!] Launching ISLC...
-    start "" "%ISLC_PATH%"
 ) else (
-    call :LogErr "Failed to download ISLC."
-    echo [X] Failed to download ISLC.
-    echo [X] ISLC download failed >> "%LOGFILE%"
+    call :LogErr "Failed to enable GlobalTimerResolutionRequests."
 )
-echo.
 
-call :LogInfo "Checking for Winget..."
-echo [!] Checking for Winget...
-winget --version >nul 2>&1
-if errorlevel 1 (
-    call :LogWarn "Winget is not available. Process Lasso installation skipped."
-    echo [X] Winget is not available.
-    echo [X] Process Lasso installation skipped.
-    echo [X] Winget missing >> "%LOGFILE%"
-) else (
-    call :LogOK "Winget detected. Installing Process Lasso..."
-    echo [✓] Winget detected.
-    echo [!] Installing Process Lasso...
-    winget install --id BitSum.ProcessLasso --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
-    if errorlevel 1 (
-        call :LogErr "Process Lasso installation failed."
-        echo [X] Process Lasso installation failed.
-        echo [X] Process Lasso install failed >> "%LOGFILE%"
-    ) else (
-        call :LogOK "Process Lasso installed successfully."
-        echo [✓] Process Lasso installed successfully.
-        echo [✓] Process Lasso installed >> "%LOGFILE%"
+set "TIMER_DIR=C:\bardhzzY Utility Tools\Timer Resolution"
+set "TIMER_EXE=%TIMER_DIR%\SetTimerResolution.exe"
+set "REPO_ZIP=%TEMP%\elifian_timer.zip"
+set "EXTRACT_DIR=%TEMP%\elifian_timer_extracted"
+
+if exist "%TIMER_EXE%" (
+    for %%I in ("%TIMER_EXE%") do if %%~zI LSS 10240 del /q "%TIMER_EXE%" >nul 2>&1
+)
+
+if not exist "%TIMER_EXE%" (
+    call :LogInfo "Downloading SetTimerResolution.exe (amitxv)..."
+    mkdir "%TIMER_DIR%" >nul 2>&1
+    
+    curl -L -f -s -o "%TIMER_EXE%" "https://github.com/amitxv/SetTimerResolution/raw/master/SetTimerResolution.exe" >nul 2>&1
+    if exist "%TIMER_EXE%" for %%I in ("%TIMER_EXE%") do if %%~zI LSS 10240 del /q "%TIMER_EXE%" >nul 2>&1
+
+    if not exist "%TIMER_EXE%" (
+        curl -L -f -s -o "%TIMER_EXE%" "https://github.com/elifian/SetTimerResolution/raw/main/SetTimerResolution.exe" >nul 2>&1
+        if exist "%TIMER_EXE%" for %%I in ("%TIMER_EXE%") do if %%~zI LSS 10240 del /q "%TIMER_EXE%" >nul 2>&1
     )
-)
-echo.
 
-call :LogInfo "Timer-resolution-related tools configured."
-echo ======================================================
-echo                      COMPLETE
-echo ======================================================
+    if not exist "%TIMER_EXE%" (
+        call :LogInfo "Direct link failed. Downloading repository archive..."
+        if exist "%REPO_ZIP%" del /q "%REPO_ZIP%" >nul 2>&1
+        if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%" >nul 2>&1
+        
+        curl -L -f -s -o "%REPO_ZIP%" "https://github.com/elifian/SetTimerResolution/archive/refs/heads/master.zip" >nul 2>&1
+        if not exist "%REPO_ZIP%" curl -L -f -s -o "%REPO_ZIP%" "https://github.com/elifian/SetTimerResolution/archive/refs/heads/main.zip" >nul 2>&1
+        
+        if exist "%REPO_ZIP%" (
+            mkdir "%EXTRACT_DIR%" >nul 2>&1
+            tar -xf "%REPO_ZIP%" -C "%EXTRACT_DIR%" >nul 2>&1
+            
+            for /r "%EXTRACT_DIR%" %%F in (SetTimerResolution.exe) do (
+                if not exist "%TIMER_EXE%" copy /Y "%%F" "%TIMER_EXE%" >nul 2>&1
+            )
+        )
+        
+        rd /s /q "%EXTRACT_DIR%" >nul 2>&1
+        del /q "%REPO_ZIP%" >nul 2>&1
+    )
+
+    if exist "%TIMER_EXE%" (
+        for %%I in ("%TIMER_EXE%") do if %%~zI GTR 10240 (
+            call :LogOK "SetTimerResolution.exe downloaded successfully."
+        ) else (
+            call :LogErr "Downloaded file is corrupted or invalid."
+            del /q "%TIMER_EXE%" >nul 2>&1
+            goto :timerres_islc
+        )
+    ) else (
+        call :LogErr "Failed to download SetTimerResolution.exe automatically."
+        call :LogInfo "Please download it manually from amitxv's GitHub and place it in:"
+        echo     "%TIMER_DIR%\"
+        goto :timerres_islc
+    )
+) else (
+    call :LogOK "SetTimerResolution.exe already exists."
+)
+
+:timerres_menu
+cls
 echo.
-echo [✓] Timer-resolution-related tools configured.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
-echo [!] Notes:
-echo     - ISLC configuration is optional
-echo     - 0.50ms timer resolution is not universally optimal
-echo     - Results vary by hardware, drivers, and games
-echo     - Process Lasso may require manual configuration
+echo  %ESC%[34mSELECT TIMER RESOLUTION%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] 0.500ms %ESC%[90m(5000 - Recommended for most users)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] 0.504ms %ESC%[90m(5040 - Slightly more aggressive)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m3%ESC%[37m] 0.507ms %ESC%[90m(5070 - Optimal for some AMD CPUs)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Custom Value %ESC%[90m(Enter microseconds, e.g., 5000)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m5%ESC%[37m] Skip Timer Resolution
 echo.
-echo [!] Log file:
-echo     %LOGFILE%
+set "timer_choice="
+set /p "timer_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+if not defined timer_choice goto timerres_menu
+set "timer_choice=%timer_choice:"=%"
+set "timer_choice=%timer_choice: =%"
+
+if /i "%timer_choice%"=="1" (
+    set "TIMER_VAL=5000"
+    goto timer_apply
+)
+if /i "%timer_choice%"=="2" (
+    set "TIMER_VAL=5040"
+    goto timer_apply
+)
+if /i "%timer_choice%"=="3" (
+    set "TIMER_VAL=5070"
+    goto timer_apply
+)
+if /i "%timer_choice%"=="5" (
+    call :LogSkip "Timer Resolution setup skipped."
+    goto :timerres_islc
+)
+if /i "%timer_choice%"=="4" goto timer_custom
+
 echo.
-timeout /t 1 /nobreak > NUL
+echo "%timer_choice%" isn't a right choice, try again!
+timeout 2 >nul
+goto timerres_menu
+
+:timer_custom
+cls
+echo.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo.
+echo  %ESC%[34mENTER CUSTOM TIMER RESOLUTION%ESC%[0m
+echo  %ESC%[90mValue must be in microseconds (e.g., 5000 for 0.5ms). Max 50000.%ESC%[0m
+echo.
+set "custom_val="
+set /p "custom_val=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Enter value: %ESC%[0m"
+if not defined custom_val goto timerres_menu
+set "custom_val=%custom_val:"=%"
+set "custom_val=%custom_val: =%"
+
+echo !custom_val!| findstr /r "^[0-9][0-9]*$" >nul
+if errorlevel 1 (
+    call :LogErr "Invalid custom value. Must be numeric."
+    timeout 2 >nul
+    goto timer_custom
+)
+
+if !custom_val! LSS 1 (
+    call :LogErr "Value cannot be less than 1."
+    timeout 2 >nul
+    goto timer_custom
+)
+if !custom_val! GTR 50000 (
+    call :LogErr "Value cannot exceed 50000 (5.0ms)."
+    timeout 2 >nul
+    goto timer_custom
+)
+
+set "TIMER_VAL=!custom_val!"
+
+:timer_apply
+call :LogInfo "Setting %TIMER_VAL%us Timer Resolution on startup..."
+%TI% reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "BardhzzyTimerResolution" /t REG_SZ /d "\"%TIMER_EXE%\" --resolution %TIMER_VAL% --no-console" /f >nul 2>&1
+if %errorlevel% equ 0 (
+    call :LogOK "Timer Resolution set to %TIMER_VAL%us permanently (Startup Registry)."
+) else (
+    call :LogErr "Failed to set startup registry key."
+)
+
+call :LogInfo "Starting SetTimerResolution for current session..."
+start "" "%TIMER_EXE%" --resolution %TIMER_VAL% --no-console
+call :LogOK "Timer Resolution applied for this session."
+
+:timerres_islc
+echo.
+echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Download ISLC (Recommended for 16GB RAM or less)
+echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Skip ISLC
+echo.
+set "islc_choice="
+set /p "islc_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+if not defined islc_choice goto :timerres_end
+set "islc_choice=%islc_choice:"=%"
+set "islc_choice=%islc_choice: =%"
+
+if /i "%islc_choice%"=="2" (
+    call :LogSkip "ISLC setup skipped."
+    goto :timerres_end
+)
+if /i not "%islc_choice%"=="1" (
+    echo "%islc_choice%" isn't a right choice, try again!
+    timeout 2 >nul
+    goto :timerres_islc
+)
+
+call :LogInfo "Downloading ISLC..."
+set "ISLC_INSTALLER=%TEMP%\ISLC_Installer.exe"
+set "ISLC_DIR=C:\Program Files\ISLC"
+
+if exist "%ISLC_INSTALLER%" del /q "%ISLC_INSTALLER%" >nul 2>&1
+
+curl -L -f -s -o "%ISLC_INSTALLER%" "https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe" >nul 2>&1
+
+if not exist "%ISLC_INSTALLER%" (
+    powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe' -OutFile '%ISLC_INSTALLER%' -UseBasicParsing } catch { exit 1 }" >nul 2>&1
+)
+
+if exist "%ISLC_INSTALLER%" (
+    for %%I in ("%ISLC_INSTALLER%") do if %%~zI GTR 10240 (
+        call :LogOK "ISLC downloaded. Extracting to %ISLC_DIR%..."
+        
+        mkdir "%ISLC_DIR%" >nul 2>&1
+        "%ISLC_INSTALLER%" -y -o"%ISLC_DIR%" >nul 2>&1
+        
+        del /q "%ISLC_INSTALLER%" >nul 2>&1
+        
+        call :LogOK "ISLC extracted successfully."
+        
+        set "ISLC_EXE="
+        for /f "delims=" %%A in ('dir /b /s "%ISLC_DIR%\Intelligent standby list cleaner ISLC.exe" 2^>nul') do set "ISLC_EXE=%%A"
+        
+        if defined ISLC_EXE (
+            call :LogInfo "Launching ISLC..."
+            start "" "!ISLC_EXE!"
+            call :LogInfo "Please check 'Start ISLC minimized' and 'Launch ISLC on user logon'."
+            call :LogInfo "Ensure 'Free memory lower than' is set to 1024, then click Start."
+        ) else (
+            call :LogErr "Extraction finished, but could not locate the ISLC executable."
+        )
+    ) else (
+        call :LogErr "Failed to download ISLC. File is corrupted or URL changed."
+        del /q "%ISLC_INSTALLER%" >nul 2>&1
+    )
+) else (
+    call :LogErr "Failed to download ISLC. Network blocked or URL changed."
+)
+
+:timerres_end
+echo.
+call :LogOK "Timer Resolution configuration complete."
+endlocal
+timeout /t 2 /nobreak > NUL
 pause
 goto main
-
 
 :fortnite
 call :LogSection "Fortnite Optimizer"
@@ -3096,8 +3403,7 @@ echo Native GPEdit Enabler ^& Fortnite QoS Optimizer
 echo ============================================================================
 echo.
 
-call :LogInfo "Unlocking Native Group Policy Editor..."
-echo [1/7] Unlocking Native Group Policy Editor...
+call :LogInfo "[1/7] Unlocking Native Group Policy Editor..."
 pushd "%~dp0"
 dir /b %SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientTools-Package*.mum >nul 2>&1
 if %errorLevel% equ 0 (
@@ -3110,20 +3416,17 @@ if %errorLevel% equ 0 (
 ) else (
     popd
     call :LogSkip "gpedit packages not found (You likely already have Windows Pro)."
-    echo        - gpedit packages not found ^(You likely already have Windows Pro^).
 )
 echo.
 
-call :LogInfo "Injecting Registry QoS Override..."
-echo [2/7] Injecting Registry QoS Override...
+call :LogInfo "[2/7] Injecting Registry QoS Override..."
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "DisableUserTOSSetting" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\QoS" /v "Do not use NLA" /t REG_SZ /d "1" /f
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS" /v "Application DSCP Marking Request" /t REG_SZ /d "Allowed" /f
 echo        - Local networking forced to accept standalone packet rules.
 echo.
 
-call :LogInfo "Configuring Core Engine Services (Psched & QWAVE)..."
-echo [3/7] Configuring Core Engine Services ^(Psched ^& QWAVE^)...
+call :LogInfo "[3/7] Configuring Core Engine Services (Psched & QWAVE)..."
 call :TIScLog config Psched start= system
 call :TIScLog start Psched
 call :TIScLog config qwave start= auto
@@ -3131,28 +3434,24 @@ call :TIScLog start qwave
 echo        - Prioritization daemons successfully initialized.
 echo.
 
-call :LogInfo "Eradicating Windows default bandwidth reservation caps..."
-echo [4/7] Eradicating Windows default bandwidth reservation caps...
+call :LogInfo "[4/7] Eradicating Windows default bandwidth reservation caps..."
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Psched" /v NonBestEffortLimit /t REG_DWORD /d 0 /f
 echo        - Interface limit throughput restrictions unthrottled ^(0%%^).
 echo.
 
-call :LogInfo "Aligning TCP Auto-Tuning..."
-echo [5/7] Aligning TCP Auto-Tuning...
+call :LogInfo "[5/7] Aligning TCP Auto-Tuning..."
 netsh int tcp set global autotuninglevel=normal >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "netsh autotuninglevel=normal") else (call :LogErr "netsh autotuninglevel=normal")
 echo        - TCP window scaling optimized for stable packet delivery.
 echo.
 
-call :LogInfo "Activating adapter stream configuration..."
-echo [6/7] Activating adapter stream configuration...
+call :LogInfo "[6/7] Activating adapter stream configuration..."
 powershell -NoProfile -Command "Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | ForEach-Object { Enable-NetAdapterQos -Name $_.Name -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Enable-NetAdapterQos") else (call :LogErr "Enable-NetAdapterQos")
 echo        - Hardware streams successfully aligned.
 echo.
 
-call :LogInfo "Injecting Fortnite Game Packet Matrix Rule..."
-echo [7/7] Injecting Fortnite Game Packet Matrix Rule...
+call :LogInfo "[7/7] Injecting Fortnite Game Packet Matrix Rule..."
 powershell -NoProfile -Command "Remove-NetQosPolicy -Name 'FortniteQoS' -ErrorAction SilentlyContinue; New-NetQosPolicy -Name 'FortniteQoS' -AppPathName 'FortniteClient-Win64-Shipping.exe' -DSCPAction 46 -NetworkProfile All -ErrorAction Stop" >nul 2>&1
 if %errorLevel% equ 0 (
     call :LogOK "Fortnite Client prioritized (DSCP 46 | Profile: ALL)."
@@ -3162,8 +3461,7 @@ if %errorLevel% equ 0 (
     echo        - Warning: Failed to hook packet stream to OS policies.
 )
 echo.
-call :LogOK "GPedit is active and Fortnite network priority is locked in."
-echo [+] Setup Complete! GPedit is active and Fortnite network priority is locked in.
+call :LogOK "[+] GPedit is active and Fortnite network priority is locked in."
 
 cls
 color 9
@@ -3198,6 +3496,7 @@ echo %Green%1. Manually Input Path
 echo %DarkYellow%2. Continue Anyway
 echo %Cyan%3. Learn More
 echo %Red%4. Back to Main Menu
+set "fnoption="
 set /p fnoption="%White%Enter option number: "
 chcp 65001 >nul 2>&1
 if "%fnoption%"=="1" goto :FN_Manual_Path
@@ -3258,7 +3557,7 @@ if exist "%FN_DownloadsFolder%\%FN_FileName%" (
    pushd "%FN_ExtractFolder%" >nul 2>&1
    tar -xf "%FN_DownloadsFolder%\%FN_FileName%" --strip-components=1 >nul 2>&1
    popd >nul 2>&1
-   del /q "C:\Fortnite Optimizer Tools.zip" >nul 2>&1
+   del /q "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
    goto :FN_Start_Screen
 ) else (
    call :LogErr "Failed to download Fortnite Optimizer Tools."
@@ -3493,7 +3792,6 @@ call :LogOK "Fortnite Optimizer routine completed."
 echo =====================================
 echo Fortnite Optimizer done successfully
 echo =====================================
-popd
 timeout /t 3 /nobreak > NUL
 goto main
 
@@ -3589,8 +3887,8 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.2.1"
-set "SCRIPT_BUILD=2026-06-24"
+set "SCRIPT_VERSION=2.8.3"
+set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
 set "LOG_SECTION=SYSTEM"
@@ -3764,16 +4062,11 @@ if "%LOG_ENABLED%"=="1" (
 endlocal & set "LOG_SECTION=%~1"
 goto :eof
 
-:: =====================================================================
-:: WRAPPER FUNCTIONS (BULLETPROOF STATE PRESERVATION)
-:: =====================================================================
-
 :RegLog
 setlocal DISABLEDELAYEDEXPANSION
 reg %* >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
-set LOG_MSG=%*
-set "LOG_MSG=%LOG_MSG:"=%"
+set "LOG_MSG=%*"
 if "%BARDHZZ_ERR%"=="0" call :LogOK
 if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 if not "%BARDHZZ_ERR%"=="0" call :LogErr
@@ -3782,12 +4075,11 @@ goto :eof
 
 :TIRegLog
 setlocal DISABLEDELAYEDEXPANSION
-set BARDHZZ_CMD=reg %*
-if defined TI set BARDHZZ_CMD=%TI% reg %*
+set "BARDHZZ_CMD=reg %*"
+if defined TI set "BARDHZZ_CMD=%TI% reg %*"
 %BARDHZZ_CMD% >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
-set LOG_MSG=%*
-set "LOG_MSG=%LOG_MSG:"=%"
+set "LOG_MSG=%*"
 if "%BARDHZZ_ERR%"=="0" call :LogOK
 if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 if not "%BARDHZZ_ERR%"=="0" call :LogErr
@@ -3798,8 +4090,7 @@ goto :eof
 setlocal DISABLEDELAYEDEXPANSION
 sc %* >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
-set LOG_MSG=%*
-set "LOG_MSG=%LOG_MSG:"=%"
+set "LOG_MSG=%*"
 if "%BARDHZZ_ERR%"=="0" call :LogOK
 if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 if not "%BARDHZZ_ERR%"=="0" call :LogErr
@@ -3808,19 +4099,12 @@ goto :eof
 
 :TIScLog
 setlocal DISABLEDELAYEDEXPANSION
-set "ARGS=%*"
-echo %ARGS% | findstr /i "config start= disabled" >nul 2>&1
-if %errorlevel% equ 0 (
-    for /f "tokens=2" %%S in ("%ARGS%") do (
-        sc stop "%%~S" >nul 2>&1
-    )
-)
-set BARDHZZ_CMD=sc %*
-if defined TI set BARDHZZ_CMD=%TI% sc %*
+if /i "%~1"=="config" sc stop "%~2" >nul 2>&1
+set "BARDHZZ_CMD=sc %*"
+if defined TI set "BARDHZZ_CMD=%TI% sc %*"
 %BARDHZZ_CMD% >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
-set LOG_MSG=%*
-set "LOG_MSG=%LOG_MSG:"=%"
+set "LOG_MSG=%*"
 if "%BARDHZZ_ERR%"=="0" call :LogOK
 if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 if not "%BARDHZZ_ERR%"=="0" call :LogErr
@@ -3831,8 +4115,7 @@ goto :eof
 setlocal DISABLEDELAYEDEXPANSION
 schtasks %* >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
-set LOG_MSG=%*
-set "LOG_MSG=%LOG_MSG:"=%"
+set "LOG_MSG=%*"
 if "%BARDHZZ_ERR%"=="0" call :LogOK
 if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 if not "%BARDHZZ_ERR%"=="0" call :LogErr
