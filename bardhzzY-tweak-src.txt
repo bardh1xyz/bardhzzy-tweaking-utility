@@ -7,7 +7,7 @@ set "dmv=powershell -NoProfile -Command Disable-PnpDevice -InstanceId"
 
 fltmc >nul 2>&1
 if %errorlevel% neq 0 (
-    title BARDHZZY Tweaks - Requesting Admin
+    title bardhzzY Tweaks - Requesting Admin
     MODE 75,7
     color 09
     echo.
@@ -22,7 +22,7 @@ if %errorlevel% neq 0 (
     set "psScript=%TEMP%\bardhzz_uac.ps1"
     
     > "%psScript%" (
-        echo $host.UI.RawUI.WindowTitle='BARDHZZY Tweaks - UAC'
+        echo $host.UI.RawUI.WindowTitle='bardhzzY Tweaks - UAC'
         echo Write-Host ' [!] Administrator privileges required. ' -ForegroundColor White -BackgroundColor DarkRed
         echo Write-Host ' [!] Please click YES on the upcoming UAC prompt... ' -ForegroundColor White -BackgroundColor DarkRed
         echo Start-Sleep -Seconds 2
@@ -48,7 +48,7 @@ if %errorlevel% neq 0 (
 )
 
 pushd "%~dp0"
-title BARDHZZY Tweaks (Admin)
+title bardhzzY Tweaks (Admin)
 chcp 65001 >nul
 reg add "HKCU\Console" /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul 2>&1
 
@@ -108,7 +108,7 @@ if exist "%NSUDO_EXE%" (
 )
 :: =====================================================================
 
-title BARDHZZY Tweaks
+title bardhzzY Tweaks
 MODE 150,40
 color 09
 cls
