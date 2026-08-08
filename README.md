@@ -17,7 +17,7 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 * **System Safety & Recovery**: Includes built-in options for *registry backups*, *System Restore Points*, and full tweak reversions.
 * **Automated Dependency Setup**: Silently installs *Winget*, *DirectX Web Setup*, and *Visual C++ Redistributables* (2015–2022).
 * **UI Customization**: Deploys lightweight *Open-Shell* configurations and custom performance visuals.
-* **These are just some theres way more!
+* **These are just some there's way more!**
 
 ---
 
