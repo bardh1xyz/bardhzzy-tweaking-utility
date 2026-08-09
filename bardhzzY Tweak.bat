@@ -1158,11 +1158,8 @@ goto NPI_CLEANUP
 call :LogErr "vortex.nip not found in C:\bardhzzY Utility Tools\Nvidia!"
 
 :NPI_CLEANUP
-call :LogInfo "Executing clean-up protocol..."
+call :LogInfo "Nvidia Profile Inspector Done"
 timeout /t 1 >nul
-if exist "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" del "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" /f /q >nul 2>&1
-if exist "C:\bardhzzY Utility Tools\Nvidia\Reference.xml" del "C:\bardhzzY Utility Tools\Nvidia\Reference.xml" /f /q >nul 2>&1
-if exist "C:\bardhzzY Utility Tools\Nvidia\CustomSettingNames_en-EN.xml" del "C:\bardhzzY Utility Tools\Nvidia\CustomSettingNames_en-EN.xml" /f /q >nul 2>&1
 
 call :LogInfo "Disabling Nvidia Telemetry Tasks..."
 setlocal EnableDelayedExpansion
@@ -3890,7 +3887,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.8.4"
+set "SCRIPT_VERSION=2.8.5"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
