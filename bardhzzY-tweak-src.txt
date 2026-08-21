@@ -1893,8 +1893,17 @@ call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\BTAGService" /v "Star
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WManSvc" /v "Start" /t REG_DWORD /d "4" /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WerFaultSvc" /v "Start" /t REG_DWORD /d "4" /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WerKernelSvc" /v "Start" /t REG_DWORD /d "4" /f
-call :LogInfo "Safely removing Windows Widgets (Preserving Snipping Tool)..."
 winget uninstall --silent --accept-source-agreements "Windows web experience Pack" >nul 2>&1
+call :LogInfo "Removing Snipping Tool (using Lightshot instead)..."
+taskkill /f /im SnippingTool.exe >nul 2>&1
+taskkill /f /im ScreenSketch.exe >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ScreenSketch* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Remove ScreenSketch") else (call :LogErr "Remove ScreenSketch")
+call :LogInfo "Deprovisioning ScreenSketch (blocks reinstall on updates/new users)..."
+powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.ScreenSketch' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Deprovision ScreenSketch") else (call :LogErr "Deprovision ScreenSketch")
+call :LogInfo "Releasing Print Screen key for Lightshot..."
+call :RegLog add "HKCU\Control Panel\Keyboard" /v "PrintScreenKeyForSnippingEnabled" /t REG_DWORD /d 0 /f
 powershell -NoProfile -Command "Get-AppxPackage *MicrosoftWindows.Client.WebExperience* -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue" >nul 2>&1
 powershell -NoProfile -Command "Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*MicrosoftWindows.Client.WebExperience*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
@@ -3887,7 +3896,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.8.5"
+set "SCRIPT_VERSION=2.8.6"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
