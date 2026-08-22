@@ -1,57 +1,64 @@
 @ECHO off
 setlocal
-
+title bardhzzY Tweaks - admin check
 set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
 
 set "dmv=powershell -NoProfile -Command Disable-PnpDevice -InstanceId"
 
 fltmc >nul 2>&1
-if %errorlevel% neq 0 (
-    title bardhzzY Tweaks - Requesting Admin
-    MODE 75,7
-    color 09
-    echo.
-    echo          BARDHZZY Tweaks - Requesting Admin
-    echo.
 
-    :: Safely pass the path and arguments via environment variables
-    set "BARDHZZ_PATH=%~f0"
-    set "BARDHZZ_ARGS=%*"
+if not "%errorlevel%"=="0" (
+    mode con: cols=78 lines=15
+    color 0B
+    cls
 
-    :: Create the temporary PowerShell script
-    set "psScript=%TEMP%\bardhzz_uac.ps1"
-    
-    > "%psScript%" (
-        echo $host.UI.RawUI.WindowTitle='bardhzzY Tweaks - UAC'
-        echo Write-Host ' [!] Administrator privileges required. ' -ForegroundColor White -BackgroundColor DarkRed
-        echo Write-Host ' [!] Please click YES on the upcoming UAC prompt... ' -ForegroundColor White -BackgroundColor DarkRed
-        echo Start-Sleep -Seconds 2
-        echo try {
-        echo     if ^(-not [string]::IsNullOrWhiteSpace^(^$env:BARDHZZ_ARGS^)^) {
-        echo         Start-Process -FilePath $env:BARDHZZ_PATH -ArgumentList $env:BARDHZZ_ARGS -Verb RunAs -ErrorAction Stop
-        echo     } else {
-        echo         Start-Process -FilePath $env:BARDHZZ_PATH -Verb RunAs -ErrorAction Stop
-        echo     }
-        echo } catch {
-        echo     Write-Host ' [X] UAC Prompt Declined or failed. Exiting...' -ForegroundColor Red
-        echo     Start-Sleep -Seconds 3
-        echo }
+    echo.
+    echo  ============================================================
+    echo.
+    echo                     bardhzzY TWEAKS
+    echo.
+    echo       Administrator privileges are required to continue.
+    echo.
+    echo       A Windows security prompt will appear shortly.
+    echo.
+    echo       Please click YES when prompted.
+    echo.
+    echo  ============================================================
+    echo.
+    timeout /t 3 /nobreak >nul
+
+    set "BARDHZZY_ELEVATE=%~f0"
+
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
+        "try { Start-Process -FilePath $env:BARDHZZY_ELEVATE -Verb RunAs -ErrorAction Stop; exit 0 } catch { exit 1 }"
+
+    if not "%errorlevel%"=="0" (
+        color 0C
+        cls
+
+        echo.
+        echo  ============================================================
+        echo.
+        echo                     bardhzzY TWEAKS
+        echo.
+        echo       [X] Administrator elevation was cancelled.
+        echo.
+        echo       The tweaks were NOT started.
+        echo.
+        echo       Please run the script again and click YES.
+        echo.
+        echo  ============================================================
+        echo.
+        timeout /t 5 /nobreak >nul
+        exit /b 1
     )
 
-    :: Execute the temporary script
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%psScript%"
-    
-    :: Clean up
-    del /q "%psScript%" >nul 2>&1
-    
-    exit /b
+    exit /b 0
 )
 
 title bardhzzY Tweaks (Admin)
 chcp 65001 >nul
 reg add "HKCU\Console" /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul 2>&1
-
-echo [OK] Running as Administrator! Starting Tweaks...
 
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
 
@@ -76,58 +83,118 @@ if %win_build% GEQ 22000 (
 
 :os_check_done
 :: =====================================================================
-:: [!] NSUDO INTEGRATION - BULLETPROOF TRUSTED INSTALLER ENGINE
+:: NSUDO / TRUSTEDINSTALLER INTEGRATION
 :: =====================================================================
+color 0B
 set "NSUDO_DIR=%ProgramData%\NSudo"
 set "NSUDO_EXE=%NSUDO_DIR%\NSudoLC.exe"
+set "TI="
 
 if not exist "%NSUDO_EXE%" (
     echo [+] Initializing NSudo Framework...
     mkdir "%NSUDO_DIR%" >nul 2>&1
-    
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Invoke-WebRequest -Uri 'https://github.com/M2Team/NSudo/releases/download/8.2/NSudo_8.2_All_Components.zip' -OutFile $env:TEMP\NSudo.zip -UseBasicParsing; Expand-Archive -Path $env:TEMP\NSudo.zip -DestinationPath $env:TEMP\NSudoExtract -Force; $arch='x64'; if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { $arch='ARM64' } elseif ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { $arch='Win32' }; $exe = Get-ChildItem -Path $env:TEMP\NSudoExtract -Recurse -Filter 'NSudoLC.exe' | Where-Object { $_.FullName -like ('*\' + $arch + '\*') } | Select-Object -First 1; if ($exe) { Copy-Item $exe.FullName "$env:ProgramData\NSudo\NSudoLC.exe" -Force; 'NSUDO_OK' } else { 'NSUDO_FAIL' } } catch { 'NSUDO_FAIL' }" > "%TEMP%\nsudo_status.txt"
-
-    
-    findstr "NSUDO_OK" "%TEMP%\nsudo_status.txt" >nul 2>&1
-    del /q "%TEMP%\nsudo_status.txt" >nul 2>&1
-    rd /s /q "%TEMP%\NSudoExtract" >nul 2>&1
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; try { $zip=Join-Path $env:TEMP 'NSudo.zip'; $ext=Join-Path $env:TEMP 'NSudoExtract'; if(Test-Path $ext){Remove-Item $ext -Recurse -Force -ErrorAction SilentlyContinue}; Invoke-WebRequest -Uri 'https://github.com/M2Team/NSudo/releases/download/8.2/NSudo_8.2_All_Components.zip' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $arch='x64'; if($env:PROCESSOR_ARCHITECTURE -eq 'ARM64'){$arch='ARM64'} elseif($env:PROCESSOR_ARCHITECTURE -ne 'AMD64'){$arch='Win32'}; $exe=Get-ChildItem -Path $ext -Recurse -Filter 'NSudoLC.exe' | Where-Object { $_.FullName -match ('[\\/]'+$arch+'[\\/]') } | Select-Object -First 1; if($exe){Copy-Item $exe.FullName '%NSUDO_DIR%\NSudoLC.exe' -Force; exit 0}else{exit 1}} catch {exit 1}" >nul 2>&1
     del /q "%TEMP%\NSudo.zip" >nul 2>&1
+    rd /s /q "%TEMP%\NSudoExtract" >nul 2>&1
 )
 
-if exist "%NSUDO_EXE%" (
-    set "TI=%NSUDO_EXE% -U:T -P:E -ShowWindowMode:Hide -Wait"
-    echo [OK] NSudo Engine initialized. Deep system tweaks will be bulletproof.
-    timeout /t 1 /nobreak >nul
-) else (
-    set "TI="
-    echo [!] NSudo setup failed.
-    echo [!] REASON: Network block, missing Admin rights, or aggressive Antivirus.
-    echo [!] FIX: Ensure you are connected to the internet and running as Administrator.
-    timeout /t 4 /nobreak >nul
-)
-:: =====================================================================
+if not exist "%NSUDO_EXE%" goto NSUDO_UNAVAILABLE
 
+set "TI="
+set "TI_AVAILABLE=0"
+set "TI_TEST=%TEMP%\BARDHZZY_TI_TEST_%RANDOM%.txt"
+
+sc.exe query TrustedInstaller >nul 2>&1
+if errorlevel 1 goto NSUDO_TEST_FAILED
+
+sc.exe query TrustedInstaller | findstr /I "RUNNING" >nul 2>&1
+if errorlevel 1 (
+    sc.exe start TrustedInstaller >nul 2>&1
+    timeout /t 2 /nobreak >nul
+)
+
+"%NSUDO_EXE%" -U:T -P:E -ShowWindowMode:Hide -Wait ^
+    powershell.exe -NoProfile -NonInteractive -Command ^
+    "$id=[Security.Principal.WindowsIdentity]::GetCurrent(); $id.Groups | ForEach-Object { $_.Value } | Set-Content -LiteralPath '%TI_TEST%' -Encoding ascii"
+
+set "TI_TEST_ERR=%errorlevel%"
+
+if not "%TI_TEST_ERR%"=="0" goto NSUDO_TEST_FAILED
+
+findstr /L /I /C:"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464" "%TI_TEST%" >nul 2>&1
+
+if errorlevel 1 goto NSUDO_TEST_FAILED
+
+del /q "%TI_TEST%" >nul 2>&1
+
+set "TI="%NSUDO_EXE%" -U:T -P:E -ShowWindowMode:Hide -Wait"
+set "TI_AVAILABLE=1"
+
+echo.
+echo [OK] TrustedInstaller verified successfully.
+echo.
+timeout /t 1 /nobreak >nul
+goto NSUDO_READY
+
+
+set "TI="
+set "TI_AVAILABLE=0"
+
+echo.
+echo [!] NSudo was found, but the TrustedInstaller token test failed.
+echo.
+echo [!] Diagnostic output:
+if exist "%TI_TEST%" type "%TI_TEST%"
+echo.
+echo [!] TrustedInstaller service tweaks will be skipped.
+echo.
+
+del /q "%TI_TEST%" >nul 2>&1
+timeout /t 4 /nobreak >nul
+goto NSUDO_READY
+
+:NSUDO_UNAVAILABLE
+set "TI="
+echo [!] NSudo is unavailable.
+echo [!] TrustedInstaller-only service tweaks will be skipped.
+timeout /t 3 /nobreak >nul
+
+:NSUDO_READY
 title bardhzzY Tweaks
 MODE 150,40
 color 09
 cls
 
 echo.
-echo      Welcome %USERNAME%, To BARDHZZY Tweaks!
+echo      Welcome %USERNAME%, To bardhzzY Tweaks!
 echo.
 
 goto license
 
 :license
 cls
-MODE 65,12
+MODE 100,40
+color 09
+echo %ESC%[0m
+
 echo.
-echo  %ESC%[34m======================================================%ESC%[0m
-echo  %ESC%[34m          %ESC%[37mBARDHZZY Tweaks - License Required%ESC%[34m         %ESC%[0m
-echo  %ESC%[34m======================================================%ESC%[0m
+echo.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo.
+echo  %ESC%[34m═══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo.
+echo                       %ESC%[37mLICENSE VERIFICATION%ESC%[0m
+echo.
+echo               %ESC%[34mEnter your license key to continue.%ESC%[0m
 echo.
 set "user_key="
 set /p "user_key=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Enter your License Key: %ESC%[0m"
+
 if defined user_key set "user_key=%user_key:"=%"
 if defined user_key set "user_key=%user_key: =%"
 
@@ -135,30 +202,58 @@ for %%k in (
     "1B99-QBRX-5YP7-YB07" "WITN-7N8Z-R8Q1-FRXX" "U3IG-J0E7-LWRO-9X27" "B21U-EY2U-C3J6-9ZTO"
     "0DC0-JVR3-QNJV-XCLK" "4Z29-1O7A-Z4XA-45QG" "BIS7-L7C3-JJNR-2JWY" "PKVJ-503R-ELHE-42GE"
     "8PAJ-MDNL-K47J-RS1F" "VVEL-QC56-GQV4-YBG8" "6ZQ2-LEF7-GOGA-OAGG" "N63C-FTQG-ES2K-M2GA"
-    "Y9UD-FYP8-P0EE-VYII" "0P27-25QX-PVAR-ULPH" "VEDT-4YW6-3AI5-BXDX" "3470-S4JZ-PGWI-4ZF6"
-    "WXF4-M5C7-G6KK-QF7X" "ASMV-5LJC-KNH4-VL85" "2AVO-SF1Y-Y624-ZEQS" "PJXL-AWWQ-PUWQ-MBYO"
-    "AXTP-LPIU-IG6S-DYO9" "AOAJ-S6CQ-TX55-71E3" "SQXO-F1R8-0IXO-BHLW" "S3YC-E3SP-CVZN-484P"
-    "62D4-MK2A-XALA-GFN5" "H2D7-K5N1-Q8X0-V3J9" "P4M6-L9Z2-B0W7-G1Y3" "QZ91-K2M3-L4P5-J6N7"
-    "W8H9-V0X1-C2B3-N4M5" "A6S7-D8F9-G0H1-J2K3" "L4K5-J6H7-G8F9-D0S1" "Z2X3-C4V5-B6N7-M8Q9"
-    "R1T2-Y3U4-I5O6-P7A8" "S9D0-F1G2-H3J4-K5L6" "M7N8-B9V0-C1X2-Z3A4" "Q5W6-E7R8-T9Y0-U1I2"
     "O3P4-A5S6-D7F8-G9H0" "J1K2-L3M4-N5B6-V7C8" "X9Z0-Q1W2-E3R4-T5Y6" "U7I8-O9P0-A1S2-D3F4"
     "G5H6-J7K8-L9M0-N1B2" "V3C4-X5Z6-Q7W8-E9R0" "T1Y2-U3I4-O5P6-A7S8" "D9F0-G1H2-J3K4-L5M6"
     "N7B8-V9C0-X1Z2-Q3W4" "E5R6-T7Y8-U9I0-O1P2" "A3S4-D5F6-G7H8-J9K0" "L1M2-N3B4-V5C6-X7Z8"
-    "Q9W0-E1R2-T3Y4-U5I6" "O7P8-A9S0-D1F2-G3H4" "bardhzzY7" "akuma123"
+    "Q9W0-E1R2-T5Y6-U7I8" "O7P8-A9S0-D1F2-G3H4" "bardhzzY7" "akuma123"
 ) do (
     if /I "%user_key%"=="%%~k" goto valid
 )
 
 :invalid
+cls
+MODE 100,40
+color 09
+echo %ESC%[0m
+
 echo.
-echo  %ESC%[31m[ERROR]%ESC%[0m Invalid License Key! Access Denied.
-pause
+echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo.
+echo                       %ESC%[37mLICENSE VERIFICATION%ESC%[0m
+echo.
+echo        %ESC%[31m[ERROR]%ESC%[37m Invalid license key.
+echo.
+echo        %ESC%[37mThe key was not recognized. Please check your key
+echo        and try again.%ESC%[0m
+echo.
+echo        %ESC%[90mReturning to license verification...%ESC%[0m
+echo.
+echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo.
+timeout /t 3 /nobreak >nul
 goto license
 
+
 :valid
+cls
+MODE 100,40
+color 09
+echo %ESC%[0m
+
 echo.
-echo  %ESC%[32m[  OK]%ESC%[0m License Verified! Welcome.
-timeout 2 >nul
+echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo.
+echo                       %ESC%[37mLICENSE VERIFICATION%ESC%[0m
+echo.
+echo        %ESC%[32m[  OK ]%ESC%[37m License verified successfully.
+echo.
+echo        %ESC%[37mWelcome to bardhzzY Tweaks.%ESC%[0m
+echo.
+echo        %ESC%[90mStarting the utility...%ESC%[0m
+echo.
+echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo.
+timeout /t 2 /nobreak >nul
 goto init
 
 :init
@@ -196,6 +291,7 @@ echo %ESC%[0m
 cls
 color 09
 
+echo.
 echo.
 echo        ██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗
 echo        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝
@@ -301,8 +397,8 @@ call :LogWarn "Winget command not found. Starting Ultimate Repair/Installation..
 
 call :LogInfo "Ensuring Windows Install services are active..."
 for %%s in (AppXSvc, wuauserv, bits) do (
-    sc config %%s start= demand >nul 2>&1
-    sc start %%s >nul 2>&1
+    call :TIScLog config "%%s" start= demand
+    call :TIScLog start "%%s"
 )
 
 set "W_TEMP=%TEMP%\winget_auto_repair"
@@ -386,10 +482,8 @@ set /p "search_choice=Apply this optimization? (Y/N): "
 if /i not "%search_choice%"=="Y" goto skip_search
 
 call :LogInfo "Disabling Windows Search Service..."
-%TI% sc config WSearch start= disabled >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "sc config WSearch") else (call :LogErr "sc config WSearch")
-%TI% sc stop WSearch >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "sc stop WSearch") else (call :LogErr "sc stop WSearch")
+call :TIScLog config WSearch start= disabled
+call :TIScLog stop WSearch
 
 call :LogInfo "Killing remnant modern Search processes..."
 taskkill /f /im SearchHost.exe >nul 2>&1
@@ -488,8 +582,7 @@ dism /online /enable-feature /featurename:WindowsMediaPlayer /norestart >nul 2>&
 if %errorlevel% equ 0 (call :LogOK "Enable WMP feature") else (call :LogErr "Enable WMP feature")
 
 call :LogInfo "Optimizing WMP Network Service..."
-%TI% sc config WMPNetworkSvc start= demand >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "sc config WMPNetworkSvc") else (call :LogErr "sc config WMPNetworkSvc")
+call :TIScLog config WMPNetworkSvc start= demand
 
 call :LogInfo "Installing Visual C++ 2015-2022 Redistributables..."
 winget install --id Microsoft.VCRedist.2015+.x64 --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
@@ -632,6 +725,8 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDelivery
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "RotatingLockScreenEnabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableFirstLogonAnimation" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "ShowTips" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v "AppsUseLightTheme" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v "SystemUsesLightTheme" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "PeopleBand" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\TabletTip\1.7" /v "EnableDesktopModeAutoInvoke" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\TabletPC" /v "TurnOffHandwritingRecognitionFeature" /t REG_DWORD /d 1 /f
@@ -738,6 +833,7 @@ call :LogInfo "Applying game mode settings..."
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d 38 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarMn" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarDa" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarAl" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\GameBar" /v "AutoGameModeEnabled" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Software\Microsoft\GameBar" /v "AllowAutoGameMode" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Software\Microsoft\GameBar" /v "UseNexusForGameBarEnabled" /t REG_DWORD /d 0 /f
@@ -940,19 +1036,19 @@ call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "com
 call :LogInfo "Disabling Windows Defender..."
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "DisableAntiSpyware" /t REG_DWORD /d 1 /f
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableRealtimeMonitoring" /t REG_DWORD /d 1 /f
-call :ScLog config WinDefend start= disabled
-call :ScLog stop WinDefend
-call :ScLog config WdNisSvc start= disabled
-call :ScLog stop WdNisSvc
-call :ScLog config wscsvc start= disabled
-call :ScLog stop wscsvc
-call :ScLog config SecurityHealthService start= disabled
-call :ScLog stop SecurityHealthService
+call :TIScLog config WinDefend start= disabled
+call :TIScLog stop WinDefend
+call :TIScLog config WdNisSvc start= disabled
+call :TIScLog stop WdNisSvc
+call :TIScLog config wscsvc start= disabled
+call :TIScLog stop wscsvc
+call :TIScLog config SecurityHealthService start= disabled
+call :TIScLog stop SecurityHealthService
 call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "SecurityHealth" /f
 call :LogInfo "Disabling SMBv1 (security)..."
 powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable SMB1Protocol") else (call :LogWarn "Disable SMB1Protocol")
-call :ScLog config lanmanworkstation depend= "Bowser/Srv2/SrvNet"
+call :TIScLog config lanmanworkstation depend= "Bowser/Srv2/SrvNet"
 call :LogInfo "Disabling LLMNR and NetBIOS (security)..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v "EnableMulticast" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" /v "EnableLLMNR" /t REG_DWORD /d 0 /f
@@ -1101,6 +1197,7 @@ echo %ESC%[0m
 color 09
 
 echo.
+echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
 echo        %ESC%[34m██████╔╗███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
@@ -1247,9 +1344,9 @@ call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "LoadDebugRuntime" /t REG
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "EnablePipelineCache" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\DirectDraw" /v "EmulationOnly" /t REG_DWORD /d 0 /f
 
-call :ScLog config NvBackend start= disabled
-call :ScLog stop NvBackend
-call :ScLog config NVDisplay.ContainerLocalSystem start= demand
+call :TIScLog config NvBackend start= disabled
+call :TIScLog stop NvBackend
+call :TIScLog config NVDisplay.ContainerLocalSystem start= demand
 
 for %%v in (ActivelyUsed IdleLongTime IdleMonitorOff IdleShortTime IdleVeryLongTime IdleNoContext) do (
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Power" /v "DefaultD3TransitionLatency%%v" /t REG_DWORD /d 1 /f
@@ -1295,8 +1392,8 @@ call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "LoadDebugRuntime" /t REG
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "EnablePipelineCache" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\DirectDraw" /v "EmulationOnly" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestMode" /t REG_DWORD /d 5 /f
-call :ScLog config "AMD External Events Utility" start= disabled
-call :ScLog stop "AMD External Events Utility"
+call :TIScLog config "AMD External Events Utility" start= disabled
+call :TIScLog stop "AMD External Events Utility"
 
 call :LogInfo "Enabling Windowed Game Optimizations"
 call :RegLog add "HKCU\SOFTWARE\Microsoft\DirectX\UserGpuPreferences" /v "DirectXUserGlobalSettings" /t REG_SZ /d "VRROptimizeEnable=0;SwapEffectUpgradeEnable=1;" /f
@@ -1477,6 +1574,7 @@ cls
 echo %ESC%[0m
 color 09
 
+echo.
 echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
@@ -1745,9 +1843,9 @@ call :TIScLog config BthAvctpSvc start= disabled
 call :TIScLog config BDESVC start= disabled
 call :TIScLog config cbdhsvc start= disabled
 call :TIScLog config CDPSvc start= disabled
-call :TIScLog config CDPUserSvc start= disabled
+call :TIDisableServiceInstances "CDPUserSvc"
 call :TIScLog config DevQueryBroker start= disabled
-call :TIScLog config DevicesFlowUserSvc start= disabled
+call :TIDisableServiceInstances "DevicesFlowUserSvc"
 call :TIScLog config DispBrokerDesktopSvc start= disabled
 call :TIScLog config TrkWks start= disabled
 call :TIScLog config dLauncherLoopback start= disabled
@@ -1766,9 +1864,9 @@ call :TIScLog config "VSS" start= disabled
 call :TIScLog stop "SDRSVC"
 call :TIScLog config "SDRSVC" start= disabled
 call :TIScLog config SysMain start= disabled
-call :TIScLog config OneSyncSvc start= disabled
+call :TIDisableServiceInstances "OneSyncSvc"
 call :TIScLog config lmhosts start= disabled
-call :TIScLog config UserDataSvc start= disabled
+call :TIDisableServiceInstances "UserDataSvc"
 call :TIScLog config Browser start= disabled
 call :TIScLog config UnistoreSvc start= disabled
 call :TIScLog config Wcmsvc start= disabled
@@ -1776,19 +1874,19 @@ call :TIScLog config FontCache start= disabled
 call :TIScLog config W32Time start= disabled
 call :TIScLog config tzautoupdate start= disabled
 call :TIScLog config DsSvc start= disabled
-call :TIScLog config DevicesFlowUserSvc_5f1ad start= disabled
+
 call :TIScLog config diagsvc start= disabled
 call :TIScLog config DialogBlockingService start= disabled
-call :TIScLog config PimIndexMaintenanceSvc_5f1ad start= disabled
-call :TIScLog config MessagingService_5f1ad start= disabled
+
+
 call :TIScLog config AppVClient start= disabled
 call :TIScLog config MsKeyboardFilter start= disabled
 call :TIScLog config NetTcpPortSharing start= disabled
 call :TIScLog config ClipSVC start= disabled
 call :TIScLog config ssh-agent start= disabled
-call :TIScLog config OneSyncSvc_5f1ad start= disabled
+
 call :TIScLog config wercplsupport start= disabled
-call :TIScLog config WpnUserService_5f1ad start= disabled
+
 call :TIScLog config WinHttpAutoProxySvc start= disabled
 call :TIScLog config DsmSvc start= disabled
 call :TIScLog config ALG start= demand
@@ -1796,7 +1894,7 @@ call :TIScLog config AppIDSvc start= demand
 call :TIScLog config CertPropSvc start= demand
 call :TIScLog config EntAppSvc start= demand
 call :TIScLog config LxpSvc start= demand
-call :TIScLog config PimIndexMaintenanceSvc start= demand
+
 call :TIScLog config RasMan start= demand
 call :TIScLog config RemoteAccess start= demand
 call :TIScLog config RmSvc start= demand
@@ -1819,20 +1917,20 @@ call :TIScLog stop "BthHFSrv"
 call :TIScLog config "BthHFSrv" start= disabled
 call :TIScLog stop "BTAGService"
 call :TIScLog config "BTAGService" start= disabled
-call :TIScLog stop "BluetoothUserService"
-call :TIRegLog add "HKLM\System\CurrentControlSet\Services\BluetoothUserService" /v "Start" /t REG_DWORD /d 4 /f
+call :TIDisableServiceInstances "BluetoothUserService"
+
 call :TIScLog stop "Spooler"
 call :TIScLog config "Spooler" start= disabled
-call :TIScLog stop "PrintWorkflowUserSvc"
-call :TIRegLog add "HKLM\System\CurrentControlSet\Services\PrintWorkflowUserSvc" /v "Start" /t REG_DWORD /d 4 /f
+call :TIDisableServiceInstances "PrintWorkflowUserSvc"
+
 call :TIScLog stop "FrameServer"
 call :TIScLog config "FrameServer" start= disabled
 call :TIScLog stop "wisvc"
 call :TIScLog config "wisvc" start= disabled
 call :TIScLog stop whesvc
 call :TIScLog config whesvc start= disabled
-call :TIRegLog add "HKLM\System\CurrentControlSet\Services\WpnUserService" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\System\CurrentControlSet\Services\MessagingService" /v "Start" /t REG_DWORD /d 4 /f
+call :TIDisableServiceInstances "WpnUserService"
+call :TIDisableServiceInstances "MessagingService"
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\CompatTelRunner.exe" /v "Debugger" /t REG_SZ /d "%windir%\System32\systray.exe" /f
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "Off" /f
@@ -2236,8 +2334,8 @@ if %errorlevel% equ 0 (call :LogOK "AutoLogger SYSTEM permissions denied") else 
 call :LogOK "Manufactor bloat and more services disabled!"
 
 call :LogInfo "Preparing Appx Removal..."
-sc config AppXSvc start= demand >nul 2>&1
-sc start AppXSvc >nul 2>&1
+call :TIScLog config AppXSvc start= demand
+call :TIScLog start AppXSvc
 timeout /t 2 /nobreak >nul
 
 call :LogInfo "Removing Appx Packages..."
@@ -2398,8 +2496,8 @@ for /d %%D in ("C:\Windows\Temp\*") do %TI% cmd.exe /c "rd /s /q \"%%D\"" >nul 2
 %TI% cmd.exe /c "del /s /f /q /a C:\Windows\Prefetch\*.*" >nul 2>&1
 for /d %%D in ("C:\Windows\Prefetch\*") do %TI% cmd.exe /c "rd /s /q \"%%D\"" >nul 2>&1
 
-%TI% sc stop wuauserv >nul 2>&1
-%TI% sc stop BITS >nul 2>&1
+call :TIScLog stop wuauserv
+call :TIScLog stop BITS
 timeout /t 1 /nobreak >nul
 %TI% cmd.exe /c "del /s /f /q /a C:\Windows\SoftwareDistribution\Download\*.*" >nul 2>&1
 
@@ -2513,7 +2611,7 @@ if /i "%wifi_kill%"=="Y" (
 )
 
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f
-%TI% sc stop WlanSvc >nul 2>&1
+call :TIScLog stop WlanSvc
 
 call :LogInfo "Enabling MSI/MSI-X for Ethernet adapters..."
 setlocal enabledelayedexpansion
@@ -2588,10 +2686,10 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Afd\Parameters" /v "FastSendDatagramThreshold" /t REG_DWORD /d 1500 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Afd\Parameters" /v "FastCopyReceiveThreshold" /t REG_DWORD /d 1500 /f
 
-call :ScLog config SSDPSRV start= disabled
-call :ScLog stop SSDPSRV
-call :ScLog config VacSvc start= disabled
-call :ScLog stop VacSvc
+call :TIScLog config SSDPSRV start= disabled
+call :TIScLog stop SSDPSRV
+call :TIScLog config VacSvc start= disabled
+call :TIScLog stop VacSvc
 netsh int tcp set global Chimney=disabled >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "netsh Chimney=disabled") else (call :LogErr "netsh Chimney=disabled")
 netsh int tcp set global rsc=disabled >nul 2>&1
@@ -2772,8 +2870,8 @@ call :RegLog add "HKCU\Control Panel\Keyboard" /v "KeyboardDelay" /t REG_SZ /d "
 call :RegLog add "HKCU\Control Panel\Keyboard" /v "KeyboardSpeed" /t REG_SZ /d "31" /f
 call :RegLog add "HKCU\Software\Microsoft\CTF\LangBar" /v "ShowStatus" /t REG_DWORD /d 3 /f
 call :RegLog add "HKCU\Software\Microsoft\CTF\LangBar" /v "ExtraIconsOnMinimized" /t REG_DWORD /d 0 /f
-call :ScLog config TextInputManagementService start= disabled
-call :ScLog stop TextInputManagementService
+call :TIScLog config TextInputManagementService start= disabled
+call :TIScLog stop TextInputManagementService
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "KeyboardDataQueueSize" /t REG_DWORD /d 20 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "ConnectMultiplePorts" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "MaximumPortsServiced" /t REG_DWORD /d 1 /f
@@ -2801,6 +2899,7 @@ goto main
 call :LogSection "Device Manager Tweaks"
 cls
 color 09
+echo.
 echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
@@ -3156,6 +3255,7 @@ setlocal EnableDelayedExpansion
 call :LogSection "Timer Resolution"
 cls
 echo.
+echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
 echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
@@ -3167,7 +3267,7 @@ echo  %ESC%[34mLATENCY ^& TIMER RESOLUTION TOOLS%ESC%[0m
 echo.
 
 call :LogInfo "Enabling support for global timer resolution requests..."
-%TI% reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d 1 /f >nul 2>&1
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d 1 /f
 if %errorlevel% equ 0 (
     call :LogOK "GlobalTimerResolutionRequests enabled."
 ) else (
@@ -3176,6 +3276,7 @@ if %errorlevel% equ 0 (
 
 set "TIMER_DIR=C:\bardhzzY Utility Tools\Timer Resolution"
 set "TIMER_EXE=%TIMER_DIR%\SetTimerResolution.exe"
+set "MEASURE_EXE=%TIMER_DIR%\MeasureSleep.exe"
 set "REPO_ZIP=%TEMP%\elifian_timer.zip"
 set "EXTRACT_DIR=%TEMP%\elifian_timer_extracted"
 
@@ -3237,6 +3338,7 @@ if not exist "%TIMER_EXE%" (
 :timerres_menu
 cls
 echo.
+echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
 echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
@@ -3245,11 +3347,12 @@ echo        %ESC%[34m██████╔╝██║  ██║██║  █�
 echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
 echo  %ESC%[34mSELECT TIMER RESOLUTION%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] 0.500ms %ESC%[90m(5000 - Recommended for most users)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] 0.504ms %ESC%[90m(5040 - Slightly more aggressive)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m3%ESC%[37m] 0.507ms %ESC%[90m(5070 - Optimal for some AMD CPUs)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Custom Value %ESC%[90m(Enter microseconds, e.g., 5000)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m5%ESC%[37m] Skip Timer Resolution
+echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] 0.500ms %ESC%[90m(5000)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] 0.504ms %ESC%[90m(5040)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m3%ESC%[37m] 0.507ms %ESC%[90m(5070)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Custom Value %ESC%[90m(Enter microseconds)%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m5%ESC%[37m] Measure Sleep Timing
+echo  %ESC%[37m [%ESC%[36m6%ESC%[37m] Skip Timer Resolution
 echo.
 set "timer_choice="
 set /p "timer_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
@@ -3270,19 +3373,67 @@ if /i "%timer_choice%"=="3" (
     set "TIMER_VAL=5070"
     goto timer_apply
 )
-if /i "%timer_choice%"=="5" (
+if /i "%timer_choice%"=="4" goto timer_custom
+
+if /i "%timer_choice%"=="5" goto timer_measure
+
+if /i "%timer_choice%"=="6" (
     call :LogSkip "Timer Resolution setup skipped."
     goto :timerres_islc
 )
-if /i "%timer_choice%"=="4" goto timer_custom
 
 echo.
 echo "%timer_choice%" isn't a right choice, try again!
 timeout 2 >nul
 goto timerres_menu
 
+:timer_measure
+cls
+echo.
+echo.
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo.
+echo  %ESC%[34mMEASURE TIMER RESOLUTION%ESC%[0m
+echo.
+echo  %ESC%[37mMeasureSleep checks the actual timing behavior of Windows Sleep(1).%ESC%[0m
+echo.
+
+if not exist "%MEASURE_EXE%" (
+    call :LogErr "MeasureSleep.exe was not found."
+    echo.
+    echo  %ESC%[31m[ERROR]%ESC%[37m MeasureSleep.exe is missing.
+    echo.
+    echo  Place it here:
+    echo  %ESC%[90m%MEASURE_EXE%%ESC%[0m
+    echo.
+    timeout /t 3 /nobreak >nul
+    goto timerres_menu
+)
+
+call :LogInfo "Launching MeasureSleep.exe..."
+
+start "" "%MEASURE_EXE%"
+
+if errorlevel 1 (
+    call :LogErr "Failed to launch MeasureSleep.exe."
+) else (
+    call :LogOK "MeasureSleep.exe launched."
+)
+
+echo.
+echo  %ESC%[90mMeasureSleep is running separately. Review its results, then return here.%ESC%[0m
+echo.
+pause
+goto timerres_menu
+
 :timer_custom
 cls
+echo.
 echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
@@ -3322,7 +3473,7 @@ set "TIMER_VAL=!custom_val!"
 
 :timer_apply
 call :LogInfo "Setting %TIMER_VAL%us Timer Resolution on startup..."
-%TI% reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "BardhzzyTimerResolution" /t REG_SZ /d "\"%TIMER_EXE%\" --resolution %TIMER_VAL% --no-console" /f >nul 2>&1
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "BardhzzyTimerResolution" /t REG_SZ /d ^""%TIMER_EXE%" --resolution %TIMER_VAL% --no-console^" /f
 if %errorlevel% equ 0 (
     call :LogOK "Timer Resolution set to %TIMER_VAL%us permanently (Startup Registry)."
 ) else (
@@ -3839,9 +3990,9 @@ if not exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
 
 call :LogInfo "Forcibly Importing Original System Registry (Bypassing TrustedInstaller)..."
 echo [+] Forcibly Importing Original System Registry (Bypassing TrustedInstaller)...
-%TI% reg.exe import "%BACKUP_DIR%\HKLM_SYSTEM.reg" >nul 2>&1
+call :TIRegLog import "%BACKUP_DIR%\HKLM_SYSTEM.reg"
 if %errorlevel% equ 0 (call :LogOK "Import HKLM_SYSTEM") else (call :LogErr "Import HKLM_SYSTEM")
-%TI% reg.exe import "%BACKUP_DIR%\HKLM_SOFTWARE.reg" >nul 2>&1
+call :TIRegLog import "%BACKUP_DIR%\HKLM_SOFTWARE.reg"
 if %errorlevel% equ 0 (call :LogOK "Import HKLM_SOFTWARE") else (call :LogErr "Import HKLM_SOFTWARE")
 
 call :LogInfo "Importing Original User Registry..."
@@ -3892,18 +4043,16 @@ if %errorlevel% equ 1 (
 )
 
 :: =====================================================================
-:: BARDHZZY PROFESSIONAL LOGGING SYSTEM v14.1 (Absolute Perfection)
-:: Immune to: & < > | " ! ( ) % ^ in file paths and registry keys
+:: BARDHZZY PROFESSIONAL LOGGING SYSTEM v14.2
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.8.7"
+set "SCRIPT_VERSION=2.8.9"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
 set "LOG_SECTION=SYSTEM"
 
-:: Fetch OS Version smoothly without bloat
 for /f "tokens=4-5 delims=[]. " %%i in ('ver') do set "LOG_OS_VER=%%i.%%j"
 
 for /f "delims=" %%t in ('powershell -NoProfile -Command "Get-Date -Format 'yyyyMMdd_HHmmss'" 2^>nul') do set "LOG_STAMP=%%t"
@@ -3949,264 +4098,384 @@ set "LOG_NOW=%date% %LOG_HR%:%time:~3,2%:%time:~6,2%"
 goto :eof
 
 :LogInfo
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
 set "MSG=%~1"
 if not defined MSG set "MSG=%LOG_MSG%"
 if not defined MSG set "MSG=(No message)"
+set "SEC=%LOG_SECTION%"
+if not defined SEC set "SEC=SYSTEM"
 set "MSG=%MSG:^=^^%"
 set "MSG=%MSG:&=^&%"
 set "MSG=%MSG:|=^|%"
 set "MSG=%MSG:<=^<%"
 set "MSG=%MSG:>=^>%"
-set "SEC=%LOG_SECTION%"
+set "SEC=%SEC:^=^^%"
 set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
 echo %ESC%[37m[INFO]%ESC%[0m %MSG%
-if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [INFO ] [%SEC%] %MSG%
+if not "%LOG_ENABLED%"=="1" goto LogInfo_Done
+>>"%LOG_FILE%" echo([%LOG_NOW%] [INFO ] [%SEC%] %MSG%
+:LogInfo_Done
 endlocal
 goto :eof
 
 :LogOK
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
 set "MSG=%~1"
 if not defined MSG set "MSG=%LOG_MSG%"
 if not defined MSG set "MSG=(No message)"
+set "SEC=%LOG_SECTION%"
+if not defined SEC set "SEC=SYSTEM"
 set "MSG=%MSG:^=^^%"
 set "MSG=%MSG:&=^&%"
 set "MSG=%MSG:|=^|%"
 set "MSG=%MSG:<=^<%"
 set "MSG=%MSG:>=^>%"
-set "SEC=%LOG_SECTION%"
+set "SEC=%SEC:^=^^%"
 set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
 echo %ESC%[32m[  OK]%ESC%[0m %MSG%
-if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [  OK ] [%SEC%] %MSG%
+if not "%LOG_ENABLED%"=="1" goto LogOK_Done
+>>"%LOG_FILE%" echo([%LOG_NOW%] [  OK ] [%SEC%] %MSG%
+:LogOK_Done
 endlocal
 goto :eof
 
 :LogErr
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
 set "MSG=%~1"
 if not defined MSG set "MSG=%LOG_MSG%"
 if not defined MSG set "MSG=(No message)"
+set "SEC=%LOG_SECTION%"
+if not defined SEC set "SEC=SYSTEM"
 set "MSG=%MSG:^=^^%"
 set "MSG=%MSG:&=^&%"
 set "MSG=%MSG:|=^|%"
 set "MSG=%MSG:<=^<%"
 set "MSG=%MSG:>=^>%"
-set "SEC=%LOG_SECTION%"
+set "SEC=%SEC:^=^^%"
 set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
 echo %ESC%[31m[FAIL]%ESC%[0m %MSG%
-if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [FAILED] [%SEC%] %MSG%
-if "%LOG_ENABLED%"=="1" >>"%LOG_ERR%" echo [%LOG_NOW%] [%SEC%] %MSG%
+if not "%LOG_ENABLED%"=="1" goto LogErr_Done
+>>"%LOG_FILE%" echo([%LOG_NOW%] [FAILED] [%SEC%] %MSG%
+if defined LOG_ERR >>"%LOG_ERR%" echo([%LOG_NOW%] [%SEC%] %MSG%
+:LogErr_Done
 endlocal
 goto :eof
 
 :LogWarn
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
 set "MSG=%~1"
 if not defined MSG set "MSG=%LOG_MSG%"
 if not defined MSG set "MSG=(No message)"
+set "SEC=%LOG_SECTION%"
+if not defined SEC set "SEC=SYSTEM"
 set "MSG=%MSG:^=^^%"
 set "MSG=%MSG:&=^&%"
 set "MSG=%MSG:|=^|%"
 set "MSG=%MSG:<=^<%"
 set "MSG=%MSG:>=^>%"
-set "SEC=%LOG_SECTION%"
+set "SEC=%SEC:^=^^%"
 set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
 echo %ESC%[33m[WARN]%ESC%[0m %MSG%
-if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [ WARN] [%SEC%] %MSG%
+if not "%LOG_ENABLED%"=="1" goto LogWarn_Done
+>>"%LOG_FILE%" echo([%LOG_NOW%] [ WARN] [%SEC%] %MSG%
+:LogWarn_Done
 endlocal
 goto :eof
 
 :LogSkip
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
 set "MSG=%~1"
 if not defined MSG set "MSG=%LOG_MSG%"
 if not defined MSG set "MSG=(No message)"
+set "SEC=%LOG_SECTION%"
+if not defined SEC set "SEC=SYSTEM"
 set "MSG=%MSG:^=^^%"
 set "MSG=%MSG:&=^&%"
 set "MSG=%MSG:|=^|%"
 set "MSG=%MSG:<=^<%"
 set "MSG=%MSG:>=^>%"
-set "SEC=%LOG_SECTION%"
+set "SEC=%SEC:^=^^%"
 set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
 echo %ESC%[90m[SKIP]%ESC%[0m %MSG%
-if "%LOG_ENABLED%"=="1" >>"%LOG_FILE%" echo [%LOG_NOW%] [ SKIP] [%SEC%] %MSG%
+if not "%LOG_ENABLED%"=="1" goto LogSkip_Done
+>>"%LOG_FILE%" echo([%LOG_NOW%] [ SKIP] [%SEC%] %MSG%
+:LogSkip_Done
 endlocal
 goto :eof
 
 :LogSection
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
 set "SEC=%~1"
+if not defined SEC set "SEC=SYSTEM"
 set "SEC_ESC=%SEC:^=^^%"
 set "SEC_ESC=%SEC_ESC:&=^&%"
 set "SEC_ESC=%SEC_ESC:|=^|%"
 set "SEC_ESC=%SEC_ESC:<=^<%"
 set "SEC_ESC=%SEC_ESC:>=^>%"
-if "%LOG_ENABLED%"=="1" (
-    >>"%LOG_FILE%" echo.
-    >>"%LOG_FILE%" echo ============================================================
-    >>"%LOG_FILE%" echo [%LOG_NOW%] ^>^>^> SECTION: %SEC_ESC%
-    >>"%LOG_FILE%" echo ============================================================
-)
+if not "%LOG_ENABLED%"=="1" goto LogSection_Set
+>>"%LOG_FILE%" echo(
+>>"%LOG_FILE%" echo ============================================================
+>>"%LOG_FILE%" echo([%LOG_NOW%] ^>^>^> SECTION: %SEC_ESC%
+>>"%LOG_FILE%" echo ============================================================
+:LogSection_Set
 endlocal & set "LOG_SECTION=%~1"
 goto :eof
 
 :RegLog
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 reg %* >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
-if "%BARDHZZ_ERR%"=="0" call :LogOK
-if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
-if not "%BARDHZZ_ERR%"=="0" call :LogErr
+if not "%BARDHZZ_ERR%"=="0" goto RegLog_Fail
+call :LogOK
+endlocal
+goto :eof
+:RegLog_Fail
+set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+call :LogErr
 endlocal
 goto :eof
 
 :TIRegLog
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 set "BARDHZZ_CMD=reg %*"
 if defined TI set "BARDHZZ_CMD=%TI% reg %*"
+if defined TI goto TIRegLog_Execute
+reg %* >nul 2>&1
+goto TIRegLog_Result
+:TIRegLog_Execute
 %BARDHZZ_CMD% >nul 2>&1
+:TIRegLog_Result
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
-if "%BARDHZZ_ERR%"=="0" call :LogOK
-if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
-if not "%BARDHZZ_ERR%"=="0" call :LogErr
+if not "%BARDHZZ_ERR%"=="0" goto TIRegLog_Fail
+call :LogOK
+endlocal
+goto :eof
+:TIRegLog_Fail
+set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+call :LogErr
 endlocal
 goto :eof
 
 :ScLog
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 sc %* >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
-if "%BARDHZZ_ERR%"=="0" call :LogOK
-if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
-if not "%BARDHZZ_ERR%"=="0" call :LogErr
+if not "%BARDHZZ_ERR%"=="0" goto ScLog_Fail
+call :LogOK
+endlocal
+goto :eof
+:ScLog_Fail
+set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+call :LogErr
 endlocal
 goto :eof
 
+:TIDisableServiceInstances
+setlocal DisableDelayedExpansion
+set "TIS_PREFIX=%~1"
+if not defined TIS_PREFIX goto TISInstances_Done
+set "TIS_FOUND=0"
+for /f "tokens=2" %%S in ('sc query type^= service state^= all ^| findstr /I /C:"SERVICE_NAME: %TIS_PREFIX%_"') do call :TIDisableServiceInstance "%%S"
+if not "%TIS_FOUND%"=="0" goto TISInstances_Done
+set "LOG_MSG=%TIS_PREFIX%_ service instance not present (skipped)"
+call :LogSkip
+:TISInstances_Done
+endlocal
+goto :eof
+
+:TIDisableServiceInstance
+set "TIS_FOUND=1"
+call :TIScLog config "%~1" start= disabled
+goto :eof
+
 :TIScLog
-setlocal DISABLEDELAYEDEXPANSION
-if /i "%~1"=="config" sc stop "%~2" >nul 2>&1
-set "BARDHZZ_CMD=sc %*"
-if defined TI set "BARDHZZ_CMD=%TI% sc %*"
+setlocal DisableDelayedExpansion
+set "TIS_ACTION=%~1"
+set "TIS_SERVICE=%~2"
+if not defined TIS_ACTION goto TIScLog_BadArgs
+if not defined TIS_SERVICE goto TIScLog_BadArgs
+
+sc query "%TIS_SERVICE%" >nul 2>&1
+set "TIS_QUERY_ERR=%errorlevel%"
+if "%TIS_QUERY_ERR%"=="1060" goto TIScLog_Skip
+if not "%TIS_QUERY_ERR%"=="0" goto TIScLog_QueryFail
+
+set "LOG_MSG=%*"
+if not defined TI goto TIScLog_NoTI
+set "BARDHZZ_CMD=%TI% sc %*"
 %BARDHZZ_CMD% >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
-if "%BARDHZZ_ERR%"=="0" call :LogOK
-if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
-if not "%BARDHZZ_ERR%"=="0" call :LogErr
+if not "%BARDHZZ_ERR%"=="0" goto TIScLog_Fail
+
+if /I not "%TIS_ACTION%"=="config" goto TIScLog_OK
+if /I not "%~3"=="start=" goto TIScLog_OK
+
+set "TIS_EXPECT=%~4"
+set "TIS_EXPECT_CODE="
+if /I "%TIS_EXPECT%"=="disabled" set "TIS_EXPECT_CODE=4"
+if /I "%TIS_EXPECT%"=="demand" set "TIS_EXPECT_CODE=3"
+if /I "%TIS_EXPECT%"=="auto" set "TIS_EXPECT_CODE=2"
+if not defined TIS_EXPECT_CODE goto TIScLog_OK
+
+set "TIS_ACTUAL_CODE="
+for /f "tokens=3" %%A in ('sc qc "%TIS_SERVICE%" ^| findstr /I /C:"START_TYPE"') do set "TIS_ACTUAL_CODE=%%A"
+if "%TIS_ACTUAL_CODE%"=="%TIS_EXPECT_CODE%" goto TIScLog_OK
+
+set "LOG_MSG=%* (verification failed: expected start code %TIS_EXPECT_CODE%, actual %TIS_ACTUAL_CODE%)"
+call :LogErr
+endlocal
+goto :eof
+
+
+:TIScLog_NoTI
+set "LOG_MSG=%* (TrustedInstaller engine unavailable)"
+call :LogErr
+endlocal
+goto :eof
+
+:TIScLog_OK
+call :LogOK
+endlocal
+goto :eof
+
+:TIScLog_Fail
+set "LOG_MSG=%* (err=%BARDHZZ_ERR%)"
+call :LogErr
+endlocal
+goto :eof
+
+:TIScLog_Skip
+set "LOG_MSG=%* (service not installed)"
+call :LogSkip
+endlocal
+goto :eof
+
+:TIScLog_QueryFail
+set "LOG_MSG=%* (service query failed, err=%TIS_QUERY_ERR%)"
+call :LogErr
+endlocal
+goto :eof
+
+:TIScLog_BadArgs
+set "LOG_MSG=TIScLog called with invalid arguments"
+call :LogErr
 endlocal
 goto :eof
 
 :SchLog
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 schtasks %* >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
-if "%BARDHZZ_ERR%"=="0" call :LogOK
-if not "%BARDHZZ_ERR%"=="0" set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
-if not "%BARDHZZ_ERR%"=="0" call :LogErr
+if "%BARDHZZ_ERR%"=="0" goto SchLog_OK
+set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+call :LogErr
 endlocal
 goto :eof
 
-:: =====================================================================
-:: SUMMARY & VIEWERS
-:: =====================================================================
+:SchLog_OK
+call :LogOK
+endlocal
+goto :eof
 
 :LogSummary
-setlocal DISABLEDELAYEDEXPANSION
+setlocal DisableDelayedExpansion
 call :LogTS
-
-if not exist "%LOG_FILE%" (
-    echo [!] No log file found.
-    endlocal
-    exit /b
-)
+if not exist "%LOG_FILE%" goto LogSummary_NoFile
 
 set "LOG_OK=0"
 set "LOG_FAIL=0"
 set "LOG_WARN=0"
 set "LOG_SKIP=0"
-
 for /f %%A in ('type "%LOG_FILE%" 2^>nul ^| find /c "[  OK ]"') do set "LOG_OK=%%A"
 for /f %%A in ('type "%LOG_FILE%" 2^>nul ^| find /c "[FAILED]"') do set "LOG_FAIL=%%A"
 for /f %%A in ('type "%LOG_FILE%" 2^>nul ^| find /c "[ WARN]"') do set "LOG_WARN=%%A"
 for /f %%A in ('type "%LOG_FILE%" 2^>nul ^| find /c "[ SKIP]"') do set "LOG_SKIP=%%A"
+set /a "LOG_TOTAL=LOG_OK+LOG_FAIL+LOG_WARN+LOG_SKIP" >nul 2>&1
 
-set /a "LOG_TOTAL=LOG_OK+LOG_FAIL+LOG_WARN+LOG_SKIP" 2>nul
+if not "%LOG_ENABLED%"=="1" goto LogSummary_Display
+>>"%LOG_FILE%" echo(
+>>"%LOG_FILE%" echo ============================================================
+>>"%LOG_FILE%" echo([%LOG_NOW%] ^>^>^> EXECUTION SUMMARY
+>>"%LOG_FILE%" echo ============================================================
+>>"%LOG_FILE%" echo( Total Operations : %LOG_TOTAL%
+>>"%LOG_FILE%" echo( Successful       : %LOG_OK%
+>>"%LOG_FILE%" echo( Failed           : %LOG_FAIL%
+>>"%LOG_FILE%" echo( Warnings         : %LOG_WARN%
+>>"%LOG_FILE%" echo( Skipped          : %LOG_SKIP%
+>>"%LOG_FILE%" echo ============================================================
+>>"%LOG_FILE%" echo( Full Log  : %LOG_FILE%
+>>"%LOG_FILE%" echo( Error Log : %LOG_ERR%
+>>"%LOG_FILE%" echo ============================================================
 
-if "%LOG_ENABLED%"=="1" (
-    >>"%LOG_FILE%" echo.
-    >>"%LOG_FILE%" echo ============================================================
-    >>"%LOG_FILE%" echo [%LOG_NOW%] ^>^>^> EXECUTION SUMMARY
-    >>"%LOG_FILE%" echo ============================================================
-    >>"%LOG_FILE%" echo  Total Operations : %LOG_TOTAL%
-    >>"%LOG_FILE%" echo  Successful       : %LOG_OK%
-    >>"%LOG_FILE%" echo  Failed           : %LOG_FAIL%
-    >>"%LOG_FILE%" echo  Warnings         : %LOG_WARN%
-    >>"%LOG_FILE%" echo  Skipped          : %LOG_SKIP%
-    >>"%LOG_FILE%" echo ============================================================
-    >>"%LOG_FILE%" echo  Full Log  : %LOG_FILE%
-    >>"%LOG_FILE%" echo  Error Log : %LOG_ERR%
-    >>"%LOG_FILE%" echo ============================================================
-)
-
-echo.
+:LogSummary_Display
+echo(
 echo ============================================================
 echo                EXECUTION SUMMARY
 echo ============================================================
-echo  Total Operations : %LOG_TOTAL%
-echo  Successful       : %LOG_OK%
-echo  Failed           : %LOG_FAIL%
-echo  Warnings         : %LOG_WARN%
-echo  Skipped          : %LOG_SKIP%
+echo( Total Operations : %LOG_TOTAL%
+echo( Successful       : %LOG_OK%
+echo( Failed           : %LOG_FAIL%
+echo( Warnings         : %LOG_WARN%
+echo( Skipped          : %LOG_SKIP%
 echo ============================================================
-echo  Log File: %LOG_FILE%
+echo( Log File: %LOG_FILE%
 echo ============================================================
-echo.
+echo(
+endlocal
+goto :eof
+
+:LogSummary_NoFile
+echo [!] No log file found.
+timeout /t 2 /nobreak >nul
 endlocal
 goto :eof
 
 :LogView
-if exist "%LOG_FILE%" (
-    start notepad "%LOG_FILE%"
-) else (
-    echo [!] No log file found.
-    timeout 2 >nul
-)
+if not exist "%LOG_FILE%" goto LogView_NoFile
+start "" notepad "%LOG_FILE%"
+goto :eof
+
+:LogView_NoFile
+echo [!] No log file found.
+timeout /t 2 /nobreak >nul
 goto :eof
 
 :LogViewErrors
-if exist "%LOG_ERR%" (
-    start notepad "%LOG_ERR%"
-) else (
-    echo [!] No error log file found.
-    timeout 2 >nul
-)
+if not exist "%LOG_ERR%" goto LogViewErrors_NoFile
+start "" notepad "%LOG_ERR%"
 goto :eof
+
+:LogViewErrors_NoFile
+echo [!] No error log file found.
+timeout /t 2 /nobreak >nul
+goto :eof
+
 :: =====================================================================
 :: END OF LOGGING SYSTEM
 :: =====================================================================
