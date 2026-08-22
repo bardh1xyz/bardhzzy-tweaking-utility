@@ -170,12 +170,27 @@ if %errorlevel% equ 0 (
 goto NSUDO_SETUP
 
 :tools_exist
-call :LogOK "bardhzzY Utility Tools already exists. Skipping download."
+if exist "%UTIL_DIR%\nsudo\NSudoLC.exe" (
+    call :LogOK "bardhzzY Utility Tools verified. Skipping download."
+    goto NSUDO_SETUP
+)
+
+call :LogWarn "Utility Tools folder exists but required NSudo is missing."
+call :LogInfo "Attempting to repair the tools directory from GitHub..."
+
+if exist "%UTIL_DIR%" rd /s /q "%UTIL_DIR%" >nul 2>&1
+mkdir "%UTIL_DIR%" >nul 2>&1
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
+
+if %errorlevel% equ 0 if exist "%UTIL_DIR%\nsudo\NSudoLC.exe" (
+    call :LogOK "Utility Tools repaired successfully."
+) else (
+    call :LogWarn "Utility Tools repair could not be verified. Continuing with Administrator fallback."
+)
+
 goto NSUDO_SETUP
 
-:: =====================================================================
-:: NSUDO / TRUSTEDINSTALLER INTEGRATION
-:: =====================================================================
 :NSUDO_SETUP
 set "NSUDO_EXE=C:\bardhzzY Utility Tools\nsudo\NSudoLC.exe"
 set "TI="
@@ -1449,17 +1464,6 @@ if %errorlevel% equ 0 (call :LogOK "bcdedit hypervisor off") else (call :LogErr 
 
 setlocal enabledelayedexpansion
 
-call :LogInfo "Applying Intel iGPU Registry Tweaks (for laptops/hybrid systems)..."
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "Disable_OverlayDSQualityEnhancement" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "IncreaseFixedSegment" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "AdaptiveVsyncEnable" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DisablePFonDP" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableCompensationForDVI" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "NoFastLinkTrainingForeDP" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "ACPowerPolicyVersion" /t REG_DWORD /d "16898" /f
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DCPowerPolicyVersion" /t REG_DWORD /d "16642" /f
-call :RegLog add "HKLM\Software\Intel\GMM" /v "DedicatedSegmentSize" /t REG_DWORD /d "512" /f
-
 call :LogInfo "Setting Background Apps to Power Saving / Low Priority..."
 set "discordPath="
 set "robloxPath="
@@ -2563,8 +2567,13 @@ if /i "%wifi_kill%"=="Y" (
     timeout /t 2 /nobreak >nul
 )
 
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f
-call :TIScLog stop WlanSvc
+if /i "%wifi_kill%"=="Y" (
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f
+    call :TIScLog stop WlanSvc
+    call :LogWarn "WLAN AutoConfig was disabled because Ethernet-only mode was selected."
+) else (
+    call :LogSkip "WLAN AutoConfig left unchanged."
+)
 
 call :LogInfo "Enabling MSI/MSI-X for Ethernet adapters..."
 setlocal enabledelayedexpansion
@@ -3174,29 +3183,96 @@ if exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
     echo     %BACKUP_DIR%
     echo     Creating a new backup will overwrite the old one.
     echo.
-    choice /c YN /m "Do you want to overwrite the existing backup"
+    choice /c YN /n /m "Do you want to overwrite the existing backup? (Y/N): "
     if errorlevel 2 goto main
 )
 
-:DO_BACKUP
 echo.
 echo [+] Creating Safety Backup of System Registry...
 echo     This may take up to 30 seconds. Please do not close this window...
-mkdir "%BACKUP_DIR%" >nul 2>&1
+echo.
 
-reg export "HKLM\SYSTEM" "%BACKUP_DIR%\HKLM_SYSTEM.reg" /y >nul
-if %errorlevel% equ 0 (call :LogOK "Export HKLM_SYSTEM") else (call :LogErr "Export HKLM_SYSTEM")
-reg export "HKLM\SOFTWARE" "%BACKUP_DIR%\HKLM_SOFTWARE.reg" /y >nul
-if %errorlevel% equ 0 (call :LogOK "Export HKLM_SOFTWARE") else (call :LogErr "Export HKLM_SOFTWARE")
-reg export "HKCU\Software" "%BACKUP_DIR%\HKCU_Software.reg" /y >nul
-if %errorlevel% equ 0 (call :LogOK "Export HKCU_Software") else (call :LogErr "Export HKCU_Software")
-reg export "HKCU\Control Panel" "%BACKUP_DIR%\HKCU_CPanel.reg" /y >nul
-if %errorlevel% equ 0 (call :LogOK "Export HKCU_CPanel") else (call :LogErr "Export HKCU_CPanel")
+if not exist "%BACKUP_DIR%" (
+    mkdir "%BACKUP_DIR%" >nul 2>&1
+)
+
+if not exist "%BACKUP_DIR%" (
+    call :LogErr "Could not create backup directory."
+    echo [X] ERROR: Could not create:
+    echo     %BACKUP_DIR%
+    echo.
+    pause
+    goto main
+)
+
+set "BACKUP_OK=1"
+
+echo [1/4] Exporting HKLM\SYSTEM...
+reg export "HKLM\SYSTEM" "%BACKUP_DIR%\HKLM_SYSTEM.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKLM_SYSTEM failed."
+    echo [X] HKLM_SYSTEM backup FAILED
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKLM_SYSTEM"
+    echo [OK] HKLM_SYSTEM backup created
+)
+
+echo [2/4] Exporting HKLM\SOFTWARE...
+reg export "HKLM\SOFTWARE" "%BACKUP_DIR%\HKLM_SOFTWARE.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKLM_SOFTWARE failed."
+    echo [X] HKLM_SOFTWARE backup FAILED
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKLM_SOFTWARE"
+    echo [OK] HKLM_SOFTWARE backup created
+)
+
+echo [3/4] Exporting HKCU\Software...
+reg export "HKCU\Software" "%BACKUP_DIR%\HKCU_Software.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKCU_Software failed."
+    echo [X] HKCU_Software backup FAILED
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKCU_Software"
+    echo [OK] HKCU_Software backup created
+)
+
+echo [4/4] Exporting HKCU\Control Panel...
+reg export "HKCU\Control Panel" "%BACKUP_DIR%\HKCU_CPanel.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKCU_CPanel failed."
+    echo [X] HKCU_CPanel backup FAILED
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKCU_CPanel"
+    echo [OK] HKCU_CPanel backup created
+)
 
 echo.
-call :LogOK "Backup successfully saved to %BACKUP_DIR%"
-echo [OK] Backup successfully saved to %BACKUP_DIR%
-echo     You can now use the Revert Undo feature safely.
+
+if "%BACKUP_OK%"=="1" (
+    call :LogOK "Complete registry backup verified."
+    echo ======================================================
+    echo [OK] COMPLETE REGISTRY BACKUP VERIFIED
+    echo ======================================================
+    echo.
+    echo Backup location:
+    echo %BACKUP_DIR%
+    echo.
+    echo You can now safely use the Revert Tweaks option.
+) else (
+    call :LogErr "Registry backup is incomplete."
+    echo ======================================================
+    echo [X] REGISTRY BACKUP FAILED / INCOMPLETE
+    echo ======================================================
+    echo.
+    echo One or more registry exports failed.
+    echo DO NOT use Revert Tweaks until a complete backup exists.
+)
+
 echo.
 echo Press any key to return to the main menu...
 pause >nul
@@ -3770,7 +3846,7 @@ if "%fnoption%"=="1" (
     echo ╔═══════════════════════════════════════╗
     echo ║ Importing Legacy Performance Mode.    ║
     echo ╚═══════════════════════════════════════╝
-    move /Y "C:\Fortnite Optimizer Tools\Legacy Performance Mode\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
+    copy /Y "C:\Fortnite Optimizer Tools\Legacy Performance Mode\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import Legacy Performance Mode!"
         echo %Red%Failed to import Legacy Performance Mode!
@@ -3789,7 +3865,7 @@ if "%fnoption%"=="2" (
     echo ╔════════════════════════════════════╗
     echo ║ Importing New Performance Mode.    ║
     echo ╚════════════════════════════════════╝
-    move /Y "C:\Fortnite Optimizer Tools\New Performance Mode\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
+    copy /Y "C:\Fortnite Optimizer Tools\New Performance Mode\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import New Performance Mode!"
         echo %Red%Failed to import New Performance Mode!
@@ -3808,7 +3884,7 @@ if "%fnoption%"=="3" (
     echo ╔═════════════════════╗
     echo ║ Importing DX 12.    ║
     echo ╚═════════════════════╝
-    move /Y "C:\Fortnite Optimizer Tools\DX 12\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
+    copy /Y "C:\Fortnite Optimizer Tools\DX 12\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import DX 12!"
         echo %Red%Failed to import DX 12!
@@ -3827,7 +3903,7 @@ if "%fnoption%"=="4" (
     echo ╔═════════════════════╗
     echo ║ Importing DX 11.    ║
     echo ╚═════════════════════╝
-    move /Y "C:\Fortnite Optimizer Tools\DX 11\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
+    copy /Y "C:\Fortnite Optimizer Tools\DX 11\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import DX 11!"
         echo %Red%Failed to import DX 11!
@@ -3888,7 +3964,13 @@ echo ║ Adding Fortnite Additional Command Line Arguments.      ║
 echo ╚═════════════════════════════════════════════════════════╝
 echo Opening Epic Games Launcher in 2 seconds!
 timeout 2 > nul
-start "" "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe"
+if exist "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe" (
+    start "" "C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe"
+) else if exist "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe" (
+    start "" "C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe"
+) else (
+    start "" "com.epicgames.launcher://apps"
+)
 echo.
 echo Launching the Github guide in 3 seconds!
 timeout 3 > nul
@@ -3921,7 +4003,7 @@ echo           BARDHZZY Tweaks - Revert / Undo Mode
 echo ======================================================
 echo.
 echo [!] WARNING: This will forcefully overwrite your current
-echo     registry with the backup created via Option 16.
+echo     registry with the backup created via Option 15.
 echo.
 echo [!] NOTE: If you used the 'Clean Up' tool to remove Windows Apps,
 echo     those specific apps will NOT be reinstalled by this process.
@@ -3932,28 +4014,98 @@ if %errorlevel% equ 2 goto main
 
 echo.
 set "BACKUP_DIR=%ProgramData%\BARDHZZY\Backup"
+set "BACKUP_OK=1"
+
+if not exist "%BACKUP_DIR%" (
+    set "BACKUP_OK=0"
+)
+
 if not exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
-    call :LogErr "No backup found in %BACKUP_DIR%"
-    echo [X] ERROR: No backup found in %BACKUP_DIR%
-    echo [X] You cannot revert if you never made a backup.
-    echo [X] Please select Option 16 to create a backup first.
-    timeout /t 3 >nul
+    set "BACKUP_OK=0"
+)
+
+if not exist "%BACKUP_DIR%\HKLM_SOFTWARE.reg" (
+    set "BACKUP_OK=0"
+)
+
+if not exist "%BACKUP_DIR%\HKCU_Software.reg" (
+    set "BACKUP_OK=0"
+)
+
+if not exist "%BACKUP_DIR%\HKCU_CPanel.reg" (
+    set "BACKUP_OK=0"
+)
+
+if "%BACKUP_OK%"=="0" (
+    call :LogErr "Registry backup is missing or incomplete."
+    echo.
+    echo ======================================================
+    echo [X] INVALID / INCOMPLETE REGISTRY BACKUP
+    echo ======================================================
+    echo.
+    echo Required backup files were not found.
+    echo Revert has been CANCELLED for safety.
+    echo.
+    echo Please create a new complete Registry Backup first.
+    echo.
+    pause
     goto main
 )
 
-call :LogInfo "Forcibly Importing Original System Registry (Bypassing TrustedInstaller)..."
-echo [+] Forcibly Importing Original System Registry (Bypassing TrustedInstaller)...
+call :LogOK "Complete registry backup verified before restore."
+echo [OK] All required registry backup files verified.
+echo.
+
+set "REVERT_OK=1"
+
+call :LogInfo "Forcibly Importing Original System Registry..."
+echo [+] Importing Original System Registry...
+
 call :TIRegLog import "%BACKUP_DIR%\HKLM_SYSTEM.reg"
-if %errorlevel% equ 0 (call :LogOK "Import HKLM_SYSTEM") else (call :LogErr "Import HKLM_SYSTEM")
+if errorlevel 1 (
+    call :LogErr "Import HKLM_SYSTEM failed."
+    set "REVERT_OK=0"
+) else (
+    call :LogOK "Import HKLM_SYSTEM"
+)
+
 call :TIRegLog import "%BACKUP_DIR%\HKLM_SOFTWARE.reg"
-if %errorlevel% equ 0 (call :LogOK "Import HKLM_SOFTWARE") else (call :LogErr "Import HKLM_SOFTWARE")
+if errorlevel 1 (
+    call :LogErr "Import HKLM_SOFTWARE failed."
+    set "REVERT_OK=0"
+) else (
+    call :LogOK "Import HKLM_SOFTWARE"
+)
 
 call :LogInfo "Importing Original User Registry..."
 echo [+] Importing Original User Registry...
+
 reg import "%BACKUP_DIR%\HKCU_Software.reg" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Import HKCU_Software") else (call :LogErr "Import HKCU_Software")
+if errorlevel 1 (
+    call :LogErr "Import HKCU_Software failed."
+    set "REVERT_OK=0"
+) else (
+    call :LogOK "Import HKCU_Software"
+)
+
 reg import "%BACKUP_DIR%\HKCU_CPanel.reg" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Import HKCU_CPanel") else (call :LogErr "Import HKCU_CPanel")
+if errorlevel 1 (
+    call :LogErr "Import HKCU_CPanel failed."
+    set "REVERT_OK=0"
+) else (
+    call :LogOK "Import HKCU_CPanel"
+)
+
+echo.
+
+if "%REVERT_OK%"=="1" (
+    call :LogOK "All registry imports completed successfully."
+    echo [OK] All registry hives restored successfully.
+) else (
+    call :LogErr "One or more registry imports failed."
+    echo [X] Registry restore completed with ERRORS.
+    echo [!] Do not assume the system is fully reverted.
+)
 
 call :LogInfo "Restarting Explorer to apply visual reverts..."
 echo [+] Restarting Explorer to apply visual reverts...
@@ -4000,7 +4152,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.8.9.1"
+set "SCRIPT_VERSION=v3.0.0"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
