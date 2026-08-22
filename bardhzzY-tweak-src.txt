@@ -3,27 +3,34 @@ setlocal
 title bardhzzY Tweaks - admin check
 set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
 
-set "dmv=powershell -NoProfile -Command Disable-PnpDevice -InstanceId"
+set "dmv=powershell -NoProfile -Command "$id=[string]$args[0]; try { Disable-PnpDevice -InstanceId $id -Confirm:$false -ErrorAction Stop; exit 0 } catch { exit 1 }""
 
 fltmc >nul 2>&1
 
 if not "%errorlevel%"=="0" (
-    mode con: cols=78 lines=15
-    color 0B
+    mode con: cols=78 lines=18
+    color 0E
     cls
 
     echo.
-    echo  ============================================================
+    echo  ==============================================================
     echo.
-    echo                     bardhzzY TWEAKS
+    echo                    bardhzzY TWEAKS
     echo.
-    echo       Administrator privileges are required to continue.
+    echo  ==============================================================
     echo.
-    echo       A Windows security prompt will appear shortly.
+    echo   [!] ACCESS DENIED - Administrator required
     echo.
-    echo       Please click YES when prompted.
+    echo   This utility modifies system services, the registry,
+    echo   and protected files. Elevated privileges are needed.
     echo.
-    echo  ============================================================
+    echo   A Windows security prompt will appear shortly.
+    echo.
+    echo   Please click YES when prompted.
+    echo.
+    echo   If no prompt appears, run the file from an admin account.
+    echo.
+    echo  ==============================================================
     echo.
     timeout /t 3 /nobreak >nul
 
@@ -160,22 +167,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='
 if %errorlevel% equ 0 (
     if exist "%UTIL_DIR%" (
         call :LogOK "Tools successfully downloaded and extracted."
-        goto NSUDO_SETUP
+        goto ADVANCEDRUN_SETUP
     ) else (
         call :LogErr "Failed to verify directory creation."
     )
 ) else (
     call :LogErr "Download failed. Download directly from https://github.com/bardh1xyz/bardhzzY-Utility-Tools ^(save to c: drive^) or check network connection."
 )
-goto NSUDO_SETUP
+goto ADVANCEDRUN_SETUP
 
 :tools_exist
-if exist "%UTIL_DIR%\nsudo\NSudoLC.exe" (
+if exist "%UTIL_DIR%\AdvancedRun\AdvancedRun.exe" (
     call :LogOK "bardhzzY Utility Tools verified. Skipping download."
-    goto NSUDO_SETUP
+    goto ADVANCEDRUN_SETUP
 )
 
-call :LogWarn "Utility Tools folder exists but required NSudo is missing."
+call :LogWarn "Utility Tools folder exists but required AdvancedRun is missing."
 call :LogInfo "Attempting to repair the tools directory from GitHub..."
 
 if exist "%UTIL_DIR%" rd /s /q "%UTIL_DIR%" >nul 2>&1
@@ -183,72 +190,165 @@ mkdir "%UTIL_DIR%" >nul 2>&1
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
 
-if %errorlevel% equ 0 if exist "%UTIL_DIR%\nsudo\NSudoLC.exe" (
+if %errorlevel% equ 0 if exist "%UTIL_DIR%\AdvancedRun\AdvancedRun.exe" (
     call :LogOK "Utility Tools repaired successfully."
 ) else (
     call :LogWarn "Utility Tools repair could not be verified. Continuing with Administrator fallback."
 )
 
-goto NSUDO_SETUP
+goto ADVANCEDRUN_SETUP
 
-:NSUDO_SETUP
-set "NSUDO_EXE=C:\bardhzzY Utility Tools\nsudo\NSudoLC.exe"
+:ADVANCEDRUN_SETUP
+set "ADVANCEDRUN_EXE=C:\bardhzzY Utility Tools\AdvancedRun\AdvancedRun.exe"
 set "TI="
 set "TI_AVAILABLE=0"
 
-if not exist "%NSUDO_EXE%" goto NSUDO_UNAVAILABLE
+if not exist "%ADVANCEDRUN_EXE%" goto ADVANCEDRUN_UNAVAILABLE
 
-set "TI_TEST=%TEMP%\BARDHZZY_TI_TEST_%RANDOM%.txt"
+REM AdvancedRun needs NO setup - just verify it works
+call :AdvancedRun_Test
+if "%TI_AVAILABLE%"=="1" (
+    echo.
+    echo        %ESC%[32m[OK]%ESC%[37m AdvancedRun TrustedInstaller verified.
+    echo.
+    timeout /t 1 /nobreak >nul
+    goto :main
+)
 
-sc.exe query TrustedInstaller >nul 2>&1
-if errorlevel 1 goto NSUDO_TEST_FAILED
+goto ADVANCEDRUN_TEST_FAILED
 
-sc.exe query TrustedInstaller | findstr /I "RUNNING" >nul 2>&1
+:ADVANCEDRUN_TEST_FAILED
+cls
+MODE 100,30
+color 09
+echo %ESC%[0m
+
+echo.
+echo.
+echo        %ESC%[31m============================================================%ESC%[0m
+echo.
+echo                    %ESC%[1;31mADVANCEDRUN TEST FAILED%ESC%[0m
+echo.
+echo        %ESC%[31m============================================================%ESC%[0m
+echo.
+echo.
+echo        %ESC%[37mAdvancedRun verification failed.%ESC%[0m
+echo.
+echo        %ESC%[90mPossible causes:%ESC%[0m
+echo        %ESC%[37m  - AdvancedRun.exe is blocked by antivirus%ESC%[0m
+echo        %ESC%[37m  - Insufficient permissions%ESC%[0m
+echo        %ESC%[37m  - File corrupted or wrong architecture%ESC%[0m
+echo.
+echo.
+echo        %ESC%[90mWhat would you like to do?%ESC%[0m
+echo.
+echo           %ESC%[36m1%ESC%[37m. %ESC%[32mTry test again%ESC%[0m
+echo           %ESC%[36m2%ESC%[37m. %ESC%[33mContinue with Admin only%ESC%[0m
+echo           %ESC%[36m3%ESC%[37m. %ESC%[31mExit script%ESC%[0m
+echo.
+echo.
+echo        %ESC%[34m============================================================%ESC%[0m
+echo.
+echo.
+set "setup_choice="
+set /p "setup_choice=        Select option: "
+
+if "%setup_choice%"=="1" goto ADVANCEDRUN_SETUP
+if "%setup_choice%"=="2" goto ADVANCEDRUN_ADMIN_FALLBACK
+if "%setup_choice%"=="3" exit /b
+
+echo.
+echo        %ESC%[31mInvalid choice.%ESC%[0m
+timeout /t 2 /nobreak >nul
+goto ADVANCEDRUN_TEST_FAILED
+
+:ADVANCEDRUN_ADMIN_FALLBACK
+set "TI="
+set "TI_AVAILABLE=0"
+cls
+echo.
+echo        %ESC%[33m[NOTE]%ESC%[37m Continuing with Administrator privileges only.%ESC%[0m
+echo        %ESC%[90mSome protected files and registry keys may not be modifiable.%ESC%[0m
+echo.
+timeout /t 3 /nobreak >nul
+goto :main
+
+:ADVANCEDRUN_UNAVAILABLE
+set "TI="
+set "TI_AVAILABLE=0"
+cls
+echo.
+echo        %ESC%[33m[NOTE]%ESC%[37m AdvancedRun not found in tools folder.%ESC%[0m
+echo        %ESC%[90mLocation: %ADVANCEDRUN_EXE%%ESC%[0m
+echo        %ESC%[90mContinuing with Administrator privileges only.%ESC%[0m
+echo.
+timeout /t 3 /nobreak >nul
+goto :main
+
+REM ================================================================
+REM Test function for AdvancedRun
+REM ================================================================
+:AdvancedRun_Test
+set "TI_TEST_FILE=C:\Windows\Temp\BARDHZZY_TI_TEST.txt"
+
+REM Pre-start the TrustedInstaller service. It is demand-start by default.
+REM With UAC fully disabled (EnableLUA=0) on Win11 24H2, TrustedInstaller.exe
+REM may not be running, and AdvancedRun /RunAs 8 needs to grab the token from
+REM the live process. Trigger it explicitly here.
+sc query TrustedInstaller 2>nul | findstr /I "RUNNING" >nul 2>&1
 if errorlevel 1 (
-    sc.exe start TrustedInstaller >nul 2>&1
+    sc start TrustedInstaller >nul 2>&1
     timeout /t 2 /nobreak >nul
 )
 
-"%NSUDO_EXE%" -U:T -P:E -ShowWindowMode:Hide -Wait ^
-    powershell.exe -NoProfile -NonInteractive -Command ^
-    "$id=[Security.Principal.WindowsIdentity]::GetCurrent(); $id.Groups | ForEach-Object { $_.Value } | Set-Content -LiteralPath '%TI_TEST%' -Encoding ascii" >nul 2>&1
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 
-set "TI_TEST_ERR=%errorlevel%"
-if not "%TI_TEST_ERR%"=="0" goto NSUDO_TEST_FAILED
+REM Attempt 1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\BARDHZZY_TI_TEST.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+if exist "%TI_TEST_FILE%" (
+    findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
+    if not errorlevel 1 (
+        del /q "%TI_TEST_FILE%" >nul 2>&1
+        set "TI_AVAILABLE=1"
+        set "TI=1"
+        goto :eof
+    )
+)
 
-findstr /L /I /C:"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464" "%TI_TEST%" >nul 2>&1
-if errorlevel 1 goto NSUDO_TEST_FAILED
+REM Attempt 2 - retry with delay (TrustedInstaller may need time to init)
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+timeout /t 2 /nobreak >nul
+sc start TrustedInstaller >nul 2>&1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\BARDHZZY_TI_TEST.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+if exist "%TI_TEST_FILE%" (
+    findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
+    if not errorlevel 1 (
+        del /q "%TI_TEST_FILE%" >nul 2>&1
+        set "TI_AVAILABLE=1"
+        set "TI=1"
+        goto :eof
+    )
+)
 
-del /q "%TI_TEST%" >nul 2>&1
+REM Attempt 3 - final retry with longer delay
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+timeout /t 3 /nobreak >nul
+sc start TrustedInstaller >nul 2>&1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\BARDHZZY_TI_TEST.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+if exist "%TI_TEST_FILE%" (
+    findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
+    if not errorlevel 1 (
+        del /q "%TI_TEST_FILE%" >nul 2>&1
+        set "TI_AVAILABLE=1"
+        set "TI=1"
+        goto :eof
+    )
+)
 
-set "TI=""%NSUDO_EXE%"" -U:T -P:E -ShowWindowMode:Hide -Wait"
-set "TI_AVAILABLE=1"
-
-echo.
-echo [OK] TrustedInstaller verified successfully.
-echo.
-timeout /t 1 /nobreak >nul
-goto :main
-
-:NSUDO_TEST_FAILED
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 set "TI="
 set "TI_AVAILABLE=0"
-if exist "%TI_TEST%" del /q "%TI_TEST%" >nul 2>&1
-echo.
-echo [!] NSudo TrustedInstaller token test failed.
-echo [!] Falling back to standard Administrator privileges.
-echo.
-timeout /t 2 /nobreak >nul
-goto :main
-
-:NSUDO_UNAVAILABLE
-set "TI="
-set "TI_AVAILABLE=0"
-echo.
-echo [!] NSudo is unavailable (Not found in tools folder).
-echo [!] Using standard Administrator privileges instead.
-echo.
-timeout /t 2 /nobreak >nul
+goto :eof
 
 :main
 title bardhzzY Tweaks
@@ -461,29 +561,41 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "Sea
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "BingSearchEnabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "CortanaEnabled" /t REG_DWORD /d 0 /f
 
-call :LogInfo "Installing latest Open-Shell..."
-winget install --id Open-Shell.Open-Shell-Menu --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
+call :LogInfo "Installing Open-Shell..."
+winget install --id Open-Shell.Open-Shell-Menu --exact --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
+
+set "OPENSHELL_INSTALLER=%UTIL_DIR%\OpenShell\OpenShellSetup_4_4_198.exe"
+
+setlocal EnableDelayedExpansion
+
 if not exist "C:\Program Files\Open-Shell\StartMenu.exe" (
-    call :LogWarn "Winget failed or timed out. Attempting direct download from GitHub..."
-    
-    powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { $r = Invoke-RestMethod -Uri 'https://api.github.com/repos/Open-Shell/Open-Shell-Menu/releases/latest' -UseBasicParsing; $a = $r.assets | Where-Object { $_.name -like 'OpenShellSetup*.exe' } | Select-Object -First 1; Invoke-WebRequest -Uri $a.browser_download_url -OutFile $env:TEMP\OpenShellSetup.exe -UseBasicParsing } catch { exit 1 }" >nul 2>&1
-    
-    if exist "%TEMP%\OpenShellSetup.exe" (
-        call :LogInfo "Running Open-Shell silent installer..."
-        start /wait "" "%TEMP%\OpenShellSetup.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
-        
-        if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
-            call :LogOK "Open-Shell installed via GitHub fallback."
+    call :LogWarn "Winget installation did not produce a working Open-Shell installation."
+    call :LogInfo "Trying bundled Open-Shell installer from Utility Tools..."
+
+    if exist "%OPENSHELL_INSTALLER%" (
+        call :LogInfo "Running bundled Open-Shell 4.4.198 installer..."
+        set "OPENSHELL_RC="
+        for /f "delims=" %%R in ('start /wait "" "%OPENSHELL_INSTALLER%" /qn ^& cmd /c "echo %errorlevel%"') do set "OPENSHELL_RC=%%R"
+        if not defined OPENSHELL_RC set "OPENSHELL_RC=0"
+
+        if not "!OPENSHELL_RC!"=="0" (
+            call :LogErr "Bundled Open-Shell installer failed (exit code !OPENSHELL_RC!)."
         ) else (
-            call :LogErr "Open-Shell silent installer failed."
+            timeout /t 2 /nobreak >nul
+            if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
+                call :LogOK "Open-Shell installed from bundled installer."
+            ) else (
+                call :LogWarn "Open-Shell installer reported success, but StartMenu.exe was not found."
+            )
         )
-        del /q "%TEMP%\OpenShellSetup.exe" >nul 2>&1
     ) else (
-        call :LogErr "Failed to download Open-Shell from GitHub. Check internet connection."
+        call :LogErr "Bundled Open-Shell installer not found: %OPENSHELL_INSTALLER%"
     )
 ) else (
     call :LogOK "Open-Shell installed via Winget."
 )
+
+endlocal
 timeout /t 4 /nobreak >nul
 
 call :LogInfo "Applying Custom Open-Shell Skin and XML Setup..."
@@ -650,19 +762,19 @@ powershell -NoProfile -Command "Get-AppxPackage Microsoft.Win32WebViewHost -AllU
 powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.MicrosoftEdge|Microsoft.Win32WebViewHost' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
 
 call :LogInfo "Nuking leftover directories..."
-if exist "C:\Program Files (x86)\Microsoft\Edge\"         %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\Edge\"" >nul 2>&1
-if exist "C:\Program Files\Microsoft\Edge\"               %TI% cmd.exe /c "rd /s /q \"C:\Program Files\Microsoft\Edge\"" >nul 2>&1
-if exist "C:\Program Files (x86)\Microsoft\EdgeWebView\"  %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\EdgeWebView\"" >nul 2>&1
-if exist "C:\Program Files\Microsoft\EdgeWebView\"        %TI% cmd.exe /c "rd /s /q \"C:\Program Files\Microsoft\EdgeWebView\"" >nul 2>&1
-if exist "C:\Program Files (x86)\Microsoft\EdgeUpdate\"   %TI% cmd.exe /c "rd /s /q \"C:\Program Files (x86)\Microsoft\EdgeUpdate\"" >nul 2>&1
+if exist "C:\Program Files (x86)\Microsoft\Edge\"         call :TIRun cmd.exe /c rd /s /q "C:\Program Files (x86)\Microsoft\Edge" >nul 2>&1
+if exist "C:\Program Files\Microsoft\Edge\"               call :TIRun cmd.exe /c rd /s /q "C:\Program Files\Microsoft\Edge" >nul 2>&1
+if exist "C:\Program Files (x86)\Microsoft\EdgeWebView\"  call :TIRun cmd.exe /c rd /s /q "C:\Program Files (x86)\Microsoft\EdgeWebView" >nul 2>&1
+if exist "C:\Program Files\Microsoft\EdgeWebView\"        call :TIRun cmd.exe /c rd /s /q "C:\Program Files\Microsoft\EdgeWebView" >nul 2>&1
+if exist "C:\Program Files (x86)\Microsoft\EdgeUpdate\"   call :TIRun cmd.exe /c rd /s /q "C:\Program Files (x86)\Microsoft\EdgeUpdate" >nul 2>&1
 rd /s /q "%LOCALAPPDATA%\Microsoft\Edge" >nul 2>&1
 rd /s /q "%LOCALAPPDATA%\Microsoft\EdgeWebView" >nul 2>&1
 
 call :LogInfo "Hardening against Windows Update reinstalls..."
-%TI% icacls "C:\Program Files (x86)\Microsoft\Edge" /deny SYSTEM:(OI)(CI)F >nul 2>&1
-%TI% icacls "C:\Program Files\Microsoft\Edge" /deny SYSTEM:(OI)(CI)F >nul 2>&1
-%TI% icacls "C:\Program Files (x86)\Microsoft\EdgeWebView" /deny SYSTEM:(OI)(CI)F >nul 2>&1
-%TI% icacls "C:\Program Files\Microsoft\EdgeWebView" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+call :TIRun icacls "C:\Program Files (x86)\Microsoft\Edge" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
+call :TIRun icacls "C:\Program Files\Microsoft\Edge" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
+call :TIRun icacls "C:\Program Files (x86)\Microsoft\EdgeWebView" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
+call :TIRun icacls "C:\Program Files\Microsoft\EdgeWebView" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
 
 call :LogInfo "Disabling EdgeUpdate & Elevation services..."
 call :TIScLog stop "edgeupdate"
@@ -675,15 +787,32 @@ call :TIScLog config "MicrosoftEdgeElevationService" start= disabled
 call :SchLog /Change /TN "MicrosoftEdgeUpdateTaskMachineCore" /Disable
 call :SchLog /Change /TN "MicrosoftEdgeUpdateTaskMachineUA" /Disable
 
+call :LogInfo "Removing every Edge shortcut from desktop, start menu, taskbar..."
 del /q /f "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Microsoft Edge.lnk" >nul 2>&1
 del /q /f "%PUBLIC%\Desktop\Microsoft Edge.lnk" >nul 2>&1
+del /q /f "%USERPROFILE%\Desktop\Microsoft Edge.lnk" >nul 2>&1
+del /q /f "%OneDrive%\Desktop\Microsoft Edge.lnk" >nul 2>&1
+del /q /f "%APPDATA%\Microsoft\Internet Explorer\Quick Launch\Microsoft Edge.lnk" >nul 2>&1
+del /q /f "%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\Microsoft Edge.lnk" >nul 2>&1
+del /q /f "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Accessories\Microsoft Edge.lnk" >nul 2>&1
+REM Kill the Edge shortcut re-creation stub (Edge leaves a stub .lnk that
+REM Windows re-resolves on logon). Wipe stub + cached icon too.
+del /q /f "%LOCALAPPDATA%\Microsoft\Edge\Application\*Microsoft Edge*.lnk" >nul 2>&1
+del /q /f "%LOCALAPPDATA%\Microsoft\Windows\INetCache\Microsoft Edge" >nul 2>&1
+rd /s /q "%LOCALAPPDATA%\Microsoft\Edge\Bin" >nul 2>&1
+REM Block Edge from re-pinning itself via the AppX shortcut cache
+if exist "%LOCALAPPDATA%\Microsoft\Windows\Caches" attrib +r "%LOCALAPPDATA%\Microsoft\Windows\Caches\*Edge*" >nul 2>&1
 
 call :LogOK "Microsoft Edge and WebView2 completely eradicated!"
 
-call :LogInfo "Disabling User Account Control (UAC)..."
+call :LogInfo "Disabling User Account Control (UAC) completely..."
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableLUA" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin" /t REG_DWORD /d "0" /f
-call :LogWarn "UAC Disabled. A system restart is required for this to take effect"
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorUser" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableInstallerDetection" /t REG_DWORD /d "0" /f
+call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableVirtualization" /t REG_DWORD /d "1" /f
+call :LogWarn "UAC fully disabled (EnableLUA=0). A system restart is required for this to take effect."
+call :LogInfo "NOTE: AdvancedRun TrustedInstaller test now pre-starts the TrustedInstaller service with retry logic."
 
 call :LogInfo "Applying registry optimizations..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization" /v "NoLockScreen" /t REG_DWORD /d 1 /f
@@ -824,7 +953,6 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory M
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "MitigationOptions" /t REG_BINARY /d "222222222222222222222222222222222222222222222222" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\Maintenance" /v "MaintenanceDisabled" /t REG_DWORD /d "1" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\FTH" /v "Enabled" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "TdrDelay" /t REG_DWORD /d 10 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "TdrDdiDelay" /t REG_DWORD /d 10 /f
@@ -998,7 +1126,6 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskba
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "SubscribedContent-310093Enabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement" /v "ScoobeSystemSettingEnabled" /t REG_DWORD /d 0 /f
 call :LogInfo "Disabling Meet Now and Teams startup..."
-call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarDa" /t REG_DWORD /d 0 /f
 call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "com.squirrel.Teams.Teams" /f
 
 call :LogInfo "Disabling Windows Defender..."
@@ -1019,14 +1146,13 @@ if %errorlevel% equ 0 (call :LogOK "Disable SMB1Protocol") else (call :LogWarn "
 call :TIScLog config lanmanworkstation depend= "Bowser/Srv2/SrvNet"
 call :LogInfo "Disabling LLMNR and NetBIOS (security)..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v "EnableMulticast" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" /v "EnableLLMNR" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" /v "EnableLLMNR" /t REG_DWORD /d 0 /f
 if "%os_ver%"=="Win11" (
     call :LogInfo "Applying Win11-specific tweaks..."
     call :RegLog add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /f /ve /d ""
     call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "EnableSnapAssistFlyout" /t REG_DWORD /d 0 /f
     call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
     call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Sudo\Settings" /v "Enabled" /t REG_DWORD /d 0 /f
-    call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarDa" /t REG_DWORD /d 0 /f
     call :RegLog add "HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot" /v "TurnOffWindowsCopilot" /t REG_DWORD /d 1 /f
     call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot" /v "TurnOffWindowsCopilot" /t REG_DWORD /d 1 /f
     call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI" /v "DisableAIDataAnalysis" /t REG_DWORD /d 1 /f
@@ -1042,7 +1168,6 @@ if "%os_ver%"=="Win11" (
     call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v "BackgroundAppGlobalToggle" /t REG_DWORD /d 0 /f
     call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "UseCompactMode" /t REG_DWORD /d 1 /f
     call :LogInfo "Disabling Windows 11 Widgets..."
-    call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarDa" /t REG_DWORD /d 0 /f
     call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
     call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Widgets" /v "AllowWidgets" /t REG_DWORD /d 0 /f
     call :TIScLog config SpectrumService start= disabled
@@ -1289,7 +1414,7 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
 call :LogOK "NVIDIA DirectX Optimizations perfectly applied!"
 
 call :LogInfo "Applying nvlddmkm tweaks..."
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\FTS" /v "EnableRID61684" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\FTS" /v "EnableRID61684" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\services\nvlddmkm\FTS" /v "EnableGR535" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SOFTWARE\NVIDIA Corporation\NvTray" /v "StartOnLogin" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\NVIDIA Corporation\Global\NVTweak" /v "HideXGpuTrayIcon" /t REG_DWORD /d 1 /f
@@ -1638,15 +1763,15 @@ goto main
 call :LogSection "RAM Tweaks (16GB)"
 echo You selected 16 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "16777216" /f
-powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "Disable-MMAgent -MemoryCompression" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MemoryCompression") else (call :LogErr "Disable MemoryCompression")
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "Disable-MMAgent -PageCombining" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable PageCombining") else (call :LogErr "Disable PageCombining")
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
@@ -1662,16 +1787,16 @@ goto main
 call :LogSection "RAM Tweaks (24GB)"
 echo You selected 24 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "25165824" /f
-powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "Disable-MMAgent -MemoryCompression" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MemoryCompression") else (call :LogErr "Disable MemoryCompression")
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "Disable-MMAgent -PageCombining" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable PageCombining") else (call :LogErr "Disable PageCombining")
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ZeroPagedMemory" /t REG_DWORD /d 0 /f
@@ -1686,16 +1811,16 @@ goto main
 call :LogSection "RAM Tweaks (32GB)"
 echo You selected 32 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "33554432" /f
-powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "Disable-MMAgent -MemoryCompression" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MemoryCompression") else (call :LogErr "Disable MemoryCompression")
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "Disable-MMAgent -PageCombining" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable PageCombining") else (call :LogErr "Disable PageCombining")
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ZeroPagedMemory" /t REG_DWORD /d 0 /f
@@ -1710,16 +1835,16 @@ goto main
 call :LogSection "RAM Tweaks (64GB)"
 echo You selected 64 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "67108864" /f
-powershell -NoProfile -Command "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -mc") else (call :LogErr "Disable-MMAgent -mc")
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "Disable-MMAgent -MemoryCompression" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MemoryCompression") else (call :LogErr "Disable MemoryCompression")
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "Disable-MMAgent -PageCombining" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable PageCombining") else (call :LogErr "Disable PageCombining")
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ZeroPagedMemory" /t REG_DWORD /d 0 /f
@@ -1981,18 +2106,18 @@ call :SchLog /Change /TN "Microsoft\Windows\Application Experience\PcaPatchDbTas
 call :SchLog /Change /TN "Microsoft\Windows\Application Experience\ProgramDataUpdater" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Application Experience\StartupAppTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Autochk\Proxy" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\Application Experience\AitAgent" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\Application Experience\StartupAppScan" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\Customer Experience Improvement Program\KernelCeipTask" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\Customer Experience Improvement Program\BthSQM" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\UpdateOrchestrator\Schedule Scan Static Task" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\UpdateOrchestrator\USO_UxBroker" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\UpdateOrchestrator\Scan Independent Update" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\AppID\SmartScreenSpecific" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticResolver" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\NetTrace\GatherNetworkInfo" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\Ras\MobilityManager" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\RetailDemo\CleanupOfflineContent" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\Application Experience\AitAgent" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\Application Experience\StartupAppScan" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\KernelCeipTask" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\BthSQM" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\UpdateOrchestrator\Schedule Scan Static Task" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\UpdateOrchestrator\USO_UxBroker" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\UpdateOrchestrator\Scan Independent Update" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\AppID\SmartScreenSpecific" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticResolver" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\NetTrace\GatherNetworkInfo" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\Ras\MobilityManager" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\RetailDemo\CleanupOfflineContent" /Disable
 call :SchLog /Change /TN "\Microsoft\Windows\Wininet\CacheTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" /Disable
@@ -2066,13 +2191,13 @@ call :SchLog /Change /TN "Microsoft\Windows\WwanSvc\NotificationTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\WwanSvc\OobeDiscovery" /Disable
 call :SchLog /Change /TN "Microsoft\XblGameSave\XblGameSaveTask" /Disable
 call :SchLog /Change /TN "\Microsoft\Windows\Wininet\CacheTask" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\WindowsUpdate\Scheduled Start" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\WindowsUpdate\sih" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\WindowsUpdate\sihboot" /Disable
-call :SchLog /Change /TN "\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" /Disable
-call :SchLog /change /disable /tn "\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" 
-call :SchLog /change /disable /tn "\Microsoft\Windows\CloudExperienceHost\CreateObjectTask" 
-call :SchLog /change /disable /tn "\Microsoft\Windows\Windows Error Reporting\Generic" 
+call :SchLog /Change /TN "Microsoft\Windows\WindowsUpdate\Scheduled Start" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\WindowsUpdate\sih" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\WindowsUpdate\sihboot" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" /Disable
+call :SchLog /change /disable /tn "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" 
+call :SchLog /change /disable /tn "Microsoft\Windows\CloudExperienceHost\CreateObjectTask" 
+call :SchLog /change /disable /tn "Microsoft\Windows\Windows Error Reporting\Generic" 
 
 for /f "tokens=2" %%a in ('sc query type^= service ^| findstr /i "WpnUserService_"') do (
     call :TIScLog stop "%%a"
@@ -2247,9 +2372,9 @@ call :TIScLog config "LanmanServer" start= disabled
 call :LogInfo "Nuking GameBarPresenceWriter..."
 set "fileToDelete=%SystemRoot%\System32\GameBarPresenceWriter.exe"
 if exist "%fileToDelete%" (
-    %TI% takeown /F "%fileToDelete%" >nul 2>&1
-    %TI% icacls "%fileToDelete%" /grant administrators:F >nul 2>&1
-    %TI% cmd.exe /c del "%fileToDelete%" /f /q >nul 2>&1
+    call :TIRun takeown /F "%fileToDelete%" >nul 2>&1
+    call :TIRun icacls "%fileToDelete%" /grant administrators:F >nul 2>&1
+    call :TIRun cmd.exe /c del "%fileToDelete%" /f /q >nul 2>&1
     if exist "%fileToDelete%" (call :LogWarn "Failed to delete GameBarPresenceWriter.exe") else (call :LogOK "GameBarPresenceWriter.exe deleted")
 ) else (
     call :LogSkip "GameBarPresenceWriter.exe not found"
@@ -2260,18 +2385,18 @@ set "usoClientFile=C:\Windows\System32\UsoClient.exe"
 set "usoCoreWorkerFile=C:\Windows\UUS\amd64\MoUsoCoreWorker.exe"
 
 if exist "%usoClientFile%" (
-    %TI% takeown /F "%usoClientFile%" >nul 2>&1
-    %TI% icacls "%usoClientFile%" /grant administrators:F >nul 2>&1
-    %TI% cmd.exe /c del "%usoClientFile%" /f /q >nul 2>&1
+    call :TIRun takeown /F "%usoClientFile%" >nul 2>&1
+    call :TIRun icacls "%usoClientFile%" /grant administrators:F >nul 2>&1
+    call :TIRun cmd.exe /c del "%usoClientFile%" /f /q >nul 2>&1
     if exist "%usoClientFile%" (call :LogWarn "Failed to delete UsoClient.exe") else (call :LogOK "UsoClient.exe deleted")
 ) else (
     call :LogSkip "UsoClient.exe not found"
 )
 
 if exist "%usoCoreWorkerFile%" (
-    %TI% takeown /F "%usoCoreWorkerFile%" >nul 2>&1
-    %TI% icacls "%usoCoreWorkerFile%" /grant administrators:F >nul 2>&1
-    %TI% cmd.exe /c del "%usoCoreWorkerFile%" /f /q >nul 2>&1
+    call :TIRun takeown /F "%usoCoreWorkerFile%" >nul 2>&1
+    call :TIRun icacls "%usoCoreWorkerFile%" /grant administrators:F >nul 2>&1
+    call :TIRun cmd.exe /c del "%usoCoreWorkerFile%" /f /q >nul 2>&1
     if exist "%usoCoreWorkerFile%" (call :LogWarn "Failed to delete MoUsoCoreWorker.exe") else (call :LogOK "MoUsoCoreWorker.exe deleted")
 ) else (
     call :LogSkip "MoUsoCoreWorker.exe not found"
@@ -2280,12 +2405,12 @@ if exist "%usoCoreWorkerFile%" (
 call :LogInfo "Nuking AutoLogger-Diagtrack..."
 set "autoLoggerDir=%PROGRAMDATA%\Microsoft\Diagnosis\ETLLogs\AutoLogger"
 if exist "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" (
-    %TI% cmd.exe /c del /q "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" >nul 2>&1
+    call :TIRun cmd.exe /c del /q "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" >nul 2>&1
     call :LogOK "AutoLogger ETL deleted"
 ) else (
     call :LogSkip "AutoLogger ETL not found"
 )
-%TI% icacls "%autoLoggerDir%" /deny SYSTEM:(OI)(CI)F >nul 2>&1
+call :TIRun icacls "%autoLoggerDir%" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "AutoLogger SYSTEM permissions denied") else (call :LogErr "AutoLogger permission deny failed")
 
 call :LogOK "Manufactor bloat and more services disabled!"
@@ -2447,16 +2572,16 @@ for %%F in ("%temp%\*.*") do (
 )
 del /q /f /a "%temp%\*.tmp" >nul 2>&1
 
-%TI% cmd.exe /c "del /s /f /q /a C:\Windows\Temp\*.*" >nul 2>&1
-for /d %%D in ("C:\Windows\Temp\*") do %TI% cmd.exe /c "rd /s /q \"%%D\"" >nul 2>&1
+call :TIRun cmd.exe /c del /s /f /q /a C:\Windows\Temp\*.* >nul 2>&1
+for /d %%D in ("C:\Windows\Temp\*") do call :TIRun cmd.exe /c rd /s /q "%%~D" >nul 2>&1
 
-%TI% cmd.exe /c "del /s /f /q /a C:\Windows\Prefetch\*.*" >nul 2>&1
-for /d %%D in ("C:\Windows\Prefetch\*") do %TI% cmd.exe /c "rd /s /q \"%%D\"" >nul 2>&1
+call :TIRun cmd.exe /c del /s /f /q /a C:\Windows\Prefetch\*.* >nul 2>&1
+for /d %%D in ("C:\Windows\Prefetch\*") do call :TIRun cmd.exe /c rd /s /q "%%~D" >nul 2>&1
 
 call :TIScLog stop wuauserv
 call :TIScLog stop BITS
 timeout /t 1 /nobreak >nul
-%TI% cmd.exe /c "del /s /f /q /a C:\Windows\SoftwareDistribution\Download\*.*" >nul 2>&1
+call :TIRun cmd.exe /c del /s /f /q /a C:\Windows\SoftwareDistribution\Download\*.* >nul 2>&1
 
 call :LogOK "Temporary files cleared."
 
@@ -2546,33 +2671,36 @@ pause
 goto main
 
 :netw
-call :LogSection "Network Tweaks"
-echo.
-call :LogInfo "[+] Ethernet Only Optimization"
-set "wifi_kill="
-set /p "wifi_kill=Disable Wi-Fi adapter at hardware level for less processes? (Y/N): "
-if /i "%wifi_kill%"=="Y" (
-    call :LogInfo "[+] Searching for Wi-Fi adapters and disabling them..."
-    
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "$devs = Get-PnpDevice -Class Net | Where-Object { $_.FriendlyName -match 'Wi-Fi|Wireless|WLAN|802.11' -and $_.Status -eq 'OK' }; if (-not $devs) { exit 2 } else { try { $devs | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction Stop }; exit 0 } catch { exit 1 } }"
-    
-    if errorlevel 2 (
-        call :LogWarn "[!] No active Wi-Fi adapter found. Nothing to disable."
-    ) else if errorlevel 1 (
-        call :LogErr "[X] Could not disable Wi-Fi. It might be protected or already in use. Check Device Manager."
-    ) else (
-        call :LogOK "[OK] Wi-Fi adapter disabled! You are now strictly on Ethernet."
-        call :LogWarn "(Note: To re-enable Wi-Fi later, go to Device Manager -^> Network Adapters -^> Right-Click your Wi-Fi adapter -^> Enable)"
-    )
-    timeout /t 2 /nobreak >nul
-)
+call :LogSection "Network Tweaks" 
+echo. 
 
-if /i "%wifi_kill%"=="Y" (
-    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f
-    call :TIScLog stop WlanSvc
-    call :LogWarn "WLAN AutoConfig was disabled because Ethernet-only mode was selected."
-) else (
-    call :LogSkip "WLAN AutoConfig left unchanged."
+call :LogInfo "[+] Ethernet Only Optimization" 
+
+set "wifi_kill=" 
+set /p "wifi_kill=Disable Wi-Fi adapter at hardware level for less processes? (Y/N): " 
+
+if /i "%wifi_kill%"=="Y" ( 
+    call :LogInfo "[+] Searching for Wi-Fi adapters and disabling them..." 
+     
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$devs = Get-PnpDevice -Class Net | Where-Object { $_.FriendlyName -match 'Wi-Fi|Wireless|WLAN|802.11' -and $_.Status -eq 'OK' }; if (-not $devs) { exit 2 } else { try { $devs | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction Stop }; exit 0 } catch { exit 1 } }" 
+     
+    if errorlevel 2 ( 
+        call :LogWarn "[!] No active Wi-Fi adapter found. Nothing to disable." 
+    ) else if errorlevel 1 ( 
+        call :LogErr "[X] Could not disable Wi-Fi. It might be protected or already in use. Check Device Manager." 
+    ) else ( 
+        call :LogOK "[OK] Wi-Fi adapter disabled! You are now strictly on Ethernet." 
+        call :LogWarn "(Note: To re-enable Wi-Fi later, go to Device Manager -> Network Adapters -> Right-Click your Wi-Fi adapter -> Enable)" 
+    ) 
+
+    timeout /t 2 /nobreak >nul 
+
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f 
+    call :TIScLog stop WlanSvc 
+    call :LogWarn "WLAN AutoConfig was disabled because Ethernet-only mode was selected." 
+
+) else ( 
+    call :LogInfo "[SKIP] Wi-Fi/WLAN left unchanged."
 )
 
 call :LogInfo "Enabling MSI/MSI-X for Ethernet adapters..."
@@ -2637,16 +2765,16 @@ call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanSer
 call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer" /v OplocksDisabled /t REG_DWORD /d 1 /f
 call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mrxsmb" /v OplocksDisabled /t REG_DWORD /d 1 /f
 call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v Tcp1323Opts /t REG_DWORD /d 2 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "LocalPriority" /t REG_DWORD /d "4" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "HostsPriority" /t REG_DWORD /d "5" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "DnsPriority" /t REG_DWORD /d "6" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "NetbtPriority" /t REG_DWORD /d "7" /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "LocalPriority" /t REG_DWORD /d "4" /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "HostsPriority" /t REG_DWORD /d "5" /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "DnsPriority" /t REG_DWORD /d "6" /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "NetbtPriority" /t REG_DWORD /d "7" /f
 call :RegLog add "HKLM\System\CurrentControlSet\Services\Tcpip\QoS" /v "Do not use NLA" /t REG_DWORD /d "1" /f
 call :RegLog add "HKLM\System\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxUserPort" /t REG_DWORD /d "65534" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "SystemResponsiveness" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "IRPStackSize" /t REG_DWORD /d 32 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Afd\Parameters" /v "FastSendDatagramThreshold" /t REG_DWORD /d 1500 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Afd\Parameters" /v "FastCopyReceiveThreshold" /t REG_DWORD /d 1500 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "IRPStackSize" /t REG_DWORD /d 32 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Afd\Parameters" /v "FastSendDatagramThreshold" /t REG_DWORD /d 1500 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Afd\Parameters" /v "FastCopyReceiveThreshold" /t REG_DWORD /d 1500 /f
 
 call :TIScLog config SSDPSRV start= disabled
 call :TIScLog stop SSDPSRV
@@ -2660,9 +2788,9 @@ powershell -NoProfile -Command "Get-WmiObject Win32_NetworkAdapterConfiguration 
 if %errorlevel% equ 0 (call :LogOK "Disable NetBIOS over TCP/IP") else (call :LogErr "Disable NetBIOS over TCP/IP")
 powershell -NoProfile -Command "Get-NetAdapter | Enable-NetAdapterRss -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Enable-NetAdapterRss") else (call :LogErr "Enable-NetAdapterRss")
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "NumTcbTablePartitions" /t REG_DWORD /d 16 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxUserPort" /t REG_DWORD /d 65534 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpTimedWaitDelay" /t REG_DWORD /d 30 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "NumTcbTablePartitions" /t REG_DWORD /d 16 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxUserPort" /t REG_DWORD /d 65534 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpTimedWaitDelay" /t REG_DWORD /d 30 /f
 powershell -NoProfile -Command "Get-NetAdapter | Disable-NetAdapterPowerManagement -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable-NetAdapterPowerManagement") else (call :LogErr "Disable-NetAdapterPowerManagement")
 powershell -NoProfile -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Energy*'} | Set-NetAdapterAdvancedProperty -RegistryValue '0' -NoRestart" >nul 2>&1
@@ -2748,8 +2876,8 @@ call :LogSection "Input Lag Tweaks"
 echo You selected Input lag tweaks!
 
 call :LogInfo "Setting Latency Tolerance"
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl" /v "MonitorLatencyTolerance" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl" /v "MonitorRefreshLatencyTolerance" /t REG_DWORD /d "1" /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl" /v "MonitorLatencyTolerance" /t REG_DWORD /d "1" /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl" /v "MonitorRefreshLatencyTolerance" /t REG_DWORD /d "1" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "ExitLatency" /t REG_DWORD /d "1" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "ExitLatencyCheckEnabled" /t REG_DWORD /d "1" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "Latency" /t REG_DWORD /d "1" /f
@@ -2834,14 +2962,14 @@ call :RegLog add "HKCU\Software\Microsoft\CTF\LangBar" /v "ShowStatus" /t REG_DW
 call :RegLog add "HKCU\Software\Microsoft\CTF\LangBar" /v "ExtraIconsOnMinimized" /t REG_DWORD /d 0 /f
 call :TIScLog config TextInputManagementService start= disabled
 call :TIScLog stop TextInputManagementService
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "KeyboardDataQueueSize" /t REG_DWORD /d 20 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "ConnectMultiplePorts" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "MaximumPortsServiced" /t REG_DWORD /d 1 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "SendOutputToAllPorts" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MouseDataQueueSize" /t REG_DWORD /d 20 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "ConnectMultiplePorts" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MaximumPortsServiced" /t REG_DWORD /d 1 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "SendOutputToAllPorts" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "KeyboardDataQueueSize" /t REG_DWORD /d 20 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "ConnectMultiplePorts" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "MaximumPortsServiced" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "SendOutputToAllPorts" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MouseDataQueueSize" /t REG_DWORD /d 20 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "ConnectMultiplePorts" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MaximumPortsServiced" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "SendOutputToAllPorts" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Control Panel\Mouse" /v "SmoothMouseXCurve" /t REG_BINARY /d "0000000000000000C0CC0C0000000000809919000000000040662600000000000033330000000000" /f
 call :RegLog add "HKCU\Control Panel\Mouse" /v "SmoothMouseYCurve" /t REG_BINARY /d "0000000000000000000038000000000000007000000000000000A800000000000000E00000000000" /f
 call :RegLog add "HKU\.DEFAULT\Control Panel\Mouse" /v "MouseSpeed" /t REG_SZ /d "0" /f
@@ -2976,9 +3104,9 @@ if %errorlevel% equ 0 (call :LogOK "powercfg setactive scheme_current") else (ca
 for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "AllowIdleIrpInD3" 2^>nul ^| findstr "HKEY_LOCAL_MACHINE"') do (
     call :RegLog add "%%a" /v "AllowIdleIrpInD3" /t REG_DWORD /d 0 /f
 )
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\HidUsb\Parameters" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\usbhub\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\HidUsb\Parameters" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\usbhub\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\501a4d13-42af-4429-9fd1-a8218c268e20\ee12f906-d277-404b-b6da-e5fa1a576df5" /v "Attributes" /t REG_DWORD /d 2 /f
 powercfg -setacvalueindex scheme_current 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg ee12f906 0") else (call :LogErr "powercfg ee12f906 0")
@@ -3003,10 +3131,6 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "DeepIoCoalesc
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "EnergyEstimationEnabled" /t REG_DWORD /d 0 /f
 
 call :LogInfo "Optimizing System Timers and Disabling Throttling..."
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "CoalescingTimerInterval" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "CoalescingTimerInterval" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" /v "PowerThrottlingOff" /t REG_DWORD /d 1 /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\Maintenance" /v "MaintenanceDisabled" /t REG_DWORD /d 1 /f
 call :LogInfo "Applying Aggressive System Timer Tweaks..."
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "PlatformTimer" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "TimerSetCoalesce" /t REG_DWORD /d 0 /f
@@ -3115,7 +3239,7 @@ cls
 chcp 65001 >nul 2>&1
 echo %ESC%[0m
 color 09
-title BARDHZZY Tweaks - Creating Restore Point
+title bardhzzY Tweaks - Creating Restore Point
 
 echo =============================================
 echo     Creating System Restore Point
@@ -3167,114 +3291,126 @@ goto main
 :backup
 call :LogSection "Registry Backup"
 cls
+MODE 92,42
 chcp 65001 >nul 2>&1
 echo %ESC%[0m
-color 0B
+color 0F
+title bardhzzY Tweaks - Registry Backup
+
 echo.
-echo ======================================================
-echo           BARDHZZY Tweaks - Registry Backup
-echo ======================================================
+echo  %ESC%[34m========================================================================%ESC%[0m
+echo.
+echo                   %ESC%[33mREGISTRY BACKUP UTILITY%ESC%[0m
+echo.
+echo  %ESC%[34m========================================================================%ESC%[0m
+echo.
+echo        %ESC%[37mCreate a full snapshot of your system registry before%ESC%[0m
+echo        %ESC%[37mapplying destructive tweaks. Always have a rollback path.%ESC%[0m
+echo.
+echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
 echo.
 
 set "BACKUP_DIR=%ProgramData%\BARDHZZY\Backup"
 
 if exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
-    echo [!] WARNING: A registry backup already exists at:
-    echo     %BACKUP_DIR%
-    echo     Creating a new backup will overwrite the old one.
+    echo        %ESC%[33m[!]%ESC%[37m A registry backup already exists at:%ESC%[0m
+    echo        %ESC%[90m    %BACKUP_DIR%%ESC%[0m
+    echo        %ESC%[37mCreating a new backup will overwrite the old one.%ESC%[0m
     echo.
-    choice /c YN /n /m "Do you want to overwrite the existing backup? (Y/N): "
+    choice /c YN /n /m "       Overwrite existing backup? [Y/N]: "
     if errorlevel 2 goto main
+    echo.
 )
 
-echo.
-echo [+] Creating Safety Backup of System Registry...
-echo     This may take up to 30 seconds. Please do not close this window...
+echo        %ESC%[36m[%ESC%[37m i %ESC%[36m]%ESC%[37m Creating Safety Backup of System Registry...%ESC%[0m
+echo        %ESC%[90m    This may take up to 30 seconds. Do not close this window.%ESC%[0m
 echo.
 
-if not exist "%BACKUP_DIR%" (
-    mkdir "%BACKUP_DIR%" >nul 2>&1
-)
+if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%" >nul 2>&1
 
 if not exist "%BACKUP_DIR%" (
     call :LogErr "Could not create backup directory."
-    echo [X] ERROR: Could not create:
-    echo     %BACKUP_DIR%
+    echo        %ESC%[31m[X]%ESC%[37m ERROR: Could not create:%ESC%[0m
+    echo        %ESC%[90m    %BACKUP_DIR%%ESC%[0m
     echo.
     pause
     goto main
 )
 
 set "BACKUP_OK=1"
+set "BK_TOTAL=4"
+set "BK_DONE=0"
 
-echo [1/4] Exporting HKLM\SYSTEM...
+echo        %ESC%[36m[1/4]%ESC%[37m Exporting HKLM\SYSTEM...%ESC%[0m
 reg export "HKLM\SYSTEM" "%BACKUP_DIR%\HKLM_SYSTEM.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SYSTEM failed."
-    echo [X] HKLM_SYSTEM backup FAILED
+    echo        %ESC%[31m    [X]%ESC%[37m HKLM_SYSTEM backup FAILED%ESC%[0m
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKLM_SYSTEM"
-    echo [OK] HKLM_SYSTEM backup created
+    echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SYSTEM backup created%ESC%[0m
 )
 
-echo [2/4] Exporting HKLM\SOFTWARE...
+echo        %ESC%[36m[2/4]%ESC%[37m Exporting HKLM\SOFTWARE...%ESC%[0m
 reg export "HKLM\SOFTWARE" "%BACKUP_DIR%\HKLM_SOFTWARE.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SOFTWARE failed."
-    echo [X] HKLM_SOFTWARE backup FAILED
+    echo        %ESC%[31m    [X]%ESC%[37m HKLM_SOFTWARE backup FAILED%ESC%[0m
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKLM_SOFTWARE"
-    echo [OK] HKLM_SOFTWARE backup created
+    echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SOFTWARE backup created%ESC%[0m
 )
 
-echo [3/4] Exporting HKCU\Software...
+echo        %ESC%[36m[3/4]%ESC%[37m Exporting HKCU\Software...%ESC%[0m
 reg export "HKCU\Software" "%BACKUP_DIR%\HKCU_Software.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_Software failed."
-    echo [X] HKCU_Software backup FAILED
+    echo        %ESC%[31m    [X]%ESC%[37m HKCU_Software backup FAILED%ESC%[0m
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCU_Software"
-    echo [OK] HKCU_Software backup created
+    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_Software backup created%ESC%[0m
 )
 
-echo [4/4] Exporting HKCU\Control Panel...
+echo        %ESC%[36m[4/4]%ESC%[37m Exporting HKCU\Control Panel...%ESC%[0m
 reg export "HKCU\Control Panel" "%BACKUP_DIR%\HKCU_CPanel.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_CPanel failed."
-    echo [X] HKCU_CPanel backup FAILED
+    echo        %ESC%[31m    [X]%ESC%[37m HKCU_CPanel backup FAILED%ESC%[0m
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCU_CPanel"
-    echo [OK] HKCU_CPanel backup created
+    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
 )
 
+echo.
+echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
 echo.
 
 if "%BACKUP_OK%"=="1" (
     call :LogOK "Complete registry backup verified."
-    echo ======================================================
-    echo [OK] COMPLETE REGISTRY BACKUP VERIFIED
-    echo ======================================================
+    echo        %ESC%[32m[OK]%ESC%[37m COMPLETE REGISTRY BACKUP VERIFIED%ESC%[0m
+    echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
     echo.
-    echo Backup location:
-    echo %BACKUP_DIR%
+    echo        %ESC%[37mBackup location:%ESC%[0m
+    echo        %ESC%[36m%BACKUP_DIR%%ESC%[0m
     echo.
-    echo You can now safely use the Revert Tweaks option.
+    echo        %ESC%[32mYou can now safely use the Revert Tweaks option.%ESC%[0m
 ) else (
     call :LogErr "Registry backup is incomplete."
-    echo ======================================================
-    echo [X] REGISTRY BACKUP FAILED / INCOMPLETE
-    echo ======================================================
+    echo        %ESC%[31m[X]%ESC%[37m REGISTRY BACKUP FAILED / INCOMPLETE%ESC%[0m
+    echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
     echo.
-    echo One or more registry exports failed.
-    echo DO NOT use Revert Tweaks until a complete backup exists.
+    echo        %ESC%[33mOne or more registry exports failed.%ESC%[0m
+    echo        %ESC%[31mDO NOT use Revert Tweaks until a complete backup exists.%ESC%[0m
 )
 
 echo.
-echo Press any key to return to the main menu...
+echo  %ESC%[34m========================================================================%ESC%[0m
+echo.
+echo        %ESC%[90mPress any key to return to the main menu...%ESC%[0m
 pause >nul
 goto main
 
@@ -4061,17 +4197,17 @@ set "REVERT_OK=1"
 call :LogInfo "Forcibly Importing Original System Registry..."
 echo [+] Importing Original System Registry...
 
-call :TIRegLog import "%BACKUP_DIR%\HKLM_SYSTEM.reg"
+call :TIRun reg import "%BACKUP_DIR%\HKLM_SYSTEM.reg" >nul 2>&1
 if errorlevel 1 (
-    call :LogErr "Import HKLM_SYSTEM failed."
+    call :LogErr "Import HKLM_SYSTEM failed (err=%errorlevel%)"
     set "REVERT_OK=0"
 ) else (
     call :LogOK "Import HKLM_SYSTEM"
 )
 
-call :TIRegLog import "%BACKUP_DIR%\HKLM_SOFTWARE.reg"
+call :TIRun reg import "%BACKUP_DIR%\HKLM_SOFTWARE.reg" >nul 2>&1
 if errorlevel 1 (
-    call :LogErr "Import HKLM_SOFTWARE failed."
+    call :LogErr "Import HKLM_SOFTWARE failed (err=%errorlevel%)"
     set "REVERT_OK=0"
 ) else (
     call :LogOK "Import HKLM_SOFTWARE"
@@ -4125,24 +4261,57 @@ goto main
 :restartpc
 call :LogSection "Restart PC"
 cls
+MODE 90,28
+chcp 65001 >nul 2>&1
+echo %ESC%[0m
+color 0F
+
 echo.
-echo ===========================================
-echo   Restarting in 5 seconds...
-echo   Press [N] to Cancel.
-echo ===========================================
+echo  %ESC%[34m==========================================================================%ESC%[0m
+echo.
+echo                       %ESC%[33mRESTART COMPUTER%ESC%[0m
+echo.
+echo  %ESC%[34m==========================================================================%ESC%[0m
+echo.
+echo        %ESC%[37mA system restart is recommended after applying tweaks%ESC%[0m
+echo        %ESC%[37mso that all service, registry, and driver changes%ESC%[0m
+echo        %ESC%[37mtake full effect.%ESC%[0m
+echo.
+echo        %ESC%[36m[%ESC%[37m Y %ESC%[36m]%ESC%[32m Restart now     %ESC%[90m(^<-- auto in 5s)%ESC%[0m
+echo        %ESC%[36m[%ESC%[37m N %ESC%[36m]%ESC%[33m Cancel           %ESC%[90mreturn to menu%ESC%[0m
+echo.
+echo  %ESC%[34m--------------------------------------------------------------------------%ESC%[0m
 echo.
 
-choice /c YN /t 5 /d Y /n /m "Restarting in 5 seconds... Press [N] to cancel: "
+choice /c YN /t 5 /d Y /n /m "Choice"
 
 if %errorlevel% equ 1 (
     call :LogInfo "User confirmed. Restarting PC now..."
+    cls
     echo.
-    echo Restarting now...
-    shutdown /r /t 0
+    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo.
+    echo                    %ESC%[32mRESTARTING NOW%ESC%[0m
+    echo.
+    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo.
+    echo        %ESC%[90mSaving settings... closing sessions...%ESC%[0m
+    echo.
+    shutdown /r /t 3 /c "bardhzzY Tweaks: restarting in 3 seconds..."
+    timeout /t 4 /nobreak >nul
+    exit /b
 ) else (
     call :LogWarn "Restart cancelled by user. Returning to menu..."
+    cls
     echo.
-    echo Restart cancelled! Returning to menu...
+    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo.
+    echo                    %ESC%[33mRESTART CANCELLED%ESC%[0m
+    echo.
+    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo.
+    echo        %ESC%[90mReturning to main menu...%ESC%[0m
+    echo.
     timeout 2 >nul
     goto main
 )
@@ -4152,7 +4321,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=v3.0.0"
+set "SCRIPT_VERSION=v3.0.0.1"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
@@ -4348,36 +4517,88 @@ endlocal & set "LOG_SECTION=%~1"
 goto :eof
 
 :RegLog
-setlocal DisableDelayedExpansion
-reg %* >nul 2>&1
-set "BARDHZZ_ERR=%errorlevel%"
+setlocal EnableDelayedExpansion
+set "RL_ARGS=%*"
+reg !RL_ARGS! >nul 2>&1
+set "BARDHZZ_ERR=!errorlevel!"
 set "LOG_MSG=%*"
-if not "%BARDHZZ_ERR%"=="0" goto RegLog_Fail
-call :LogOK
-endlocal
-goto :eof
+if "!BARDHZZ_ERR!"=="0" goto RegLog_OK
+REM Verification step: for "add" ops, query the value to see if it was
+REM actually set. If it matches, treat as success (reg sometimes returns 1
+REM on Win11 24H2 for protected/managed keys even though the write worked).
+set "RL_VERIFY=0"
+echo !RL_ARGS! | findstr /B /I "add " >nul 2>&1 && set "RL_VERIFY=1"
+if "!RL_VERIFY!"=="0" goto RegLog_Fail
+REM Parse: key path is the first arg after "add", /v NAME, /d DATA
+set "RL_KEY="
+set "RL_VAL_NAME="
+set "RL_VAL_DATA="
+set "RL_NEXT_KEY=0"
+set "RL_NEXT_VAL=0"
+set "RL_NEXT_DATA=0"
+for %%A in (!RL_ARGS!) do (
+    if "!RL_NEXT_KEY!"=="1" ( set "RL_KEY=%%~A" & set "RL_NEXT_KEY=0" ) else if "!RL_NEXT_VAL!"=="1" ( set "RL_VAL_NAME=%%~A" & set "RL_NEXT_VAL=0" ) else if "!RL_NEXT_DATA!"=="1" ( set "RL_VAL_DATA=%%~A" & set "RL_NEXT_DATA=0" ) else if /I "%%~A"=="add" ( set "RL_NEXT_KEY=1" ) else if /I "%%~A"=="/v" ( set "RL_NEXT_VAL=1" ) else if /I "%%~A"=="/d" ( set "RL_NEXT_DATA=1" )
+)
+if not defined RL_KEY goto RegLog_Fail
+if not defined RL_VAL_NAME goto RegLog_Fail
+REM Query current value
+for /f "tokens=2,*" %%X in ('reg query "!RL_KEY!" /v "!RL_VAL_NAME!" 2^>nul ^| findstr /I "REG_"') do set "RL_ACTUAL=%%Y"
+if /I "!RL_ACTUAL!"=="!RL_VAL_DATA!" goto RegLog_OK
 :RegLog_Fail
-set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
 call :LogErr
 endlocal
 goto :eof
+:RegLog_OK
+call :LogOK
+endlocal
+goto :eof
+
+:: =====================================================================
+:: TrustedInstaller execution helper (AdvancedRun)
+:: =====================================================================
+:TIRun
+setlocal DisableDelayedExpansion
+if "%~1"=="" (
+    endlocal & exit /b 87
+)
+
+set "TI_PROGRAM=%~1"
+set "TI_ALL_ARGS=%*"
+set "TI_ARGS=%TI_ALL_ARGS:* =%"
+set "TI_EXE=%TI_PROGRAM%"
+
+if /I "%TI_PROGRAM%"=="cmd.exe" set "TI_EXE=%SystemRoot%\System32\cmd.exe"
+if /I "%TI_PROGRAM%"=="takeown" set "TI_EXE=%SystemRoot%\System32\takeown.exe"
+if /I "%TI_PROGRAM%"=="icacls" set "TI_EXE=%SystemRoot%\System32\icacls.exe"
+if /I "%TI_PROGRAM%"=="reg" set "TI_EXE=%SystemRoot%\System32\reg.exe"
+if /I "%TI_PROGRAM%"=="sc" set "TI_EXE=%SystemRoot%\System32\sc.exe"
+
+if not defined TI_AVAILABLE goto TIRun_Admin
+
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%TI_EXE%" /CommandLine '%TI_ARGS%' /RunAs 8 /WaitProcess 1 /Run
+set "TIRUN_RC=%errorlevel%"
+endlocal & exit /b %TIRUN_RC%
+
+:TIRun_Admin
+"%TI_EXE%" %TI_ARGS%
+set "TIRUN_RC=%errorlevel%"
+endlocal & exit /b %TIRUN_RC%
 
 :TIRegLog
 setlocal DisableDelayedExpansion
-set "BARDHZZ_CMD=reg %*"
-if defined TI set "BARDHZZ_CMD=%TI% reg %*"
-if defined TI goto TIRegLog_Execute
-reg %* >nul 2>&1
-goto TIRegLog_Result
-:TIRegLog_Execute
-%BARDHZZ_CMD% >nul 2>&1
-:TIRegLog_Result
+set "BARDHZZ_ARGS=%*"
+if "%TI_AVAILABLE%"=="1" set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\reg.exe" /CommandLine '%BARDHZZ_ARGS%' /RunAs 8 /WaitProcess 1 /Run"
+if "%TI_AVAILABLE%"=="1" %BARDHZZ_CMD% >nul 2>&1
+if not "%TI_AVAILABLE%"=="1" reg %* >nul 2>&1
+
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
 if not "%BARDHZZ_ERR%"=="0" goto TIRegLog_Fail
 call :LogOK
 endlocal
 goto :eof
+
 :TIRegLog_Fail
 set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 call :LogErr
@@ -4393,6 +4614,7 @@ if not "%BARDHZZ_ERR%"=="0" goto ScLog_Fail
 call :LogOK
 endlocal
 goto :eof
+
 :ScLog_Fail
 set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 call :LogErr
@@ -4430,8 +4652,9 @@ if "%TIS_QUERY_ERR%"=="1060" goto TIScLog_Skip
 if not "%TIS_QUERY_ERR%"=="0" goto TIScLog_QueryFail
 
 set "LOG_MSG=%*"
-if not defined TI goto TIScLog_NoTI
-set "BARDHZZ_CMD=%TI% sc %*"
+if not "%TI_AVAILABLE%"=="1" goto TIScLog_NoTI
+set "BARDHZZ_ARGS=%*"
+set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\sc.exe" /CommandLine '%BARDHZZ_ARGS%' /RunAs 8 /WaitProcess 1 /Run"
 %BARDHZZ_CMD% >nul 2>&1
 set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%*"
@@ -4463,7 +4686,6 @@ set "BARDHZZ_ERR=%errorlevel%"
 set "LOG_MSG=%* (Admin Fallback)"
 if not "%BARDHZZ_ERR%"=="0" goto TIScLog_Fail
 
-:: If it was a config command, verify it
 if /I not "%TIS_ACTION%"=="config" goto TIScLog_OK
 if /I not "%~3"=="start=" goto TIScLog_OK
 
@@ -4513,13 +4735,40 @@ endlocal
 goto :eof
 
 :SchLog
-setlocal DisableDelayedExpansion
+setlocal EnableDelayedExpansion
+REM Parse out the task name from args like: /Change /TN "taskname" /Disable  OR  /DELETE /TN "taskname" /f
+set "SCH_ALL=%*"
+set "SCH_TASK="
+set "SCH_IN_TN=0"
+for %%A in (!SCH_ALL!) do (
+    if /I "!SCH_IN_TN!"=="1" (
+        set "SCH_TASK=%%~A"
+        set "SCH_IN_TN=0"
+    ) else if /I "%%~A"=="/TN" (
+        set "SCH_IN_TN=1"
+    )
+)
+REM Strip leading backslash which is invalid for schtasks and causes err=1
+if defined SCH_TASK if "!SCH_TASK:~0,1!"=="\" set "SCH_TASK=!SCH_TASK:~1!"
+
+if not defined SCH_TASK goto SchLog_Run
+REM Check task existence first; if missing, log as SKIP (not error)
+schtasks /Query /TN "!SCH_TASK!" >nul 2>&1
+if not "!errorlevel!"=="0" goto SchLog_NotFound
+
+:SchLog_Run
 schtasks %* >nul 2>&1
-set "BARDHZZ_ERR=%errorlevel%"
+set "BARDHZZ_ERR=!errorlevel!"
 set "LOG_MSG=%*"
-if "%BARDHZZ_ERR%"=="0" goto SchLog_OK
-set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+if "!BARDHZZ_ERR!"=="0" goto SchLog_OK
+set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
 call :LogErr
+endlocal
+goto :eof
+
+:SchLog_NotFound
+set "LOG_MSG=%* (task not present - skipped)"
+call :LogSkip
 endlocal
 goto :eof
 
@@ -4560,23 +4809,24 @@ if not "%LOG_ENABLED%"=="1" goto LogSummary_Display
 
 :LogSummary_Display
 echo(
-echo ============================================================
-echo                EXECUTION SUMMARY
-echo ============================================================
-echo( Total Operations : %LOG_TOTAL%
-echo( Successful       : %LOG_OK%
-echo( Failed           : %LOG_FAIL%
-echo( Warnings         : %LOG_WARN%
-echo( Skipped          : %LOG_SKIP%
-echo ============================================================
-echo( Log File: %LOG_FILE%
-echo ============================================================
+echo %ESC%[34m============================================================%ESC%[0m
+echo %ESC%[34m               %ESC%[37mEXECUTION SUMMARY%ESC%[34m                 %ESC%[0m
+echo %ESC%[34m============================================================%ESC%[0m
+echo %ESC%[34m %ESC%[37m Total Operations : %ESC%[97m%LOG_TOTAL%%ESC%[0m
+echo %ESC%[34m %ESC%[37m Successful       : %ESC%[32m%LOG_OK%%ESC%[0m
+echo %ESC%[34m %ESC%[37m Failed           : %ESC%[31m%LOG_FAIL%%ESC%[0m
+echo %ESC%[34m %ESC%[37m Warnings         : %ESC%[33m%LOG_WARN%%ESC%[0m
+echo %ESC%[34m %ESC%[37m Skipped          : %ESC%[90m%LOG_SKIP%%ESC%[0m
+echo %ESC%[34m============================================================%ESC%[0m
+echo %ESC%[34m %ESC%[37m Log File : %ESC%[36m%LOG_FILE%%ESC%[0m
+echo %ESC%[34m %ESC%[37m Error Log: %ESC%[36m%LOG_ERR%%ESC%[0m
+echo %ESC%[34m============================================================%ESC%[0m
 echo(
 endlocal
 goto :eof
 
 :LogSummary_NoFile
-echo [!] No log file found.
+echo %ESC%[33m[!]%ESC%[37m No log file found.%ESC%[0m
 timeout /t 2 /nobreak >nul
 endlocal
 goto :eof
@@ -4587,7 +4837,7 @@ start "" notepad "%LOG_FILE%"
 goto :eof
 
 :LogView_NoFile
-echo [!] No log file found.
+echo %ESC%[33m[!]%ESC%[37m No log file found.%ESC%[0m
 timeout /t 2 /nobreak >nul
 goto :eof
 
@@ -4597,7 +4847,7 @@ start "" notepad "%LOG_ERR%"
 goto :eof
 
 :LogViewErrors_NoFile
-echo [!] No error log file found.
+echo %ESC%[33m[!]%ESC%[37m No error log file found.%ESC%[0m
 timeout /t 2 /nobreak >nul
 goto :eof
 
