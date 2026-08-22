@@ -27,33 +27,8 @@ if not "%errorlevel%"=="0" (
     echo.
     timeout /t 3 /nobreak >nul
 
-    set "BARDHZZY_ELEVATE=%~f0"
-
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
-        "try { Start-Process -FilePath $env:BARDHZZY_ELEVATE -Verb RunAs -ErrorAction Stop; exit 0 } catch { exit 1 }"
-
-    if not "%errorlevel%"=="0" (
-        color 0C
-        cls
-
-        echo.
-        echo  ============================================================
-        echo.
-        echo                     bardhzzY TWEAKS
-        echo.
-        echo       [X] Administrator elevation was cancelled.
-        echo.
-        echo       The tweaks were NOT started.
-        echo.
-        echo       Please run the script again and click YES.
-        echo.
-        echo  ============================================================
-        echo.
-        timeout /t 5 /nobreak >nul
-        exit /b 1
-    )
-
-    exit /b 0
+    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    exit /b
 )
 
 title bardhzzY Tweaks (Admin)
@@ -82,94 +57,7 @@ if %win_build% GEQ 22000 (
 )
 
 :os_check_done
-:: =====================================================================
-:: NSUDO / TRUSTEDINSTALLER INTEGRATION
-:: =====================================================================
-color 0B
-set "NSUDO_DIR=%ProgramData%\NSudo"
-set "NSUDO_EXE=%NSUDO_DIR%\NSudoLC.exe"
-set "TI="
-
-if not exist "%NSUDO_EXE%" (
-    echo [+] Initializing NSudo Framework...
-    mkdir "%NSUDO_DIR%" >nul 2>&1
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; try { $zip=Join-Path $env:TEMP 'NSudo.zip'; $ext=Join-Path $env:TEMP 'NSudoExtract'; if(Test-Path $ext){Remove-Item $ext -Recurse -Force -ErrorAction SilentlyContinue}; Invoke-WebRequest -Uri 'https://github.com/M2Team/NSudo/releases/download/8.2/NSudo_8.2_All_Components.zip' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $arch='x64'; if($env:PROCESSOR_ARCHITECTURE -eq 'ARM64'){$arch='ARM64'} elseif($env:PROCESSOR_ARCHITECTURE -ne 'AMD64'){$arch='Win32'}; $exe=Get-ChildItem -Path $ext -Recurse -Filter 'NSudoLC.exe' | Where-Object { $_.FullName -match ('[\\/]'+$arch+'[\\/]') } | Select-Object -First 1; if($exe){Copy-Item $exe.FullName '%NSUDO_DIR%\NSudoLC.exe' -Force; exit 0}else{exit 1}} catch {exit 1}" >nul 2>&1
-    del /q "%TEMP%\NSudo.zip" >nul 2>&1
-    rd /s /q "%TEMP%\NSudoExtract" >nul 2>&1
-)
-
-if not exist "%NSUDO_EXE%" goto NSUDO_UNAVAILABLE
-
-set "TI="
-set "TI_AVAILABLE=0"
-set "TI_TEST=%TEMP%\BARDHZZY_TI_TEST_%RANDOM%.txt"
-
-sc.exe query TrustedInstaller >nul 2>&1
-if errorlevel 1 goto NSUDO_TEST_FAILED
-
-sc.exe query TrustedInstaller | findstr /I "RUNNING" >nul 2>&1
-if errorlevel 1 (
-    sc.exe start TrustedInstaller >nul 2>&1
-    timeout /t 2 /nobreak >nul
-)
-
-"%NSUDO_EXE%" -U:T -P:E -ShowWindowMode:Hide -Wait ^
-    powershell.exe -NoProfile -NonInteractive -Command ^
-    "$id=[Security.Principal.WindowsIdentity]::GetCurrent(); $id.Groups | ForEach-Object { $_.Value } | Set-Content -LiteralPath '%TI_TEST%' -Encoding ascii"
-
-set "TI_TEST_ERR=%errorlevel%"
-
-if not "%TI_TEST_ERR%"=="0" goto NSUDO_TEST_FAILED
-
-findstr /L /I /C:"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464" "%TI_TEST%" >nul 2>&1
-
-if errorlevel 1 goto NSUDO_TEST_FAILED
-
-del /q "%TI_TEST%" >nul 2>&1
-
-set "TI="%NSUDO_EXE%" -U:T -P:E -ShowWindowMode:Hide -Wait"
-set "TI_AVAILABLE=1"
-
-echo.
-echo [OK] TrustedInstaller verified successfully.
-echo.
-timeout /t 1 /nobreak >nul
-goto NSUDO_READY
-
-
-set "TI="
-set "TI_AVAILABLE=0"
-
-echo.
-echo [!] NSudo was found, but the TrustedInstaller token test failed.
-echo.
-echo [!] Diagnostic output:
-if exist "%TI_TEST%" type "%TI_TEST%"
-echo.
-echo [!] TrustedInstaller service tweaks will be skipped.
-echo.
-
-del /q "%TI_TEST%" >nul 2>&1
-timeout /t 4 /nobreak >nul
-goto NSUDO_READY
-
-:NSUDO_UNAVAILABLE
-set "TI="
-echo [!] NSudo is unavailable.
-echo [!] TrustedInstaller-only service tweaks will be skipped.
-timeout /t 3 /nobreak >nul
-
-:NSUDO_READY
 title bardhzzY Tweaks
-MODE 150,40
-color 09
-cls
-
-echo.
-echo      Welcome %USERNAME%, To bardhzzY Tweaks!
-echo.
-
-goto license
 
 :license
 cls
@@ -272,17 +160,80 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='
 if %errorlevel% equ 0 (
     if exist "%UTIL_DIR%" (
         call :LogOK "Tools successfully downloaded and extracted."
+        goto NSUDO_SETUP
     ) else (
         call :LogErr "Failed to verify directory creation."
     )
 ) else (
     call :LogErr "Download failed. Download directly from https://github.com/bardh1xyz/bardhzzY-Utility-Tools ^(save to c: drive^) or check network connection."
 )
-goto :main
+goto NSUDO_SETUP
 
 :tools_exist
 call :LogOK "bardhzzY Utility Tools already exists. Skipping download."
+goto NSUDO_SETUP
+
+:: =====================================================================
+:: NSUDO / TRUSTEDINSTALLER INTEGRATION
+:: =====================================================================
+:NSUDO_SETUP
+set "NSUDO_EXE=C:\bardhzzY Utility Tools\nsudo\NSudoLC.exe"
+set "TI="
+set "TI_AVAILABLE=0"
+
+if not exist "%NSUDO_EXE%" goto NSUDO_UNAVAILABLE
+
+set "TI_TEST=%TEMP%\BARDHZZY_TI_TEST_%RANDOM%.txt"
+
+sc.exe query TrustedInstaller >nul 2>&1
+if errorlevel 1 goto NSUDO_TEST_FAILED
+
+sc.exe query TrustedInstaller | findstr /I "RUNNING" >nul 2>&1
+if errorlevel 1 (
+    sc.exe start TrustedInstaller >nul 2>&1
+    timeout /t 2 /nobreak >nul
+)
+
+"%NSUDO_EXE%" -U:T -P:E -ShowWindowMode:Hide -Wait ^
+    powershell.exe -NoProfile -NonInteractive -Command ^
+    "$id=[Security.Principal.WindowsIdentity]::GetCurrent(); $id.Groups | ForEach-Object { $_.Value } | Set-Content -LiteralPath '%TI_TEST%' -Encoding ascii" >nul 2>&1
+
+set "TI_TEST_ERR=%errorlevel%"
+if not "%TI_TEST_ERR%"=="0" goto NSUDO_TEST_FAILED
+
+findstr /L /I /C:"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464" "%TI_TEST%" >nul 2>&1
+if errorlevel 1 goto NSUDO_TEST_FAILED
+
+del /q "%TI_TEST%" >nul 2>&1
+
+set "TI=""%NSUDO_EXE%"" -U:T -P:E -ShowWindowMode:Hide -Wait"
+set "TI_AVAILABLE=1"
+
+echo.
+echo [OK] TrustedInstaller verified successfully.
+echo.
+timeout /t 1 /nobreak >nul
 goto :main
+
+:NSUDO_TEST_FAILED
+set "TI="
+set "TI_AVAILABLE=0"
+if exist "%TI_TEST%" del /q "%TI_TEST%" >nul 2>&1
+echo.
+echo [!] NSudo TrustedInstaller token test failed.
+echo [!] Falling back to standard Administrator privileges.
+echo.
+timeout /t 2 /nobreak >nul
+goto :main
+
+:NSUDO_UNAVAILABLE
+set "TI="
+set "TI_AVAILABLE=0"
+echo.
+echo [!] NSudo is unavailable (Not found in tools folder).
+echo [!] Using standard Administrator privileges instead.
+echo.
+timeout /t 2 /nobreak >nul
 
 :main
 title bardhzzY Tweaks
@@ -984,7 +935,9 @@ if exist "%WALLPAPER_PATH%" (
     call :RegLog add "HKCU\Control Panel\Desktop" /v Wallpaper      /t REG_SZ /d "%WALLPAPER_PATH%" /f
     call :RegLog add "HKCU\Control Panel\Desktop" /v WallpaperStyle /t REG_SZ /d "10" /f
     call :RegLog add "HKCU\Control Panel\Desktop" /v TileWallpaper  /t REG_SZ /d "0"  /f
-    powershell -command "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class Wallpaper { [DllImport(\"user32.dll\", CharSet=CharSet.Auto)] public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni); }'; [Wallpaper]::SystemParametersInfo(20, 0, \"$WALLPAPER_PATH\", 3)"
+
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$code = '[DllImport(\"user32.dll\")] public static extern bool SystemParametersInfo(uint a, uint b, string c, uint d);'; $sys = Add-Type -MemberDefinition $code -Name 'Wallpaper' -Namespace 'Win32' -PassThru; if (-not $sys::SystemParametersInfo(20, 0, $env:WALLPAPER_PATH, 3)) { exit 1 }"
+
     if errorlevel 1 (
         call :LogWarn "Wallpaper registry set, but live refresh failed. Will apply on next reboot."
     ) else (
@@ -4047,7 +4000,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=2.8.9"
+set "SCRIPT_VERSION=2.8.9.1"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
@@ -4353,7 +4306,27 @@ goto :eof
 
 
 :TIScLog_NoTI
-set "LOG_MSG=%* (TrustedInstaller engine unavailable)"
+sc %* >nul 2>&1
+set "BARDHZZ_ERR=%errorlevel%"
+set "LOG_MSG=%* (Admin Fallback)"
+if not "%BARDHZZ_ERR%"=="0" goto TIScLog_Fail
+
+:: If it was a config command, verify it
+if /I not "%TIS_ACTION%"=="config" goto TIScLog_OK
+if /I not "%~3"=="start=" goto TIScLog_OK
+
+set "TIS_EXPECT=%~4"
+set "TIS_EXPECT_CODE="
+if /I "%TIS_EXPECT%"=="disabled" set "TIS_EXPECT_CODE=4"
+if /I "%TIS_EXPECT%"=="demand" set "TIS_EXPECT_CODE=3"
+if /I "%TIS_EXPECT%"=="auto" set "TIS_EXPECT_CODE=2"
+if not defined TIS_EXPECT_CODE goto TIScLog_OK
+
+set "TIS_ACTUAL_CODE="
+for /f "tokens=3" %%A in ('sc qc "%TIS_SERVICE%" ^| findstr /I /C:"START_TYPE"') do set "TIS_ACTUAL_CODE=%%A"
+if "%TIS_ACTUAL_CODE%"=="%TIS_EXPECT_CODE%" goto TIScLog_OK
+
+set "LOG_MSG=%* (Admin Fallback verification failed: expected %TIS_EXPECT_CODE%, actual %TIS_ACTUAL_CODE%)"
 call :LogErr
 endlocal
 goto :eof
