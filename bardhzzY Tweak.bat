@@ -100,7 +100,7 @@ for %%k in (
     "O3P4-A5S6-D7F8-G9H0" "J1K2-L3M4-N5B6-V7C8" "X9Z0-Q1W2-E3R4-T5Y6" "U7I8-O9P0-A1S2-D3F4"
     "G5H6-J7K8-L9M0-N1B2" "V3C4-X5Z6-Q7W8-E9R0" "T1Y2-U3I4-O5P6-A7S8" "D9F0-G1H2-J3K4-L5M6"
     "N7B8-V9C0-X1Z2-Q3W4" "E5R6-T7Y8-U9I0-O1P2" "A3S4-D5F6-G7H8-J9K0" "L1M2-N3B4-V5C6-X7Z8"
-    "Q9W0-E1R2-T5Y6-U7I8" "O7P8-A9S0-D1F2-G3H4" "bardhzzY7" "akuma123"
+    "Q9W0-E1R2-T5Y6-U7I8" "O7P8-A9S0-D1F2-G3H4" "bardhzzY7"
 ) do (
     if /I "%user_key%"=="%%~k" goto valid
 )
@@ -1438,8 +1438,6 @@ call :RegLog add "HKLM\SOFTWARE\Microsoft\Direct3D" /v "EnablePipelineCache" /t 
 call :RegLog add "HKLM\SOFTWARE\Microsoft\DirectDraw" /v "EmulationOnly" /t REG_DWORD /d 0 /f
 
 call :TIScLog config NvBackend start= disabled
-call :TIScLog stop NvBackend
-call :TIScLog config NVDisplay.ContainerLocalSystem start= demand
 
 for %%v in (ActivelyUsed IdleLongTime IdleMonitorOff IdleShortTime IdleVeryLongTime IdleNoContext) do (
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Power" /v "DefaultD3TransitionLatency%%v" /t REG_DWORD /d 1 /f
@@ -2671,36 +2669,38 @@ pause
 goto main
 
 :netw
-call :LogSection "Network Tweaks" 
-echo. 
+call :LogSection "Network Tweaks"
+echo.
 
-call :LogInfo "[+] Ethernet Only Optimization" 
+call :LogInfo "[+] Ethernet Only Optimization"
 
-set "wifi_kill=" 
-set /p "wifi_kill=Disable Wi-Fi adapter at hardware level for less processes? (Y/N): " 
+set "wifi_kill="
+set /p "wifi_kill=Disable Wi-Fi adapter at hardware level for less processes? (Y/N): "
 
-if /i "%wifi_kill%"=="Y" ( 
-    call :LogInfo "[+] Searching for Wi-Fi adapters and disabling them..." 
+if /i "%wifi_kill%"=="Y" (
+    call :LogInfo "[+] Searching for Wi-Fi adapters and disabling them..."
      
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "$devs = Get-PnpDevice -Class Net | Where-Object { $_.FriendlyName -match 'Wi-Fi|Wireless|WLAN|802.11' -and $_.Status -eq 'OK' }; if (-not $devs) { exit 2 } else { try { $devs | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction Stop }; exit 0 } catch { exit 1 } }" 
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$devs = Get-PnpDevice -Class Net | Where-Object { $_.FriendlyName -match 'Wi-Fi|Wireless|WLAN|802.11' -and $_.Status -eq 'OK' }; if (-not $devs) { exit 2 } else { try { $devs | ForEach-Object { Disable-PnpDevice -InstanceId $_.InstanceId -Confirm:$false -ErrorAction Stop }; exit 0 } catch { exit 1 } }"
      
-    if errorlevel 2 ( 
-        call :LogWarn "[!] No active Wi-Fi adapter found. Nothing to disable." 
-    ) else if errorlevel 1 ( 
-        call :LogErr "[X] Could not disable Wi-Fi. It might be protected or already in use. Check Device Manager." 
-    ) else ( 
-        call :LogOK "[OK] Wi-Fi adapter disabled! You are now strictly on Ethernet." 
-        call :LogWarn "(Note: To re-enable Wi-Fi later, go to Device Manager -> Network Adapters -> Right-Click your Wi-Fi adapter -> Enable)" 
-    ) 
+    if errorlevel 2 (
+        call :LogWarn "[!] No active Wi-Fi adapter found. Nothing to disable."
+    ) else if errorlevel 1 (
+        call :LogErr "[X] Could not disable Wi-Fi. It might be protected or already in use. Check Device Manager."
+    ) else (
+        call :LogOK "[OK] Wi-Fi adapter disabled! You are now strictly on Ethernet."
+        call :LogWarn "(Note: To re-enable Wi-Fi later, go to Device Manager -> Network Adapters -> Right-Click your Wi-Fi adapter -> Enable)"
+    )
 
-    timeout /t 2 /nobreak >nul 
+    timeout /t 2 /nobreak >nul
 
-    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f 
-    call :TIScLog stop WlanSvc 
-    call :LogWarn "WLAN AutoConfig was disabled because Ethernet-only mode was selected." 
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WlanSvc" /v "Start" /t REG_DWORD /d "4" /f
+    call :TIScLog stop WlanSvc
+    call :LogWarn "WLAN AutoConfig was disabled because Ethernet-only mode was selected."
 
-) else ( 
+) else if /i "%wifi_kill%"=="N" (
     call :LogInfo "[SKIP] Wi-Fi/WLAN left unchanged."
+) else (
+    call :LogWarn "[!] Invalid choice. Wi-Fi/WLAN left unchanged."
 )
 
 call :LogInfo "Enabling MSI/MSI-X for Ethernet adapters..."
@@ -4321,7 +4321,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=v3.0.0.1"
+set "SCRIPT_VERSION=v3.0.0.2"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
