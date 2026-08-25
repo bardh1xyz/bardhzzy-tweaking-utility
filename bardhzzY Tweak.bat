@@ -352,6 +352,9 @@ goto :eof
 
 :main
 title bardhzzY Tweaks
+
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
+
 MODE 100,40
 echo %ESC%[0m
 cls
@@ -662,11 +665,89 @@ if %errorlevel% equ 0 (call :LogOK "Enable WMP feature") else (call :LogErr "Ena
 call :LogInfo "Optimizing WMP Network Service..."
 call :TIScLog config WMPNetworkSvc start= demand
 
-call :LogInfo "Installing Visual C++ 2015-2022 Redistributables..."
-winget install --id Microsoft.VCRedist.2015+.x64 --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Install VCRedist x64") else (call :LogErr "Install VCRedist x64")
-winget install --id Microsoft.VCRedist.2015+.x86 --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Install VCRedist x86") else (call :LogErr "Install VCRedist x86")
+call :LogInfo "Installing Microsoft Visual C++ Redistributables..."
+
+set "VC_TEMP=%TEMP%\bardhzzY_vcredist"
+set "VC_X64=%VC_TEMP%\vc_redist.x64.exe"
+set "VC_X86=%VC_TEMP%\vc_redist.x86.exe"
+
+if exist "%VC_TEMP%" rd /s /q "%VC_TEMP%" >nul 2>&1
+mkdir "%VC_TEMP%" >nul 2>&1
+
+rem vcc+ x64
+winget install --id Microsoft.VCRedist.2015+.x64 --exact --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
+set "VC64_RC=%errorlevel%"
+
+if "%VC64_RC%"=="0" (
+    call :LogOK "VCRedist x64 installed via Winget."
+) else if "%VC64_RC%"=="3010" (
+    call :LogOK "VCRedist x64 installed via Winget (restart required)."
+) else (
+    call :LogWarn "Winget failed for VCRedist x64 (rc=%VC64_RC%). Trying Microsoft direct download..."
+
+    curl.exe -L -f --retry 3 --retry-delay 2 -sS ^
+        -o "%VC_X64%" ^
+        "https://aka.ms/vc14/vc_redist.x64.exe" >nul 2>&1
+
+    if not exist "%VC_X64%" (
+        call :LogErr "Microsoft VCRedist x64 download failed."
+    ) else (
+        for %%F in ("%VC_X64%") do if %%~zF LSS 1000000 (
+            call :LogErr "Microsoft VCRedist x64 download appears invalid."
+            del /q "%VC_X64%" >nul 2>&1
+        ) else (
+            start /wait "" "%VC_X64%" /install /quiet /norestart
+            set "VC64_DIRECT_RC=%errorlevel%"
+
+            if "%VC64_DIRECT_RC%"=="0" (
+                call :LogOK "VCRedist x64 installed from Microsoft."
+            ) else if "%VC64_DIRECT_RC%"=="3010" (
+                call :LogOK "VCRedist x64 installed from Microsoft (restart required)."
+            ) else (
+                call :LogErr "VCRedist x64 Microsoft installer failed (rc=%VC64_DIRECT_RC%)."
+            )
+        )
+    )
+)
+
+rem vcc+ x86
+winget install --id Microsoft.VCRedist.2015+.x86 --exact --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
+set "VC86_RC=%errorlevel%"
+
+if "%VC86_RC%"=="0" (
+    call :LogOK "VCRedist x86 installed via Winget."
+) else if "%VC86_RC%"=="3010" (
+    call :LogOK "VCRedist x86 installed via Winget (restart required)."
+) else (
+    call :LogWarn "Winget failed for VCRedist x86 (rc=%VC86_RC%). Trying Microsoft direct download..."
+
+    curl.exe -L -f --retry 3 --retry-delay 2 -sS ^
+        -o "%VC_X86%" ^
+        "https://aka.ms/vc14/vc_redist.x86.exe" >nul 2>&1
+
+    if not exist "%VC_X86%" (
+        call :LogErr "Microsoft VCRedist x86 download failed."
+    ) else (
+        for %%F in ("%VC_X86%") do if %%~zF LSS 1000000 (
+            call :LogErr "Microsoft VCRedist x86 download appears invalid."
+            del /q "%VC_X86%" >nul 2>&1
+        ) else (
+            start /wait "" "%VC_X86%" /install /quiet /norestart
+            set "VC86_DIRECT_RC=%errorlevel%"
+
+            if "%VC86_DIRECT_RC%"=="0" (
+                call :LogOK "VCRedist x86 installed from Microsoft."
+            ) else if "%VC86_DIRECT_RC%"=="3010" (
+                call :LogOK "VCRedist x86 installed from Microsoft (restart required)."
+            ) else (
+                call :LogErr "VCRedist x86 Microsoft installer failed (rc=%VC86_DIRECT_RC%)."
+            )
+        )
+    )
+)
+
+del /q "%VC_X64%" "%VC_X86%" >nul 2>&1
+rd /s /q "%VC_TEMP%" >nul 2>&1
 
 call :LogInfo "Downloading DirectX Web Setup..."
 setlocal EnableDelayedExpansion
@@ -1378,24 +1459,81 @@ for %%i in (0000 0001 0002 0003 0004 0005) do (
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMHdcpKeyglobZero" /t REG_DWORD /d 1 /f
 )
 
-call :LogInfo "Applying DisableDynamicPstate to active GPU (Universal Safe)..."
+call :LogInfo "Applying DisableDynamicPstate to active GPU"
 powershell -NoProfile -Command "$gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like 'PCI\VEN_10DE*' }; foreach ($gpu in $gpus) { $pnp = $gpu.PNPDeviceID; $regBase = 'HKLM:\SYSTEM\CurrentControlSet\Enum\' + $pnp; $driverVal = (Get-ItemProperty -Path $regBase -Name 'Driver' -ErrorAction SilentlyContinue).Driver; if ($driverVal) { $classPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\' + $driverVal; if (Test-Path $classPath) { Set-ItemProperty -Path $classPath -Name 'DisableDynamicPstate' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "DisableDynamicPstate applied") else (call :LogWarn "DisableDynamicPstate skipped (No matching GPU found)")
 
-:: --- MSI Mode
+rem nvidia msi mode
 call :LogInfo "Enabling MSI Mode for NVIDIA GPU..."
-setlocal EnableDelayedExpansion
-for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_10DE" ^| findstr "HKEY"') do (
-    reg query "%%a" /v "Service" 2>nul | findstr /i "nvlddmkm" >nul
-    if !errorlevel! equ 0 (
-        call :RegLog add "%%a\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /t REG_DWORD /d 3 /f
+setlocal EnableExtensions EnableDelayedExpansion
+
+set "NVIDIA_MSI_COUNT=0"
+
+for /f "delims=" %%A in ('
+    reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_10DE" 2^>nul ^|
+    findstr /i /b "HKEY_LOCAL_MACHINE"
+') do (
+    reg query "%%A" /v "Service" 2>nul | findstr /i /c:"nvlddmkm" >nul
+
+    if not errorlevel 1 (
+        set "NVIDIA_MSI_PATH=%%A\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
+
+        reg query "!NVIDIA_MSI_PATH!" >nul 2>&1
+
+        if not errorlevel 1 (
+            reg add "!NVIDIA_MSI_PATH!" /v "MSISupported" /t REG_DWORD /d 1 /f >nul 2>&1
+            set "NVIDIA_MSI_RC=!errorlevel!"
+
+            if "!NVIDIA_MSI_RC!"=="0" (
+                set /a NVIDIA_MSI_COUNT+=1
+                set "LOG_MSG=NVIDIA MSI enabled: %%A"
+                call :LogOK
+            ) else (
+                set "LOG_MSG=NVIDIA MSI write failed: %%A (err=!NVIDIA_MSI_RC!)"
+                call :LogErr
+            )
+
+            reg add "!NVIDIA_MSI_PATH!" /v "MessageNumberLimit" /t REG_DWORD /d 1 /f >nul 2>&1
+            if not errorlevel 1 (
+                set "LOG_MSG=NVIDIA MSI MessageNumberLimit configured: %%A"
+                call :LogOK
+            ) else (
+                set "LOG_MSG=NVIDIA MessageNumberLimit write failed: %%A"
+                call :LogWarn
+            )
+
+            set "NVIDIA_AFFINITY_PATH=%%A\Device Parameters\Interrupt Management\Affinity Policy"
+
+            reg query "!NVIDIA_AFFINITY_PATH!" >nul 2>&1
+
+            if not errorlevel 1 (
+                reg add "!NVIDIA_AFFINITY_PATH!" /v "DevicePriority" /t REG_DWORD /d 3 /f >nul 2>&1
+
+                if not errorlevel 1 (
+                    set "LOG_MSG=NVIDIA DevicePriority set: %%A"
+                    call :LogOK
+                ) else (
+                    set "LOG_MSG=NVIDIA DevicePriority write failed: %%A"
+                    call :LogWarn
+                )
+            ) else (
+                set "LOG_MSG=NVIDIA Affinity Policy structure not present; skipped: %%A"
+                call :LogSkip
+            )
+        ) else (
+            set "LOG_MSG=NVIDIA MSI structure not present; skipped: %%A"
+            call :LogSkip
+        )
     )
 )
+
+if !NVIDIA_MSI_COUNT! equ 0 (
+    call :LogWarn "No NVIDIA devices with an existing MSI structure were modified."
+) else (
+    set "LOG_MSG=Successfully enabled MSI on !NVIDIA_MSI_COUNT! NVIDIA device(s)."
+    call :LogOK
+)
 endlocal
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\PnP\Pci" /v "GetInterruptConnectionCount" /t REG_DWORD /d 0 /f
-call :LogOK "NVIDIA GPU MSI Mode & High Priority Enabled!"
 
 call :LogInfo "Applying DirectX Optimizations..."
 powershell -NoProfile -Command "$p='HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'; $n='DirectXUserGlobalSettings'; $tweak='SwapEffectUpgradeEnable=1;VRROptimizeEnable=0;'; $val=(Get-ItemProperty -Path $p -Name $n -ErrorAction SilentlyContinue).$n; if($val){ $parts=$val -split ';' | Where-Object { $_ -notmatch 'SwapEffectUpgradeEnable' -and $_ -notmatch 'VRROptimizeEnable' }; $new=($parts -join ';').';'+$tweak } else { $new=$tweak }; Set-ItemProperty -Path $p -Name $n -Value $new -Type String -Force" >nul 2>&1
@@ -2072,7 +2210,6 @@ call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\BTAGService" /v "Star
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WManSvc" /v "Start" /t REG_DWORD /d "4" /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WerFaultSvc" /v "Start" /t REG_DWORD /d "4" /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WerKernelSvc" /v "Start" /t REG_DWORD /d "4" /f
-winget uninstall --silent --accept-source-agreements "Windows web experience Pack" >nul 2>&1
 call :LogInfo "Removing Snipping Tool (using Lightshot instead)..."
 taskkill /f /im SnippingTool.exe >nul 2>&1
 taskkill /f /im ScreenSketch.exe >nul 2>&1
@@ -2534,7 +2671,9 @@ powershell -NoProfile -Command "Get-AppxPackage -AllUsers *MixedReality.Portal* 
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: MixedReality.Portal") else (call :LogErr "Remove AppxProv: MixedReality.Portal")
 powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DisneyMagicKingdoms* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DisneyMagicKingdoms*' -or $_.PackageName -like '*DisneyMagicKingdoms*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: DisneyMagicKingdoms") else (call :LogErr "Remove AppxProv: DisneyMagicKingdoms")
-winget uninstall --silent --accept-source-agreements "Windows web experience Pack" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$pkgs = Get-AppxPackage -AllUsers | Where-Object { $_.Name -like '*WebExperience*' -or $_.PackageFullName -like '*WebExperience*' }; if ($pkgs) { $pkgs | ForEach-Object { Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction SilentlyContinue }; exit 0 } else { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Windows Web Experience Pack removal.") else (call :LogSkip "Windows Web Experience Pack not present or already removed.")
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
 if %errorlevel% equ 0 (call :LogOK "Winget uninstall: Web Exp Pack") else (call :LogErr "Winget uninstall: Web Exp Pack")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.GetHelp* | Remove-AppxPackage" >nul 2>&1
@@ -2704,29 +2843,52 @@ if /i "%wifi_kill%"=="Y" (
 )
 
 call :LogInfo "Enabling MSI/MSI-X for Ethernet adapters..."
-setlocal enabledelayedexpansion
-set "count=0"
+setlocal EnableExtensions EnableDelayedExpansion
 
-for /f "delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}" /s /v "IfType" 2^>nul ^| findstr /i "HKEY_LOCAL_MACHINE"') do (
-    reg query "%%i" /v "IfType" 2>nul | findstr /i /r "REG_DWORD *0x6[ ]*$" >nul && (
-        for /f "tokens=2*" %%A in ('reg query "%%i" /v "PnPInstanceID" 2>nul ^| findstr /i "PnPInstanceID"') do (
-            set "MSI_REG_PATH=HKLM\SYSTEM\CurrentControlSet\Enum\%%B\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
-            
-            reg query "!MSI_REG_PATH!" >nul 2>&1
-            if !errorlevel! equ 0 (
-                call :RegLog add "!MSI_REG_PATH!" /v "MSISupported" /t REG_DWORD /d 1 /f
-                set /a count+=1
+set "ETH_MSI_COUNT=0"
+
+for /f "delims=" %%A in ('
+    reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}" /s /v "IfType" 2^>nul ^|
+    findstr /i /b "HKEY_LOCAL_MACHINE"
+') do (
+    reg query "%%A" /v "IfType" 2>nul | findstr /i /r /c:"REG_DWORD[ ]*0x6[ ]*$" >nul
+
+    if not errorlevel 1 (
+        for /f "tokens=2,*" %%B in ('
+            reg query "%%A" /v "PnPInstanceID" 2^>nul ^|
+            findstr /i "PnPInstanceID"
+        ') do (
+            set "ETH_MSI_PATH=HKLM\SYSTEM\CurrentControlSet\Enum\%%C\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
+
+            reg query "!ETH_MSI_PATH!" >nul 2>&1
+
+            if not errorlevel 1 (
+                reg add "!ETH_MSI_PATH!" /v "MSISupported" /t REG_DWORD /d 1 /f >nul 2>&1
+
+                if not errorlevel 1 (
+                    set /a ETH_MSI_COUNT+=1
+                    set "LOG_MSG=Ethernet MSI enabled: %%C"
+                    call :LogOK
+                ) else (
+                    set "LOG_MSG=Ethernet MSI write failed: %%C (err=!errorlevel!)"
+                    call :LogErr
+                )
             ) else (
-                call :LogSkip "Adapter %%B lacks MSI structures. Unsafe to force."
+                set "LOG_MSG=Ethernet MSI structure not present; skipped: %%C"
+                call :LogSkip
             )
         )
     )
 )
-if %count%==0 (
-    call :LogWarn "No physical Ethernet adapters found or applied."
+
+if !ETH_MSI_COUNT! equ 0 (
+    call :LogWarn "No Ethernet adapters with an existing MSI structure were modified."
 ) else (
-    call :LogOK "Successfully applied MSI mode to %count% adapter(s)."
+    set "LOG_MSG=Successfully enabled MSI on !ETH_MSI_COUNT! Ethernet adapter(s)."
+    call :LogOK
 )
+
+endlocal
 
 call :LogInfo "Applying Advanced Network Tweaks..."
 for /f "skip=2 delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"') do (
@@ -2832,25 +2994,56 @@ if %errorlevel% equ 0 (call :LogOK "fsutil Disabledeletenotify 0") else (call :L
 fsutil behavior set encryptpagingfile 0 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "fsutil encryptpagingfile 0") else (call :LogErr "fsutil encryptpagingfile 0")
 
+:: ------------------------------------------------------------
+:: Storage MSI / MSI-X
+:: ------------------------------------------------------------
 call :LogInfo "Enabling MSI Mode for Active Storage Controllers..."
-setlocal EnableDelayedExpansion
+setlocal EnableExtensions EnableDelayedExpansion
+
+set "STORAGE_MSI_COUNT=0"
+
 for %%S in (stornvme storahci) do (
     reg query "HKLM\SYSTEM\CurrentControlSet\Services\%%S\Enum" >nul 2>&1
-    if !errorlevel! equ 0 (
-        for /f "tokens=1,2,*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\%%S\Enum" 2^>nul ^| find "REG_SZ"') do (
+
+    if not errorlevel 1 (
+        for /f "tokens=1,2,*" %%A in ('
+            reg query "HKLM\SYSTEM\CurrentControlSet\Services\%%S\Enum" 2^>nul ^|
+            findstr /r /c:"REG_SZ"
+        ') do (
             set "DEVICE_ID=%%C"
-            set "REG_PATH=HKLM\SYSTEM\CurrentControlSet\Enum\!DEVICE_ID!\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
+            set "STORAGE_MSI_PATH=HKLM\SYSTEM\CurrentControlSet\Enum\!DEVICE_ID!\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
+
             call :LogInfo "Target Found: !DEVICE_ID!"
-            reg query "!REG_PATH!" >nul 2>&1
-            if !errorlevel! equ 0 (
-                call :RegLog add "!REG_PATH!" /v "MSISupported" /t REG_DWORD /d 1 /f
+
+            reg query "!STORAGE_MSI_PATH!" >nul 2>&1
+
+            if not errorlevel 1 (
+                reg add "!STORAGE_MSI_PATH!" /v "MSISupported" /t REG_DWORD /d 1 /f >nul 2>&1
+
+                if not errorlevel 1 (
+                    set /a STORAGE_MSI_COUNT+=1
+                    set "LOG_MSG=Storage MSI enabled: !DEVICE_ID!"
+                    call :LogOK
+                ) else (
+                    set "LOG_MSG=Storage MSI write failed: !DEVICE_ID! (err=!errorlevel!)"
+                    call :LogErr
+                )
             ) else (
-                call :LogSkip "Hardware lacks MSI structures. Unsafe to force."
+                set "LOG_MSG=Storage MSI structure not present; skipped: !DEVICE_ID!"
+                call :LogSkip
             )
         )
     )
 )
-call :LogInfo "Storage MSI configuration complete."
+
+if !STORAGE_MSI_COUNT! equ 0 (
+    call :LogWarn "No storage controllers with an existing MSI structure were modified."
+) else (
+    set "LOG_MSG=Successfully enabled MSI on !STORAGE_MSI_COUNT! storage controller(s)."
+    call :LogOK
+)
+
+endlocal
 
 call :LogInfo "Disabling Sleep Study"
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "SleepStudyDisabled" /t REG_DWORD /d "1" /f
@@ -3193,7 +3386,7 @@ call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Memory\N
 call :LogInfo "Applying bcdedit and powercfg settings..."
 bcdedit /set disabledynamictick Yes >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "bcdedit disabledynamictick Yes") else (call :LogErr "bcdedit disabledynamictick Yes")
-bcdedit /deletevalue useplatformclock >nul 2>&1
+bcdedit /deletevalue {current} useplatformclock >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "bcdedit deletevalue useplatformclock") else (call :LogWarn "bcdedit deletevalue useplatformclock")
 bcdedit /deletevalue useplatformtick >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "bcdedit deletevalue useplatformtick") else (call :LogWarn "bcdedit deletevalue useplatformtick")
@@ -3225,8 +3418,31 @@ powercfg /setacvalueindex scheme_current sub_processor PERFBOOSTMODE 2 >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg PERFBOOSTMODE 2") else (call :LogErr "powercfg PERFBOOSTMODE 2")
 powercfg -setactive SCHEME_CURRENT >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "powercfg -setactive SCHEME_CURRENT") else (call :LogErr "powercfg -setactive SCHEME_CURRENT")
-%dmv% "ACPI\PNP0103" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "High Precision Event Timer driver") else (call :LogErr "High Precision Event Timer driver")
+call :LogInfo "Disabling High Precision Event Timer device..."
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$ErrorActionPreference='Stop';" ^
+    "$devs = @(Get-PnpDevice -ErrorAction Stop | Where-Object { $_.FriendlyName -eq 'High Precision Event Timer' -or $_.InstanceId -match '^ACPI\\PNP0103' });" ^
+    "if ($devs.Count -eq 0) { exit 2 };" ^
+    "$failed = $false;" ^
+    "foreach ($dev in $devs) {" ^
+        "try {" ^
+            "Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop;" ^
+            "$check = Get-PnpDevice -InstanceId $dev.InstanceId -ErrorAction Stop;" ^
+            "if ($check.Problem -ne 22) { $failed = $true }" ^
+        "} catch { $failed = $true }" ^
+    "};" ^
+    "if ($failed) { exit 1 } else { exit 0 }"
+
+set "HPET_RC=%errorlevel%"
+
+if "%HPET_RC%"=="0" (
+    call :LogOK "High Precision Event Timer device disabled and verified (Code 22)."
+) else if "%HPET_RC%"=="2" (
+    call :LogSkip "High Precision Event Timer device not present on this system."
+) else (
+    call :LogErr "High Precision Event Timer device could not be disabled or verification failed."
+)
 
 call :LogOK "Power tweaks applied successfully!"
 timeout /t 1 /nobreak > NUL
@@ -4321,7 +4537,7 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=v3.0.0.2"
+set "SCRIPT_VERSION=v3.0.0.3"
 set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
