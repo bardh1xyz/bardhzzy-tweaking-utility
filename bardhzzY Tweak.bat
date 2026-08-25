@@ -355,7 +355,7 @@ title bardhzzY Tweaks
 
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
 
-MODE 100,42
+MODE 100,40
 echo %ESC%[0m
 cls
 
@@ -367,24 +367,24 @@ echo        %ESC%[34m██╔══██╗██╔══██║██╔�
 echo        %ESC%[34m██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
 echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
-echo  %ESC%[34mSYSTEM TWEAKS                 %ESC%[0m %ESC%[34mNETWORK ^& LATENCY%ESC%[0m
+echo  %ESC%[34mSYSTEM TWEAKS                  %ESC%[0m %ESC%[34mNETWORK ^& LATENCY%ESC%[0m
 echo  %ESC%[37m [%ESC%[36m 1%ESC%[37m] Windows Tweaks            %ESC%[37m [%ESC%[36m 6%ESC%[37m] Network Tweaks
 echo  %ESC%[37m [%ESC%[36m 2%ESC%[37m] GPU Tweaks                %ESC%[37m [%ESC%[36m 7%ESC%[37m] Storage Tweaks
 echo  %ESC%[37m [%ESC%[36m 3%ESC%[37m] CPU Tweaks                %ESC%[37m [%ESC%[36m 8%ESC%[37m] Input Lag Tweaks
 echo  %ESC%[37m [%ESC%[36m 4%ESC%[37m] RAM Tweaks                %ESC%[37m [%ESC%[36m 9%ESC%[37m] KBM Tweaks
 echo  %ESC%[37m [%ESC%[36m 5%ESC%[37m] Power Tweaks              %ESC%[37m [%ESC%[36m10%ESC%[37m] Timer Resolution
 echo.
-echo  %ESC%[34mGAMING ^& CLEANUP             %ESC%[0m %ESC%[34mSAFETY ^& UTILITIES%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer       %ESC%[37m [%ESC%[36m14%ESC%[37m] Restore Point
-echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction        %ESC%[37m [%ESC%[36m15%ESC%[37m] Registry Backup
-echo  %ESC%[37m [%ESC%[36m13%ESC%[37m] Device Manager Tweak     %ESC%[37m [%ESC%[36m16%ESC%[37m] Revert Tweaks
+echo  %ESC%[34mGAMING ^& CLEANUP                %ESC%[34mSECURITY ^& FIXES
+echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer        %ESC%[37m [%ESC%[36m14%ESC%[37m] Disable Defender
+echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction         %ESC%[37m [%ESC%[36m15%ESC%[37m] Re-enable Defender
+echo  %ESC%[37m [%ESC%[36m13%ESC%[37m] Device Manager Tweak      %ESC%[37m [%ESC%[36m16%ESC%[37m] Fixes
 echo.
-echo  %ESC%[34mSECURITY ^& FIXES             %ESC%[0m %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m17%ESC%[37m] Disable Defender         %ESC%[37m [%ESC%[36m20%ESC%[37m] View Log
-echo  %ESC%[37m [%ESC%[36m18%ESC%[37m] Re-enable Defender       %ESC%[37m [%ESC%[36m21%ESC%[37m] View Errors
-echo  %ESC%[37m [%ESC%[36m19%ESC%[37m] Fixes                    %ESC%[37m [%ESC%[36m22%ESC%[37m] Summary
-echo                                 %ESC%[37m [%ESC%[36m23%ESC%[37m] Restart PC
-echo  %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord                  %ESC%[37m [%ESC%[36m24%ESC%[37m] Quit
+echo  %ESC%[34mSAFETY ^& UTILITIES%ESC%[0m             %ESC%[0m %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m17%ESC%[37m] Restore Point             %ESC%[37m [%ESC%[36m20%ESC%[37m] View Log
+echo  %ESC%[37m [%ESC%[36m18%ESC%[37m] Registry Backup           %ESC%[37m [%ESC%[36m21%ESC%[37m] View Errors
+echo  %ESC%[37m [%ESC%[36m19%ESC%[37m] Revert Tweaks             %ESC%[37m [%ESC%[36m22%ESC%[37m] Summary
+echo                                  %ESC%[37m [%ESC%[36m23%ESC%[37m] Restart PC
+echo  %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord                   %ESC%[37m [%ESC%[36m24%ESC%[37m] Quit
 echo.
 echo  %ESC%[90mCopyright © 2026 bardhzzY Tweaks. All rights reserved.%ESC%[0m
 echo.
@@ -412,12 +412,12 @@ if /i "%input%"=="10" goto timerres
 if /i "%input%"=="11" goto fortnite
 if /i "%input%"=="12" goto services
 if /i "%input%"=="13" goto devmgmt
-if /i "%input%"=="14" goto srp
-if /i "%input%"=="15" goto backup
-if /i "%input%"=="16" goto revert
-if /i "%input%"=="17" goto defender
-if /i "%input%"=="18" goto defender_revert
-if /i "%input%"=="19" goto fixes
+if /i "%input%"=="14" goto defender
+if /i "%input%"=="15" goto goto defender_revert
+if /i "%input%"=="16" goto fixes
+if /i "%input%"=="17" goto srp
+if /i "%input%"=="18" goto backup
+if /i "%input%"=="19" goto revert
 if /i "%input%"=="20" (
     call :LogView
     goto main
@@ -435,7 +435,7 @@ if /i "%input%"=="23" goto restartpc
 if /i "%input%"=="24" (
     call :LogSummary
     echo.
-    echo Thank you for using BARDHZZY Tweaks!
+    echo Thank you for using bardhzzY Tweaks!
     echo Your log file: %LOG_FILE%
     timeout 3 >nul
     exit /b
@@ -4876,7 +4876,7 @@ goto main
 :defender
 call :LogSection "Disable Defender (Enhanced)"
 cls
-MODE 100,42
+MODE 100,40
 color 0E
 echo %ESC%[0m
 
@@ -4904,7 +4904,7 @@ echo  %ESC%[91m[!] CRITICAL: Tamper Protection MUST be OFF for registry%ESC%[0m
 echo  %ESC%[91m    writes to stick. If TP is ON, this section will open%ESC%[0m
 echo  %ESC%[91m    windowsdefender: so you can turn it off manually.%ESC%[0m
 echo.
-echo  %ESC%[33m[!] A REVERT option is available as menu option 18.%ESC%[0m
+echo  %ESC%[33m[!] A REVERT option is available as menu option 15.%ESC%[0m
 echo.
 echo  Press any key to continue, or CTRL+C to abort...
 pause >nul
@@ -5078,9 +5078,6 @@ echo.
 pause
 goto main
 
-:: =====================================================================
-:: Fixes / Recovery Section
-:: =====================================================================
 :fixes
 call :LogSection "System Fixes / Recovery"
 cls
