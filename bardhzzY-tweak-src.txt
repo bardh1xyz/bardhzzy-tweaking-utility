@@ -803,7 +803,7 @@ set "VC_X86=%VC_TEMP%\vc_redist.x86.exe"
 if exist "%VC_TEMP%" rd /s /q "%VC_TEMP%" >nul 2>&1
 mkdir "%VC_TEMP%" >nul 2>&1
 
-rem vcc+ x64
+rem vc++ x64
 winget install --id Microsoft.VCRedist.2015+.x64 --exact --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
 set "VC64_RC=%errorlevel%"
 
@@ -839,7 +839,7 @@ if "%VC64_RC%"=="0" (
     )
 )
 
-rem vcc+ x86
+rem vc++ x86
 winget install --id Microsoft.VCRedist.2015+.x86 --exact --silent --accept-source-agreements --accept-package-agreements >nul 2>&1
 set "VC86_RC=%errorlevel%"
 
@@ -888,7 +888,6 @@ if "%DX_OK%"=="1" (
     call :LogOK "DirectX Web Setup downloaded."
     call :LogInfo "Installing DirectX silently (this may take a moment)..."
     
-    :: /Q = Quiet, /R:N = Suppress restart
     start /wait "" "%temp%\dxwebsetup.exe" /Q /R:N
     set "DX_EXIT_CODE=!errorlevel!"
     
@@ -5232,8 +5231,8 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=v3.1.0.0"
-set "SCRIPT_BUILD=25-08-2026"
+set "SCRIPT_VERSION=v3.0.0.3"
+set "SCRIPT_BUILD=08-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
 set "LOG_SECTION=SYSTEM"
