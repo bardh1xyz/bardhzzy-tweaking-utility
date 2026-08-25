@@ -38,10 +38,13 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 | `11` | **Fortnite Optimizer** | Whitelists Fortnite paths in security settings and applies *custom process priorities*. |
 | `12` | **Service Reduction** | Disables non-essential Windows services (*Printers*, *Fax*, *Hyper-V*, *Bluetooth*, etc.). |
 | `13` | **Device Manager Tweak** | Disables unused virtual devices (*WAN Miniports*, *VMIC guest interfaces*). |
-| `14` | **Restore Point** | Creates a standard Windows *System Restore Point*. |
-| `15` | **Registry Backup** | Generates a full backup of critical system *registry hives*. |
-| `16` | **Revert Tweaks** | Reverts modified registry keys and service configurations back to *defaults*. |
-| `17–21` | **Utilities & Logs** | Quick system restart, *live execution log viewer*, error diagnostics, and script exit. |
+| `14` | **Disable Defender** | Disables Windows security/antivirus *Proceed with care if u run this option!* |
+| `15` | **Re-enable Defender** | Re-enables *Windows security* if disabled previously. |
+| `16` | **Fixes** | Contains fixes for different games and errors if the tweak broke them. |
+| `17` | **Restore Point** | Creates a standard Windows *System Restore Point*. |
+| `18` | **Registry Backup** | Generates a full backup of critical system *registry hives*. |
+| `19` | **Revert Tweaks** | Reverts modified registry keys and service configurations back to *defaults*. |
+| `20–24` | **Utilities & Logs** | Quick system restart, *live execution log viewer*, error diagnostics, and script exit. |
 
 ---
 
