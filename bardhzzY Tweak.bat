@@ -9,8 +9,12 @@ fltmc >nul 2>&1
 
 if not "%errorlevel%"=="0" (
     mode con: cols=78 lines=18
-    color 0E
+    color 0C
+    title [!] ACCESS DENIED - ELEVATION REQUIRED
     cls
+
+    :: Plays a two-tone failure error sound
+    powershell -NoProfile -Command "[console]::beep(800, 200); Start-Sleep -m 50; [console]::beep(500, 300)" >nul 2>&1
 
     echo.
     echo  ==============================================================
@@ -28,7 +32,7 @@ if not "%errorlevel%"=="0" (
     echo.
     echo   Please click YES when prompted.
     echo.
-    echo   If no prompt appears, run the file from an admin account.
+    echo   If no prompt appears, right click the file and run as admin.
     echo.
     echo  ==============================================================
     echo.
@@ -69,7 +73,6 @@ title bardhzzY Tweaks
 :license
 cls
 MODE 100,40
-color 09
 echo %ESC%[0m
 
 echo.
@@ -108,7 +111,6 @@ for %%k in (
 :invalid
 cls
 MODE 100,40
-color 09
 echo %ESC%[0m
 
 echo.
@@ -132,7 +134,6 @@ goto license
 :valid
 cls
 MODE 100,40
-color 09
 echo %ESC%[0m
 
 echo.
@@ -220,7 +221,6 @@ goto ADVANCEDRUN_TEST_FAILED
 :ADVANCEDRUN_TEST_FAILED
 cls
 MODE 100,30
-color 09
 echo %ESC%[0m
 
 echo.
@@ -355,19 +355,17 @@ title bardhzzY Tweaks
 
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
 
-MODE 100,40
+MODE 100,42
 echo %ESC%[0m
 cls
-color 09
 
 echo.
-echo.
-echo        ██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗
-echo        ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝
-echo        ██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ 
-echo        ██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  
-echo        ██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   
-echo        ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   
+echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
+echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
+echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
+echo        %ESC%[34m██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
+echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
 echo  %ESC%[34mSYSTEM TWEAKS                 %ESC%[0m %ESC%[34mNETWORK ^& LATENCY%ESC%[0m
 echo  %ESC%[37m [%ESC%[36m 1%ESC%[37m] Windows Tweaks            %ESC%[37m [%ESC%[36m 6%ESC%[37m] Network Tweaks
@@ -381,9 +379,12 @@ echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer       %ESC%[37m [%ESC%
 echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction        %ESC%[37m [%ESC%[36m15%ESC%[37m] Registry Backup
 echo  %ESC%[37m [%ESC%[36m13%ESC%[37m] Device Manager Tweak     %ESC%[37m [%ESC%[36m16%ESC%[37m] Revert Tweaks
 echo.
-echo  %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m17%ESC%[37m] Restart PC       %ESC%[37m [%ESC%[36m18%ESC%[37m] View Log         %ESC%[37m [%ESC%[36m19%ESC%[37m] View Errors
-echo  %ESC%[37m [%ESC%[36m20%ESC%[37m] Summary          %ESC%[37m [%ESC%[36m21%ESC%[37m] Quit             %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord
+echo  %ESC%[34mSECURITY ^& FIXES             %ESC%[0m %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
+echo  %ESC%[37m [%ESC%[36m17%ESC%[37m] Disable Defender         %ESC%[37m [%ESC%[36m20%ESC%[37m] View Log
+echo  %ESC%[37m [%ESC%[36m18%ESC%[37m] Re-enable Defender       %ESC%[37m [%ESC%[36m21%ESC%[37m] View Errors
+echo  %ESC%[37m [%ESC%[36m19%ESC%[37m] Fixes                    %ESC%[37m [%ESC%[36m22%ESC%[37m] Summary
+echo                                 %ESC%[37m [%ESC%[36m23%ESC%[37m] Restart PC
+echo  %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord                  %ESC%[37m [%ESC%[36m24%ESC%[37m] Quit
 echo.
 echo  %ESC%[90mCopyright © 2026 bardhzzY Tweaks. All rights reserved.%ESC%[0m
 echo.
@@ -414,21 +415,24 @@ if /i "%input%"=="13" goto devmgmt
 if /i "%input%"=="14" goto srp
 if /i "%input%"=="15" goto backup
 if /i "%input%"=="16" goto revert
-if /i "%input%"=="17" goto restartpc
-if /i "%input%"=="18" (
+if /i "%input%"=="17" goto defender
+if /i "%input%"=="18" goto defender_revert
+if /i "%input%"=="19" goto fixes
+if /i "%input%"=="20" (
     call :LogView
     goto main
 )
-if /i "%input%"=="19" (
+if /i "%input%"=="21" (
     call :LogViewErrors
     goto main
 )
-if /i "%input%"=="20" (
+if /i "%input%"=="22" (
     call :LogSummary
     pause
     goto main
 )
-if /i "%input%"=="21" (
+if /i "%input%"=="23" goto restartpc
+if /i "%input%"=="24" (
     call :LogSummary
     echo.
     echo Thank you for using BARDHZZY Tweaks!
@@ -447,6 +451,131 @@ timeout 2 >nul
 goto main
 
 :win
+call :LogSection "Package Manager:win
+call :LogSection "Pre-flight: UCPD / Smart App Control / Teredo / Autologger"
+
+:: UCPD disable - Win11 24H2+ only (build >= 26100)
+setlocal EnableDelayedExpansion
+if "!os_ver!"=="Win11" (
+    if defined win_build (
+        if !win_build! GEQ 26100 (
+            sc query ucpd 2>nul | findstr /I "RUNNING" >nul 2>&1
+            if not errorlevel 1 (
+                call :LogWarn "UCPD (User Choice Protection Driver) running on Win11 24H2+."
+                call :LogInfo "UCPD blocks file association / default app changes. Disabling..."
+                call :TIScLog config ucpd start= disabled
+                call :TIScLog stop ucpd
+                call :SchLog /Change /TN "\Microsoft\Windows\AppxDeploymentClient\UCPD velocity" /Disable
+                call :LogWarn "UCPD disabled. RESTART REQUIRED for full visual tweak compatibility."
+            ) else (
+                call :LogOK "UCPD not running or already disabled."
+            )
+        ) else (
+            call :LogSkip "UCPD check: Windows build < 26100 (not Win11 24H2+)."
+        )
+    ) else (
+        call :LogSkip "UCPD check: win_build not defined."
+    )
+) else (
+    call :LogSkip "UCPD check: not Windows 11."
+)
+endlocal
+
+:: Smart App Control disable (Win11 22H2+) - blocks unsigned apps otherwise
+call :LogInfo "Disabling Smart App Control (Win11 22H2+)..."
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy" /v "VerifiedAndReputablePolicyState" /t REG_DWORD /d 0 /f
+
+:: Teredo disable (IPv6 tunneling - not needed on most desktops)
+call :LogInfo "Disabling Teredo tunneling..."
+netsh interface teredo set state disabled >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "netsh teredo disabled") else (call :LogWarn "netsh teredo disabled (already off or N/A)")
+
+:: Autologger Destroyer - disable ALL ETW autologger sessions, not just Diagtrack
+call :LogInfo "Disabling all Autologger ETW sessions..."
+setlocal EnableDelayedExpansion
+for /f "tokens=*" %%K in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger" 2^>nul ^| findstr /I "HKEY"') do (
+    call :TIRegLog add "%%K" /v "Start" /t REG_DWORD /d 0 /f
+)
+endlocal
+call :LogOK "Autologger sessions disabled."
+
+call :LogSection "Optional Features Disable (cherry-picked safe subset)"
+call :LogInfo "Disabling IIS features..."
+for %%F in (
+    IIS-WebServerRole
+    IIS-WebServer
+    IIS-CommonHttpFeatures
+    IIS-HttpErrors
+    IIS-HttpRedirect
+    IIS-ApplicationDevelopment
+    IIS-NetFxExtensibility
+    IIS-HealthAndDiagnostics
+    IIS-HttpLogging
+    IIS-LoggingLibraries
+    IIS-RequestMonitor
+    IIS-HttpTracing
+    IIS-Security
+    IIS-RequestFiltering
+    IIS-IPSecurity
+    IIS-Performance
+    IIS-HttpCompressionDynamic
+    IIS-WebServerManagementTools
+    IIS-IIS6ManagementCompatibility
+    IIS-Metabase
+    IIS-WMICompatibility
+    IIS-LegacyScripts
+    IIS-LegacySnapin
+    IIS-FTPServer
+    IIS-FTPSvc
+    IIS-FTPExtensibility
+) do (
+    powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName %%F -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
+    if %errorlevel% equ 0 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
+)
+
+call :LogInfo "Disabling MSMQ + WCF..."
+for %%F in (
+    MSMQ-Container
+    MSMQ-Server
+    MSMQ-Triggers
+    MSMQ-ADIntegration
+    MSMQ-HTTP
+    MSMQ-Multicast
+    MSMQ-DCOM
+    WCF-HTTP-Activation
+    WCF-NonHTTP-Activation
+    WCF-Pipe-Activation
+    WCF-TCP-Activation
+    WCF-TCP-PortSharing45
+) do (
+    powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName %%F -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
+    if %errorlevel% equ 0 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
+)
+
+call :LogInfo "Disabling network/legacy features..."
+for %%F in (
+    SMB1Protocol
+    SMB1Protocol-Client
+    SMB1Protocol-Server
+    TelnetClient
+    TFTP
+    SimpleTCP
+    TIFFIFilter
+    DirectPlay
+    LegacyComponents
+    WindowsSandbox
+    Printing-PrintToPDFServices-Features
+    Xps-Viewer-Services
+    WorkFolders-Client
+    Internet-Explorer-Optional-amd64
+    MicrosoftWindowsPowerShell-V2
+    MicrosoftWindowsPowerShell-V2-Root
+) do (
+    powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName %%F -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
+    if %errorlevel% equ 0 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
+)
+call :LogOK "Optional features disabled (WSL/Hyper-V/.NET left intact)."
+
 call :LogSection "Package Manager (Winget) Setup"
 call :LogInfo "Verifying Winget availability..."
 
@@ -1209,18 +1338,7 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEnga
 call :LogInfo "Disabling Meet Now and Teams startup..."
 call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "com.squirrel.Teams.Teams" /f
 
-call :LogInfo "Disabling Windows Defender..."
-call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "DisableAntiSpyware" /t REG_DWORD /d 1 /f
-call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableRealtimeMonitoring" /t REG_DWORD /d 1 /f
-call :TIScLog config WinDefend start= disabled
-call :TIScLog stop WinDefend
-call :TIScLog config WdNisSvc start= disabled
-call :TIScLog stop WdNisSvc
-call :TIScLog config wscsvc start= disabled
-call :TIScLog stop wscsvc
-call :TIScLog config SecurityHealthService start= disabled
-call :TIScLog stop SecurityHealthService
-call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "SecurityHealth" /f
+call :LogInfo "Windows Defender handling moved to menu option 17 (Disable Defender)."
 call :LogInfo "Disabling SMBv1 (security)..."
 powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "Disable SMB1Protocol") else (call :LogWarn "Disable SMB1Protocol")
@@ -1368,9 +1486,7 @@ goto main
 :gpu
 cls
 echo %ESC%[0m
-color 09
 
-echo.
 echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
@@ -1458,6 +1574,89 @@ for %%i in (0000 0001 0002 0003 0004 0005) do (
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "DisableDynamicPstate" /t REG_DWORD /d 1 /f
     call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMHdcpKeyglobZero" /t REG_DWORD /d 1 /f
 )
+
+call :LogInfo "Applying NVIDIA RM* depth tweaks (engine gatings, GC6, runtime PM, LRC, latency tolerance)..."
+
+:: All RM* keys applied to all 6 GPU subkey slots. Desktop-focused.
+for %%i in (0000 0001 0002 0003 0004 0005) do (
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableHwFaultBuffer" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisablePerIntrDPCQueueing" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMElcg" /t REG_DWORD /d 1431655765 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMBlcg" /t REG_DWORD /d 286331153 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMElpg" /t REG_DWORD /d 4095 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMSlcg" /t REG_DWORD /d 262131 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMFspg" /t REG_DWORD /d 15 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDidleFeatureGC5" /t REG_DWORD /d 44731050 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMHotPlugSupportDisable" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmFbsrPagedDMA" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisablePostL2Compression" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmRcWatchdog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLogonRC" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMIntrDetailedLogs" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMCtxswLog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMNvLog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMSuppressGPIOIntrErrLog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMUsbcDebugMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableFeatureDisablement" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmBreakonRC" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDebugSetSMCMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableLRCCoalescing" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmEnableI2CNanny" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMPcieLtrOverride" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMPcieLtrL12ThresholdOverride" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDeepL1EntryLatencyUsec" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisablePreosapps" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmPerfLimitsOverride" /t REG_DWORD /d 21 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMGCOffFeature" /t REG_DWORD /d 2 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmOverrideSupportChipsetAspm" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMEnableASPMDT" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableGpuASPMFlags" /t REG_DWORD /d 3 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMEnableASPMAtLoad" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMEnableEventTracer" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SkipSwStateErrChecks" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMAERRForceDisable" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmWar1760398" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLpwrArch" /t REG_DWORD /d 349525 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLpwrGrPgSwFilterFunction" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLpwrCacheStatsOnD3" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDwbMscg" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableInforomBBX" /t REG_DWORD /d 15 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "PreferSystemMemoryContiguous" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmSec2EnableApm" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmOverrideIdleSlowdownSettings" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMClkSlowDown" /t REG_DWORD /d 71303168 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMNativePcieL1WarFlags" /t REG_DWORD /d 16 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMResetPerfMonD4" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmFbsrWDDMMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmFbsrFileMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmMIONoPowerOff" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableOptimalPowerForPadlinkPll" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmClkPowerOffDramPllWhenUnused" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMOPSB" /t REG_DWORD /d 10914 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "DisableAsyncPstates" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SlideMCLK" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMNvlinkUPHYInitControl" /t REG_DWORD /d 16 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmGpsGenoa" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "OptInOrOutPreference" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SendTelemetryData" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRID44231" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRID64640" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRID66610" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableRegistryCaching" /t REG_DWORD /d 15 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "D3PCLatency" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableMsHybrid" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableIntrIllegalCompstatAccess" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SetPanelRefreshRate" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableNoncontigAlloc" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableHdcp22" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRuntimePowerManagement" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmProfilingAdminOnly" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "ShowDlssIndicator" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableHDAudioD3Cold" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDevToolsVisible" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "NvDevToolsVisible" /t REG_DWORD /d 1 /f
+)
+call :LogOK "NVIDIA RM* depth tweaks applied."
 
 call :LogInfo "Applying DisableDynamicPstate to active GPU"
 powershell -NoProfile -Command "$gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like 'PCI\VEN_10DE*' }; foreach ($gpu in $gpus) { $pnp = $gpu.PNPDeviceID; $regBase = 'HKLM:\SYSTEM\CurrentControlSet\Enum\' + $pnp; $driverVal = (Get-ItemProperty -Path $regBase -Name 'Driver' -ErrorAction SilentlyContinue).Driver; if ($driverVal) { $classPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\' + $driverVal; if (Test-Path $classPath) { Set-ItemProperty -Path $classPath -Name 'DisableDynamicPstate' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } }" >nul 2>&1
@@ -1613,6 +1812,90 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
         call :RegLog add "%%a" /v "KMD_EnableComputePreemption" /t REG_DWORD /d 0 /f
         call :RegLog add "%%a" /v "KMD_DeLagEnabled" /t REG_DWORD /d 1 /f
         call :RegLog add "%%a" /v "DisablePreemption" /t REG_DWORD /d 1 /f
+
+        call :LogInfo "Applying AMD depth tweaks (clock gating, power gating, ASPM, sleep) to: %%a"
+
+        :: Performance mode + sleep disables
+        call :RegLog add "%%a" /v "PP_Force3DPerformanceMode" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "PP_ForceHighDPMLevel" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxCoarseGrainLightSleep" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxCpLightSleep" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxMediumGrainLightSleep" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxRlcLightSleep" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableDrmLightSleep" /t REG_DWORD /d 1 /f
+
+        :: Radeon Boost off
+        call :RegLog add "%%a" /v "KMD_RadeonBoostEnabled" /t REG_DWORD /d 0 /f
+
+        :: Clock gating keys
+        call :RegLog add "%%a" /v "DisableGfx3DCGLS" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxCGTS" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxCGTS_LS" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxMGCGPerfMon" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableDrmdmaMGCG" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableDrmMGCG" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfx3DCGCG" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "EnableUvdClockGating" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "EnableVceSwClockGating" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "EnableGfxClockGatingThruSmu" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "EnableSysClockGatingThruSmu" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "IRQMgrDisableIHClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "swGcClockGatingMask" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "swGcClockGatingOverride" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableRomMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableRomMGCGClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableSamuClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableSysClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableVceClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxCoarseGrainClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableMcMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableNbioMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DalDisableClockGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DalFineGrainClockGating" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "DisableAllClockGating" /t REG_DWORD /d 1 /f
+
+        :: Power gating keys
+        call :RegLog add "%%a" /v "DisableGfxPGCondClearStateWA" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableCpPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableAcpPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableDrmdmaPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableDynamicGfxMGPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGDSPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGfxCGPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableGFXPipelinePowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableUVDPowerGatingDynamic" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisablePowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableQuickGfxMGPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableSAMUPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableStaticGfxMGPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableUVDPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableVCEPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableXdmaPowerGating" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableXdmaSclkGating" /t REG_DWORD /d 1 /f
+
+        :: Powerdown + ASPM
+        call :RegLog add "%%a" /v "DalPSRSkipCRTCPowerDown" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "PP_GPUPowerDownEnabled" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "DisableAspmSWL1" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableAspmL0s" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableAspmL1" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "EnableAspmL0s" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "EnableAspmL1" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "EnableAspmL1SS" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "AspmL0sTimeout" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "AspmL1Timeout" /t REG_DWORD /d 0 /f
+
+        :: Misc disable
+        call :RegLog add "%%a" /v "DisableClkReqSupport" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableFBCSupport" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "DisableForceUvdToSclk" /t REG_DWORD /d 1 /f
+        call :RegLog add "%%a" /v "EnableSpreadSpectrum" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "PowerSaverAutoEnable_CUR" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "ChillEnabled" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "AutoUpdateTriggered" /t REG_DWORD /d 0 /f
+        call :RegLog add "%%a" /v "AutoUpdate" /t REG_DWORD /d 0 /f
     )
 )
 endlocal
@@ -1790,9 +2073,7 @@ goto main
 :ram
 cls
 echo %ESC%[0m
-color 09
 
-echo.
 echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
@@ -2725,6 +3006,51 @@ call :LogOK "Temporary files cleared."
 call :LogInfo "Clearing Windows Event Logs..."
 for /f "tokens=*" %%G in ('wevtutil el') do (wevtutil cl "%%G" >nul 2>&1)
 
+call :LogInfo "Cleaning Discord + Spotify cache (frees disk space)..."
+:: Discord Cache + Code Cache + GPU Cache
+for /d %%D in ("%LOCALAPPDATA%\Discord\app-*") do (
+    if exist "%%D\Cache" call :TIRun cmd.exe /c rd /s /q "%%D\Cache" >nul 2>&1
+    if exist "%%D\Code Cache" call :TIRun cmd.exe /c rd /s /q "%%D\Code Cache" >nul 2>&1
+    if exist "%%D\GPUCache" call :TIRun cmd.exe /c rd /s /q "%%D\GPUCache" >nul 2>&1
+)
+call :LogOK "Discord cache cleared."
+
+:: Spotify cache
+if exist "%LOCALAPPDATA%\Spotify\Data" (
+    call :TIRun cmd.exe /c rd /s /q "%LOCALAPPDATA%\Spotify\Data" >nul 2>&1
+    if not exist "%LOCALAPPDATA%\Spotify\Data" (call :LogOK "Spotify cache cleared.") else (call :LogErr "Spotify cache clear failed.")
+) else (
+    call :LogSkip "Spotify cache not present"
+)
+
+call :LogInfo "Cleaning USO UpdateStore + Logs..."
+if exist "%ProgramData%\USOPrivate\UpdateStore" (
+    call :TIRun cmd.exe /c rd /s /q "%ProgramData%\USOPrivate\UpdateStore" >nul 2>&1
+    if not exist "%ProgramData%\USOPrivate\UpdateStore" (call :LogOK "USO UpdateStore cleared.") else (call :LogErr "USO UpdateStore clear failed.")
+) else (
+    call :LogSkip "USO UpdateStore not present"
+)
+if exist "%ProgramData%\USOShared\Logs" (
+    call :TIRun cmd.exe /c rd /s /q "%ProgramData%\USOShared\Logs" >nul 2>&1
+    if not exist "%ProgramData%\USOShared\Logs" (call :LogOK "USO Logs cleared.") else (call :LogErr "USO Logs clear failed.")
+) else (
+    call :LogSkip "USO Logs not present"
+)
+
+call :LogInfo "Cleaning SleepStudy + Windows Logs..."
+if exist "C:\Windows\System32\SleepStudy" (
+    call :TIRun cmd.exe /c rd /s /q "C:\Windows\System32\SleepStudy" >nul 2>&1
+    if not exist "C:\Windows\System32\SleepStudy" (call :LogOK "SleepStudy cleared.") else (call :LogErr "SleepStudy clear failed.")
+) else (
+    call :LogSkip "SleepStudy not present"
+)
+if exist "C:\Windows\Logs" (
+    call :TIRun cmd.exe /c rd /s /q "C:\Windows\Logs" >nul 2>&1
+    if not exist "C:\Windows\Logs" (call :LogOK "Windows Logs cleared.") else (call :LogErr "Windows Logs clear failed.")
+) else (
+    call :LogSkip "Windows Logs not present"
+)
+
 call :LogInfo "Setting VolumeCaches StateFlags..."
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Active Setup Temp Folders" /v "StateFlags0001" /t REG_DWORD /d 2 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Content Indexer Cleaner" /v "StateFlags0001" /t REG_DWORD /d 2 /f
@@ -2974,6 +3300,34 @@ for %%a in (
 
 ipconfig /flushdns >nul 2>&1
 if %errorlevel% equ 0 (call :LogOK "ipconfig /flushdns") else (call :LogErr "ipconfig /flushdns")
+
+:: Per-NIC Adapter Tuning (60+ properties via PowerShell)
+call :LogInfo "Applying Per-NIC Adapter Tuning (ReceiveBuffers, TransmitBuffers, EEE, IM, ITR)..."
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$adapters = Get-NetAdapter | Where-Object { $_.Status -eq 'Up' -or $_.MediaConnectionState -eq 'Connected' }; foreach ($a in $adapters) { try { Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Receive Buffers' -RegistryValue 2048 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Transmit Buffers' -RegistryValue 1024 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Energy Efficient Ethernet' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Interrupt Moderation' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Interrupt Moderation Rate' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Wake on Magic Packet' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Wake on Pattern Match' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Flow Control' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Priority ^& VLAN' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Log Link State Event' -RegistryValue 16 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Power Saving Mode' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Selective Suspend' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Green Ethernet' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'GigaLite' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'ULP Mode' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $a.Name -DisplayName 'Auto Power Save Mode' -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue; Write-Output ('OK:' + $a.Name) } catch { Write-Output ('SKIP:' + $a.Name) } }" > "%TEMP%\bardhzz_nic.log" 2>nul
+set "NIC_PROCESSED=0"
+for /f "tokens=1,* delims=:" %%X in ('type "%TEMP%\bardhzz_nic.log" 2^>nul') do (
+    set "NIC_PROCESSED=1"
+    if "%%X"=="OK" call :LogOK "Per-NIC tuned: %%Y"
+    if "%%X"=="SKIP" call :LogWarn "Per-NIC partial: %%Y"
+)
+if "%NIC_PROCESSED%"=="0" call :LogWarn "Per-NIC tuning: no adapters processed."
+del /q "%TEMP%\bardhzz_nic.log" >nul 2>&1
+
+:: Full Network Cleanup
+call :LogInfo "Performing full Network Cleanup..."
+ipconfig /release >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "ipconfig /release") else (call :LogWarn "ipconfig /release")
+ipconfig /renew >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "ipconfig /renew") else (call :LogWarn "ipconfig /renew")
+arp -d * >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "arp -d *") else (call :LogWarn "arp -d *")
+nbtstat -R >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "nbtstat -R") else (call :LogWarn "nbtstat -R")
+nbtstat -RR >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "nbtstat -RR") else (call :LogWarn "nbtstat -RR")
+ipconfig /registerdns >nul 2>&1
+if %errorlevel% equ 0 (call :LogOK "ipconfig /registerdns") else (call :LogWarn "ipconfig /registerdns")
+
 call :LogOK "Advanced Network Tweaks Applied!"
 endlocal
 timeout /t 1 /nobreak > NUL
@@ -3181,8 +3535,7 @@ goto main
 :devmgmt
 call :LogSection "Device Manager Tweaks"
 cls
-color 09
-echo.
+echo %ESC%[0m
 echo.
 echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
 echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
@@ -3194,19 +3547,25 @@ echo.
 echo  %ESC%[91m[!] BARDHZZY Tweaks - Aggressive Warning%ESC%[0m
 echo ======================================================
 echo.
-echo  %ESC%[91m[!]%ESC%[0m The following tweaks will disable hardware devices:
-echo      - High Precision Event Timer (HPET)
-echo      - System Timer
-echo      - Direct Memory Access (DMA) Controller
-echo      - Numeric Data Processor
-echo      - Composite Bus Enumerator
-echo      - Microsoft GS Wavetable Synth
+echo  %ESC%[91m[!]%ESC%[0m The following tweaks will disable 48 hardware devices:
+echo      - HPET, System Timer, DMA Controller, Numeric Data Processor
+echo      - Composite Bus, Microsoft GS Wavetable Synth, Programmable PIC
+echo      - ACPI Processor Aggregator, Thermal Zone, Wake Alarm
+echo      - AMD Controller Emulation, Crash Defender, PSP
+echo      - Intel Management Engine (MEI, DAL, WMI, PMT, SMBus, SPI)
+echo      - Bluetooth enumerators (PAN, RFCOMM, MS BT, MS BT LE)
+echo      - Microsoft Hyper-V, Hypervisor Service, Kernel Debug Network
+echo      - Print to PDF, Radio Device, RRAS, Virtual Drive, WMI for ACPI
+echo      - NDIS Virtual, NVIDIA HD Audio, RDP Redirector, Root Print Queue
+echo      - UMBus Root, all 7 WAN Miniports (IKEv2/IP/IPv6/L2TP/NetMon/PPPOE/PPTP/SSTP)
 echo.
 echo  %ESC%[91m[!] RISKS:%ESC%[0m
-echo      Disabling HPET and System Timers is highly debated.
-echo      On modern Windows, the OS relies on these for scheduling.
-echo      This can either fix micro-stutters completely OR cause
-echo      system freezes, DPC watchdog violations, and audio issues.
+echo      Disabling HPET/Timers is highly debated - may fix stutters
+echo      OR cause freezes, DPC watchdog violations, audio issues.
+echo      Intel ME / AMD PSP disable may cause boot issues on some systems.
+echo      WAN Miniport disable breaks VPN clients (OpenVPN, Cisco AnyConnect).
+echo      Bluetooth enumerators break Bluetooth audio/HID devices.
+echo      Disabling NVIDIA HD Audio breaks HDMI audio output.
 echo.
 echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Continue (I understand the risks)
 echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Go Back to Main Menu
@@ -3233,7 +3592,7 @@ echo [+] Scanning for active system devices...
 call :LogInfo "Preparing Device Manager PnP Tweaks..."
 
 :: Flawless PowerShell execution: No pipes to confuse CMD, handles multiple instances, forces UTF-8 output
-powershell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $devices = @('High Precision Event Timer', 'System Timer', 'Direct memory access controller', 'Numeric Data Processor', 'Composite Bus Enumerator', 'Microsoft GS Wavetable Synth'); $found=0; foreach ($d in $devices) { $devs = Get-PnpDevice -FriendlyName $d -ErrorAction SilentlyContinue; foreach ($dev in $devs) { if ($dev.Status -eq 'OK') { try { Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop; Write-Output ('OK:' + $d); $found=1 } catch { Write-Output ('FAIL:' + $d); $found=1 } } } }; if ($found -eq 0) { Write-Output 'WARN:No active target devices were found.' }" > "%TEMP%\bardhzz_pnp_log.txt"
+powershell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $devices = @('High Precision Event Timer', 'System Timer', 'Direct memory access controller', 'Numeric Data Processor', 'Composite Bus Enumerator', 'Microsoft GS Wavetable Synth', 'ACPI Processor Aggregator', 'ACPI Thermal Zone', 'ACPI Wake Alarm', 'AMD Controller Emulation', 'AMD Crash Defender', 'AMD PSP', 'Bluetooth Device (Personal Area Network)', 'Bluetooth Device (RFCOMM Protocol TDI)', 'Intel(R) Management Engine Interface', 'Intel(R) Dynamic Application Loader Host Interface', 'Intel(R) Management Engine WMI Provider', 'Intel(R) Platform Monitoring Technology Device', 'Intel(R) SMBus - 7AA3', 'Intel(R) SPI (Flash) Controller - 7AA4', 'Microsoft Bluetooth Enumerator', 'Microsoft Bluetooth LE Enumerator', 'Microsoft Device Association Root Enumerator', 'Microsoft Hyper-V Virtualization Infrastructure Driver', 'Microsoft Hypervisor Service', 'Microsoft Kernel Debug Network Adapter', 'Microsoft Print to PDF', 'Microsoft Radio Device Enumeration Bus', 'Microsoft RRAS Root Enumerator', 'Microsoft Virtual Drive Enumerator', 'Microsoft Windows Management Interface for ACPI', 'NDIS Virtual Network Adapter Enumerator', 'NVIDIA High Definition Audio', 'Programmable interrupt controller', 'Remote Desktop Device Redirector Bus', 'Resource Hub proxy device', 'Root Print Queue', 'UMBus Root Bus Enumerator', 'WAN Miniport (IKEv2)', 'WAN Miniport (IP)', 'WAN Miniport (IPv6)', 'WAN Miniport (L2TP)', 'WAN Miniport (Network Monitor)', 'WAN Miniport (PPPOE)', 'WAN Miniport (PPTP)', 'WAN Miniport (SSTP)'); $found=0; foreach ($d in $devices) { $devs = Get-PnpDevice -FriendlyName $d -ErrorAction SilentlyContinue; foreach ($dev in $devs) { if ($dev.Status -eq 'OK') { try { Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop; Write-Output ('OK:' + $d); $found=1 } catch { Write-Output ('FAIL:' + $d); $found=1 } } } }; if ($found -eq 0) { Write-Output 'WARN:No active target devices were found.' }" > "%TEMP%\bardhzz_pnp_log.txt"
 
 :: Parse the results flawlessly
 set "pnp_processed=0"
@@ -3454,7 +3813,6 @@ call :LogSection "System Restore Point"
 cls
 chcp 65001 >nul 2>&1
 echo %ESC%[0m
-color 09
 title bardhzzY Tweaks - Creating Restore Point
 
 echo =============================================
@@ -3477,7 +3835,6 @@ del /q "%PS_SCRIPT%" >nul 2>&1
 cls
 chcp 65001 >nul 2>&1
 echo %ESC%[0m
-color 09
 
 if %SRP_STATUS% equ 0 (
     call :LogOK "Restore point created successfully! (BardhzzyTweak_Restore)"
@@ -3554,10 +3911,10 @@ if not exist "%BACKUP_DIR%" (
 )
 
 set "BACKUP_OK=1"
-set "BK_TOTAL=4"
+set "BK_TOTAL=6"
 set "BK_DONE=0"
 
-echo        %ESC%[36m[1/4]%ESC%[37m Exporting HKLM\SYSTEM...%ESC%[0m
+echo        %ESC%[36m[1/6]%ESC%[37m Exporting HKLM\SYSTEM...%ESC%[0m
 reg export "HKLM\SYSTEM" "%BACKUP_DIR%\HKLM_SYSTEM.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SYSTEM failed."
@@ -3568,7 +3925,7 @@ if errorlevel 1 (
     echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SYSTEM backup created%ESC%[0m
 )
 
-echo        %ESC%[36m[2/4]%ESC%[37m Exporting HKLM\SOFTWARE...%ESC%[0m
+echo        %ESC%[36m[2/6]%ESC%[37m Exporting HKLM\SOFTWARE...%ESC%[0m
 reg export "HKLM\SOFTWARE" "%BACKUP_DIR%\HKLM_SOFTWARE.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SOFTWARE failed."
@@ -3579,7 +3936,7 @@ if errorlevel 1 (
     echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SOFTWARE backup created%ESC%[0m
 )
 
-echo        %ESC%[36m[3/4]%ESC%[37m Exporting HKCU\Software...%ESC%[0m
+echo        %ESC%[36m[3/6]%ESC%[37m Exporting HKCU\Software...%ESC%[0m
 reg export "HKCU\Software" "%BACKUP_DIR%\HKCU_Software.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_Software failed."
@@ -3590,7 +3947,7 @@ if errorlevel 1 (
     echo        %ESC%[32m    [OK]%ESC%[37m HKCU_Software backup created%ESC%[0m
 )
 
-echo        %ESC%[36m[4/4]%ESC%[37m Exporting HKCU\Control Panel...%ESC%[0m
+echo        %ESC%[36m[4/6]%ESC%[37m Exporting HKCU\Control Panel...%ESC%[0m
 reg export "HKCU\Control Panel" "%BACKUP_DIR%\HKCU_CPanel.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_CPanel failed."
@@ -3598,6 +3955,30 @@ if errorlevel 1 (
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCU_CPanel"
+    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
+)
+
+echo        %ESC%[36m[5/6]%ESC%[37m Exporting HKCR (HKEY_CLASSES_ROOT)...%ESC%[0m
+reg export "HKCR" "%BACKUP_DIR%\HKCR.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKCR failed."
+    echo        %ESC%[31m    [X]%ESC%[37m HKCR backup FAILED%ESC%[0m
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKCR"
+    echo        %ESC%[32m    [OK]%ESC%[37m HKCR backup created%ESC%[0m
+)
+
+echo        %ESC%[36m[6/6]%ESC%[37m Exporting HKU (HKEY_USERS)...%ESC%[0m
+reg export "HKU" "%BACKUP_DIR%\HKU.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKU failed."
+    echo        %ESC%[31m    [X]%ESC%[37m HKU backup FAILED%ESC%[0m
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKU"
+    echo        %ESC%[32m    [OK]%ESC%[37m HKU backup created%ESC%[0m
+)    call :LogOK "Export HKCU_CPanel"
     echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
 )
 
@@ -4131,7 +4512,7 @@ goto :FN_Download_Failed
 
 :FN_Start_Screen
 cls
-color 09
+echo %ESC%[0m
 chcp 65001 >nul 2>&1
 echo.
 echo.
@@ -4448,6 +4829,21 @@ if errorlevel 1 (
     call :LogOK "Import HKCU_CPanel"
 )
 
+call :LogInfo "Importing HKCR + HKU..."
+call :TIRun reg import "%BACKUP_DIR%\HKCR.reg" >nul 2>&1
+if errorlevel 1 (
+    call :LogWarn "Import HKCR failed (non-critical, may need TI)."
+) else (
+    call :LogOK "Import HKCR"
+)
+
+reg import "%BACKUP_DIR%\HKU.reg" >nul 2>&1
+if errorlevel 1 (
+    call :LogWarn "Import HKU failed (non-critical, may need TI)."
+) else (
+    call :LogOK "Import HKU"
+)
+
 echo.
 
 if "%REVERT_OK%"=="1" (
@@ -4473,6 +4869,305 @@ echo [!] A System Restart is HIGHLY recommended to flush all drivers.
 echo.
 pause
 goto main
+
+:: =====================================================================
+:: Disable Defender (Enhanced) - with Tamper Protection handling + IFEO failsafe
+:: Firewall is NOT touched per user request.
+:: =====================================================================
+:defender
+call :LogSection "Disable Defender (Enhanced)"
+cls
+MODE 100,42
+color 0E
+echo %ESC%[0m
+
+echo.
+echo  ============================================================
+echo            WINDOWS DEFENDER DISABLE (ENHANCED)
+echo  ============================================================
+echo.
+echo  This will DISABLE:
+echo    - Windows Defender AntiSpyware + Real-Time Protection
+echo    - Behavior Monitoring, IOAV, OnAccess, Script Scanning
+echo    - Tamper Protection (manual guide first if enabled)
+echo    - WdNisSvc (Network Inspection), WdBoot (Boot)
+echo    - Security Center (wscsvc) + SecurityHealthService
+echo    - Windows Security Health startup entry
+echo    - SmartScreen (Explorer, Edge, AppHost, AppRep)
+echo    - Defender Advanced Threat Protection (Sense)
+echo    - Defender scheduled tasks
+echo    - IFEO failsafe: MsMpEng/NisSrv/SecurityHealth/SmartScreen
+echo      redirected to systray.exe (survives Tamper Protection)
+echo.
+echo  %ESC%[33m[!] NOTE: Windows Firewall is NOT touched.%ESC%[0m
+echo.
+echo  %ESC%[91m[!] CRITICAL: Tamper Protection MUST be OFF for registry%ESC%[0m
+echo  %ESC%[91m    writes to stick. If TP is ON, this section will open%ESC%[0m
+echo  %ESC%[91m    windowsdefender: so you can turn it off manually.%ESC%[0m
+echo.
+echo  %ESC%[33m[!] A REVERT option is available as menu option 18.%ESC%[0m
+echo.
+echo  Press any key to continue, or CTRL+C to abort...
+pause >nul
+
+call :LogInfo "Step 1/8: Detecting Tamper Protection state..."
+set "TP_STATE="
+for /f "tokens=3" %%A in ('reg query "HKLM\SOFTWARE\Microsoft\Windows Defender\Features" /v TamperProtection 2^>nul ^| findstr /i "TamperProtection"') do set "TP_STATE=%%A"
+
+if "%TP_STATE%"=="0x5" (
+    call :LogWarn "Tamper Protection is ENABLED. Registry writes WILL be rolled back."
+    call :LogInfo "Opening windowsdefender: so you can turn off RTP + TP manually..."
+    start windowsdefender:
+    echo.
+    echo  ============================================================
+    echo   In the Defender window:
+    echo     1. "Virus ^& threat protection" ^> "Manage settings"
+    echo     2. Toggle OFF "Real-time protection"
+    echo     3. Toggle OFF "Cloud-delivered protection"
+    echo     4. Toggle OFF "Automatic sample submission"
+    echo     5. Back ^> "Tamper Protection" ^> Toggle OFF
+    echo  ============================================================
+    echo  Press any key once all 5 toggles are OFF...
+    pause >nul
+    taskkill /f /im SecHealthUI.exe >nul 2>&1
+) else (
+    call :LogOK "Tamper Protection is OFF (state=%TP_STATE%). Proceeding."
+)
+
+call :LogInfo "Step 2/8: Disabling Defender via policy registry keys..."
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "DisableAntiSpyware" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableRealtimeMonitoring" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableBehaviorMonitoring" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableIOAVProtection" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableOnAccessProtection" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableScanOnRealtimeEnable" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableScriptScanning" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet" /v "SpynetReporting" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet" /v "SubmitSamplesConsent" /t REG_DWORD /d 2 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "ServiceKeepAlive" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "DisableRoutinelyTakingAction" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "PassiveMode" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows Defender\Features" /v "TamperProtection" /t REG_DWORD /d 0 /f
+
+call :LogInfo "Step 3/8: Disabling all Defender services..."
+call :TIScLog stop WinDefend
+call :TIScLog config WinDefend start= disabled
+call :TIScLog stop WdNisSvc
+call :TIScLog config WdNisSvc start= disabled
+call :TIScLog stop WdBoot
+call :TIScLog config WdBoot start= disabled
+call :TIScLog stop Sense
+call :TIScLog config Sense start= disabled
+call :TIScLog stop wscsvc
+call :TIScLog config wscsvc start= disabled
+call :TIScLog stop SecurityHealthService
+call :TIScLog config SecurityHealthService start= disabled
+:: Hard-set via registry in case sc fails (TrustedInstaller-protected)
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WinDefend" /v "Start" /t REG_DWORD /d 4 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WdNisSvc" /v "Start" /t REG_DWORD /d 4 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WdBoot" /v "Start" /t REG_DWORD /d 4 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Sense" /v "Start" /t REG_DWORD /d 4 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\wscsvc" /v "Start" /t REG_DWORD /d 4 /f
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\SecurityHealthService" /v "Start" /t REG_DWORD /d 4 /f
+
+call :LogInfo "Step 4/8: Removing SecurityHealth startup entries..."
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "SecurityHealth" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "SecurityHealthSystray" /f
+
+call :LogInfo "Step 5/8: Disabling SmartScreen (Explorer, Edge, AppHost, AppRep)..."
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "Off" /f
+call :TIRegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "EnableWebContentEvaluation" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "EnableSmartScreen" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SmartScreenEnabled" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SmartScreenPuaEnabled" /t REG_DWORD /d 0 /f
+call :TIRegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "PreventOverride" /t REG_DWORD /d 0 /f
+
+call :LogInfo "Step 6/8: Disabling Defender scheduled tasks..."
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Cache Maintenance" /Disable
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Cleanup" /Disable
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan" /Disable
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Verification" /Disable
+
+call :LogInfo "Step 7/8: IFEO failsafe - redirect Defender binaries to systray.exe..."
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\MsMpEng.exe" /v "Debugger" /t REG_SZ /d "%windir%\System32\systray.exe" /f
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\NisSrv.exe" /v "Debugger" /t REG_SZ /d "%windir%\System32\systray.exe" /f
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\SecurityHealthService.exe" /v "Debugger" /t REG_SZ /d "%windir%\System32\systray.exe" /f
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Smartscreen.exe" /v "Debugger" /t REG_SZ /d "%windir%\System32\systray.exe" /f
+
+call :LogInfo "Step 8/8: Disabling Windows Security Center notifications..."
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "FirstRunDisabled" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "AntiVirusDisableNotify" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "FirewallDisableNotify" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "UpdatesDisableNotify" /t REG_DWORD /d 1 /f
+
+call :LogOK "Defender + SmartScreen + Security Center disabled."
+call :LogWarn "A SYSTEM RESTART is required for all changes to take effect."
+echo.
+echo  ============================================================
+echo  %ESC%[32m[OK]%ESC%[0m %ESC%[37mDefender + SmartScreen + Security Center%ESC%[0m
+echo  %ESC%[37m     disabled. RESTART to apply.%ESC%[0m
+echo  %ESC%[33mNOTE: Windows Firewall was NOT touched.%ESC%[0m
+echo  ============================================================
+echo.
+echo  To re-enable: use menu option 18 (Re-enable Defender).
+echo.
+pause
+goto main
+
+:: =====================================================================
+:: Re-enable Defender + SmartScreen (Firewall untouched)
+:: =====================================================================
+:defender_revert
+call :LogSection "Re-enable Defender + SmartScreen"
+cls
+color 0A
+echo %ESC%[0m
+echo.
+echo  %ESC%[32mRe-enabling Windows Defender, SmartScreen, Security Center...%ESC%[0m
+echo.
+
+call :LogInfo "Removing IFEO failsafe..."
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\MsMpEng.exe" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\NisSrv.exe" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\SecurityHealthService.exe" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Smartscreen.exe" /f
+
+call :LogInfo "Removing Defender policy keys..."
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "DisableAntiSpyware" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableRealtimeMonitoring" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableBehaviorMonitoring" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableIOAVProtection" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableOnAccessProtection" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableScanOnRealtimeEnable" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v "DisableScriptScanning" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "PassiveMode" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "ServiceKeepAlive" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "DisableRoutinelyTakingAction" /f
+
+call :LogInfo "Re-enabling Defender services (start=demand)..."
+call :TIScLog config WinDefend start= demand
+call :TIScLog config WdNisSvc start= demand
+call :TIScLog config WdBoot start= demand
+call :TIScLog config wscsvc start= demand
+call :TIScLog config SecurityHealthService start= demand
+
+call :LogInfo "Re-enabling SmartScreen..."
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "On" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "EnableSmartScreen" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SmartScreenEnabled" /f
+
+call :LogInfo "Removing Security Center notification disables..."
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "FirstRunDisabled" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "AntiVirusDisableNotify" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "FirewallDisableNotify" /f
+call :TIRegLog delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\Security Center" /v "UpdatesDisableNotify" /f
+
+call :LogInfo "Re-enabling Defender scheduled tasks..."
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan" /Enable
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Cache Maintenance" /Enable
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Cleanup" /Enable
+call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Verification" /Enable
+
+call :LogOK "Defender + SmartScreen re-enabled. RESTART to apply."
+echo.
+echo  ============================================================
+echo  %ESC%[32m[OK]%ESC%[0m %ESC%[37mDefender re-enabled. RESTART to apply.%ESC%[0m
+echo  %ESC%[33mNOTE: If Tamper Protection is on, you may need to manually%ESC%[0m
+echo  %ESC%[33m      re-enable RTP in the Defender UI after restart.%ESC%[0m
+echo  ============================================================
+echo.
+pause
+goto main
+
+:: =====================================================================
+:: Fixes / Recovery Section
+:: =====================================================================
+:fixes
+call :LogSection "System Fixes / Recovery"
+cls
+MODE 100,30
+color 0B
+echo %ESC%[0m
+
+echo.
+echo  ============================================================
+echo                  %ESC%[36mSYSTEM FIXES / RECOVERY%ESC%[0m
+echo  ============================================================
+echo.
+echo  %ESC%[37m Use this section to fix issues caused by aggressive tweaks.%ESC%[0m
+echo.
+echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Wi-Fi / Network Fixer (re-enable 16 network services)
+echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Epic Games Fixer (re-enable Epic services)
+echo  %ESC%[37m [%ESC%[36m3%ESC%[37m] Rockstar Games Fixer (re-enable Rockstar service)
+echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Back to Main Menu
+echo.
+set "fix_choice="
+set /p "fix_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+
+if not defined fix_choice goto fixes
+set "fix_choice=%fix_choice:"=%"
+set "fix_choice=%fix_choice: =%"
+
+if /i "%fix_choice%"=="1" goto fix_wifi
+if /i "%fix_choice%"=="2" goto fix_epic
+if /i "%fix_choice%"=="3" goto fix_rockstar
+if /i "%fix_choice%"=="4" goto main
+
+echo.
+echo "%fix_choice%" isn't a right choice, try again!
+timeout 2 >nul
+goto fixes
+
+:fix_wifi
+call :LogInfo "Wi-Fi / Network Fixer - re-enabling critical network services..."
+for %%S in (
+    LanmanWorkstation
+    LanmanServer
+    netprofm
+    NlaSvc
+    netman
+    WlanSvc
+    WwanSvc
+    Dhcp
+    Dnscache
+    nsi
+    BFE
+    WinHttpAutoProxySvc
+    Wcmsvc
+    RmSvc
+    NcbService
+    DPS
+    lmhosts
+) do (
+    call :TIScLog config "%%S" start= demand
+    call :TIScLog start "%%S"
+)
+call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "EnableActiveProbing" /t REG_DWORD /d 1 /f
+call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\Internet Settings" /v "NoActiveProbe" /t REG_DWORD /d 0 /f
+call :LogOK "Network services re-enabled. Test your connection now."
+echo.
+pause
+goto fixes
+
+:fix_epic
+call :LogInfo "Epic Games Fixer - re-enabling Epic services..."
+call :TIScLog config "EpicGamesUpdater" start= demand
+call :TIScLog start "EpicGamesUpdater"
+call :TIScLog config "EpicOnlineServices" start= demand
+call :TIScLog start "EpicOnlineServices"
+call :LogOK "Epic services re-enabled."
+echo.
+pause
+goto fixes
+
+:fix_rockstar
+call :LogInfo "Rockstar Games Fixer - re-enabling Rockstar service..."
+call :TIScLog config "Rockstar Service" start= demand
+call :TIScLog start "Rockstar Service"
+call :LogOK "Rockstar service re-enabled."
+echo.
+pause
+goto fixes
 
 :restartpc
 call :LogSection "Restart PC"
@@ -4537,8 +5232,8 @@ if %errorlevel% equ 1 (
 :: =====================================================================
 
 :LogInit
-set "SCRIPT_VERSION=v3.0.0.3"
-set "SCRIPT_BUILD=08-08-2026"
+set "SCRIPT_VERSION=v3.1.0.0"
+set "SCRIPT_BUILD=25-08-2026"
 set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
 set "LOG_ENABLED=0"
 set "LOG_SECTION=SYSTEM"
