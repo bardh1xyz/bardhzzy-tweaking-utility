@@ -54,6 +54,6 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 
 1. Right-click the .bat file.
 2. Select Run as Administrator.
-3. Create a registry backup (option 15) and a restore point (option 14)
+3. Create a registry backup (option 18) and a restore point (option 17)
 4. Run the Tweak Options as Preferred
 5. Restart
