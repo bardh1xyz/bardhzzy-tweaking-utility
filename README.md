@@ -13,7 +13,7 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 
 * **OS Debloating & Privacy**: Force-removes *telemetry*, background tracking, *Microsoft Edge*, *OneDrive*, and pre-installed *UWP apps*.
 * **Gaming & Latency Optimization**: Tweaks GPU profiles (*NVIDIA*, *AMD*, *Intel*), CPU priorities, RAM behavior, *TCP/IP* stack, mouse/keyboard response times, and *system timer resolution*.
-* **TrustedInstaller Integration**: Leverages an automated *NSudo engine* to safely modify locked registry hives and system services.
+* **TrustedInstaller Integration**: Leverages an automated *AdvancedRun engine* to safely modify locked registry hives and system services.
 * **System Safety & Recovery**: Includes built-in options for *registry backups*, *System Restore Points*, and full tweak reversions.
 * **Automated Dependency Setup**: Silently installs *Winget*, *DirectX Web Setup*, and *Visual C++ Redistributables* (2015–2022).
 * **UI Customization**: Deploys lightweight *Open-Shell* configurations and custom performance visuals.
