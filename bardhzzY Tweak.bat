@@ -3,7 +3,7 @@ setlocal
 title bardhzzY Tweaks - admin check
 set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
 
-set "dmv=powershell -NoProfile -Command "$id=[string]$args[0]; try { Disable-PnpDevice -InstanceId $id -Confirm:$false -ErrorAction Stop; exit 0 } catch { exit 1 }""
+REM [FINAL FIX] Broken PnP macro removed: nested quotes truncated the command body.
 
 fltmc >nul 2>&1
 
@@ -165,7 +165,7 @@ mkdir "%UTIL_DIR%" >nul 2>&1
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
 
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
     if exist "%UTIL_DIR%" (
         call :LogOK "Tools successfully downloaded and extracted."
         goto ADVANCEDRUN_SETUP
@@ -191,7 +191,7 @@ mkdir "%UTIL_DIR%" >nul 2>&1
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
 
-if %errorlevel% equ 0 if exist "%UTIL_DIR%\AdvancedRun\AdvancedRun.exe" (
+if not errorlevel 1 if exist "%UTIL_DIR%\AdvancedRun\AdvancedRun.exe" (
     call :LogOK "Utility Tools repaired successfully."
 ) else (
     call :LogWarn "Utility Tools repair could not be verified. Continuing with Administrator fallback."
@@ -289,7 +289,7 @@ REM ================================================================
 REM Test function for AdvancedRun
 REM ================================================================
 :AdvancedRun_Test
-set "TI_TEST_FILE=C:\Windows\Temp\BARDHZZY_TI_TEST.txt"
+set "TI_TEST_FILE=C:\Windows\Temp\bardhzzY_ti_test.txt"
 
 REM Pre-start the TrustedInstaller service. It is demand-start by default.
 REM With UAC fully disabled (EnableLUA=0) on Win11 24H2, TrustedInstaller.exe
@@ -304,7 +304,7 @@ if errorlevel 1 (
 if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 
 REM Attempt 1
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\BARDHZZY_TI_TEST.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\bardhzzY_ti_test.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
 if exist "%TI_TEST_FILE%" (
     findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
     if not errorlevel 1 (
@@ -319,7 +319,7 @@ REM Attempt 2 - retry with delay (TrustedInstaller may need time to init)
 if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 timeout /t 2 /nobreak >nul
 sc start TrustedInstaller >nul 2>&1
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\BARDHZZY_TI_TEST.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\bardhzzY_ti_test.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
 if exist "%TI_TEST_FILE%" (
     findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
     if not errorlevel 1 (
@@ -334,7 +334,7 @@ REM Attempt 3 - final retry with longer delay
 if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 timeout /t 3 /nobreak >nul
 sc start TrustedInstaller >nul 2>&1
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\BARDHZZY_TI_TEST.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\bardhzzY_ti_test.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
 if exist "%TI_TEST_FILE%" (
     findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
     if not errorlevel 1 (
@@ -451,9 +451,10 @@ timeout 2 >nul
 goto main
 
 :win
-call :LogSection "Package Manager"
+call :LogSection "Windows Tweaks"
 call :LogSection "Pre-flight: UCPD / Smart App Control / Teredo / Autologger"
 
+:: UCPD disable - Win11 24H2+ only (build >= 26100)
 setlocal EnableDelayedExpansion
 if "!os_ver!"=="Win11" (
     if defined win_build (
@@ -487,16 +488,27 @@ call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy" /v "Verifie
 :: Teredo disable (IPv6 tunneling - not needed on most desktops)
 call :LogInfo "Disabling Teredo tunneling..."
 netsh interface teredo set state disabled >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh teredo disabled") else (call :LogWarn "netsh teredo disabled (already off or N/A)")
+if not errorlevel 1 (call :LogOK "netsh teredo disabled") else (call :LogWarn "netsh teredo disabled (already off or N/A)")
 
-:: Autologger Destroyer - disable ALL ETW autologger sessions, not just Diagtrack
-call :LogInfo "Disabling all Autologger ETW sessions..."
-setlocal EnableDelayedExpansion
-for /f "tokens=*" %%K in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger" 2^>nul ^| findstr /I "HKEY"') do (
-    call :TIRegLog add "%%K" /v "Start" /t REG_DWORD /d 0 /f
+:: Aggressive Autologger profile: disable non-essential ETW autologgers for performance.
+:: Keep the core Windows EventLog sessions plus Circular Kernel Context Logger so
+:: Event Viewer, security auditing, and useful crash context remain available.
+call :LogInfo "Applying aggressive Autologger performance profile..."
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $root='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WMI\Autologger'; $keep=@('Circular Kernel Context Logger','EventLog-Application','EventLog-Security','EventLog-System'); $disabled=0; $kept=0; $failed=0; try { $items=Get-ChildItem -Path $root -ErrorAction Stop; foreach($k in $items){ if($keep -contains $k.PSChildName){ $kept++; continue }; try { New-ItemProperty -Path $k.PSPath -Name 'Start' -PropertyType DWord -Value 0 -Force -ErrorAction Stop | Out-Null; $disabled++ } catch { $failed++ } }; Write-Output ('RESULT|'+$disabled+'|'+$kept+'|'+$failed); exit 0 } catch { Write-Output ('RESULT|0|0|1'); exit 1 }" > "%TEMP%\bardhzzY_autologger_result.txt" 2>nul
+set "AUTOLOGGER_RC=%errorlevel%"
+if exist "%TEMP%\bardhzzY_autologger_result.txt" (
+    for /f "tokens=1-4 delims=|" %%A in ('type "%TEMP%\bardhzzY_autologger_result.txt" 2^>nul') do (
+        if /I "%%A"=="RESULT" (
+            if "%%D"=="0" (
+                call :LogOK "Autologger profile applied: %%B disabled, %%C core session(s) kept."
+            ) else (
+                call :LogWarn "Autologger profile applied: %%B disabled, %%C core session(s) kept, %%D could not be modified."
+            )
+        )
+    )
+    del /q "%TEMP%\bardhzzY_autologger_result.txt" >nul 2>&1
 )
-endlocal
-call :LogOK "Autologger sessions disabled."
+if not "%AUTOLOGGER_RC%"=="0" call :LogWarn "Autologger profile encountered an enumeration error; continuing with targeted telemetry disables."
 
 call :LogSection "Optional Features Disable (cherry-picked safe subset)"
 call :LogInfo "Disabling IIS features..."
@@ -529,7 +541,7 @@ for %%F in (
     IIS-FTPExtensibility
 ) do (
     powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName %%F -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
-    if %errorlevel% equ 0 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
+    if not errorlevel 1 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
 )
 
 call :LogInfo "Disabling MSMQ + WCF..."
@@ -548,7 +560,7 @@ for %%F in (
     WCF-TCP-PortSharing45
 ) do (
     powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName %%F -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
-    if %errorlevel% equ 0 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
+    if not errorlevel 1 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
 )
 
 call :LogInfo "Disabling network/legacy features..."
@@ -571,7 +583,7 @@ for %%F in (
     MicrosoftWindowsPowerShell-V2-Root
 ) do (
     powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName %%F -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
-    if %errorlevel% equ 0 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
+    if not errorlevel 1 (call :LogOK "Disable %%F") else (call :LogSkip "Disable %%F (not installed)")
 )
 call :LogOK "Optional features disabled (WSL/Hyper-V/.NET left intact)."
 
@@ -579,13 +591,13 @@ call :LogSection "Package Manager (Winget) Setup"
 call :LogInfo "Verifying Winget availability..."
 
 where curl >nul 2>&1
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     call :LogErr "CURL.exe not found. Winget cannot be downloaded automatically."
     goto WINGET_DONE
 )
 
 winget --version >nul 2>&1
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
     call :LogOK "Winget is already installed and functional."
     goto WINGET_INITIALIZE
 )
@@ -604,7 +616,7 @@ mkdir "%W_TEMP%"
 call :LogInfo "Downloading latest Microsoft App Installer bundle..."
 
 curl -L -f -s -o "%W_TEMP%\winget.msixbundle" "https://aka.ms/getwinget"
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     call :LogErr "Network error: Failed to download Winget bundle."
     goto WINGET_FAIL
 )
@@ -613,7 +625,7 @@ call :LogInfo "Installing App Installer bundle (this may take 30s)..."
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "try { Add-AppxPackage -Path '%W_TEMP%\winget.msixbundle' -ForceUpdateFromAnyVersion -ErrorAction Stop; exit 0 } catch { exit 1 }"
 
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     call :LogErr "Installation failed. Windows components may be too corrupted."
     goto WINGET_FAIL
 )
@@ -622,7 +634,7 @@ set "PATH=%PATH%;%LOCALAPPDATA%\Microsoft\WindowsApps;C:\Program Files\WindowsAp
 timeout /t 2 /nobreak >nul
 
 winget --version >nul 2>&1
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
     call :LogOK "Winget successfully installed and injected into session."
     goto WINGET_INITIALIZE
 ) else (
@@ -705,12 +717,9 @@ if not exist "C:\Program Files\Open-Shell\StartMenu.exe" (
 
     if exist "%OPENSHELL_INSTALLER%" (
         call :LogInfo "Running bundled Open-Shell 4.4.198 installer..."
-        set "OPENSHELL_RC="
-        for /f "delims=" %%R in ('start /wait "" "%OPENSHELL_INSTALLER%" /qn ^& cmd /c "echo %errorlevel%"') do set "OPENSHELL_RC=%%R"
-        if not defined OPENSHELL_RC set "OPENSHELL_RC=0"
-
-        if not "!OPENSHELL_RC!"=="0" (
-            call :LogErr "Bundled Open-Shell installer failed (exit code !OPENSHELL_RC!)."
+        call :RunOpenShellInstaller "%OPENSHELL_INSTALLER%"
+        if errorlevel 1 (
+            call :LogErr "Bundled Open-Shell installer failed."
         ) else (
             timeout /t 2 /nobreak >nul
             if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
@@ -770,7 +779,7 @@ start explorer.exe
 powershell -NoProfile -Command "for ($i=0; $i -lt 10; $i++) { if (Get-Process -Name explorer -ErrorAction SilentlyContinue) { break }; Start-Sleep -Seconds 1 }" >nul 2>&1
 
 tasklist /FI "IMAGENAME eq StartMenu.exe" | find /i "StartMenu.exe" >nul 2>&1
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     if exist "C:\Program Files\Open-Shell\StartMenu.exe" (
         start "" "C:\Program Files\Open-Shell\StartMenu.exe"
     )
@@ -782,13 +791,13 @@ goto skip_search
 :skip_search
 call :LogInfo "Removing New Media Player app..."
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneVideo* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove ZuneVideo") else (call :LogErr "Remove ZuneVideo")
+if not errorlevel 1 (call :LogOK "Remove ZuneVideo") else (call :LogErr "Remove ZuneVideo")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneMusic* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove ZuneMusic") else (call :LogErr "Remove ZuneMusic")
+if not errorlevel 1 (call :LogOK "Remove ZuneMusic") else (call :LogErr "Remove ZuneMusic")
 
 call :LogInfo "Enabling Legacy Media Player feature..."
 dism /online /enable-feature /featurename:WindowsMediaPlayer /norestart >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Enable WMP feature") else (call :LogErr "Enable WMP feature")
+if not errorlevel 1 (call :LogOK "Enable WMP feature") else (call :LogErr "Enable WMP feature")
 
 call :LogInfo "Optimizing WMP Network Service..."
 call :TIScLog config WMPNetworkSvc start= demand
@@ -825,14 +834,16 @@ if "%VC64_RC%"=="0" (
             del /q "%VC_X64%" >nul 2>&1
         ) else (
             start /wait "" "%VC_X64%" /install /quiet /norestart
-            set "VC64_DIRECT_RC=%errorlevel%"
-
-            if "%VC64_DIRECT_RC%"=="0" (
-                call :LogOK "VCRedist x64 installed from Microsoft."
-            ) else if "%VC64_DIRECT_RC%"=="3010" (
-                call :LogOK "VCRedist x64 installed from Microsoft (restart required)."
+            if errorlevel 3010 (
+                if not errorlevel 3011 (
+                    call :LogOK "VCRedist x64 installed from Microsoft (restart required)."
+                ) else (
+                    call :LogErr "VCRedist x64 Microsoft installer failed (rc=3010+)."
+                )
+            ) else if errorlevel 1 (
+                call :LogErr "VCRedist x64 Microsoft installer failed."
             ) else (
-                call :LogErr "VCRedist x64 Microsoft installer failed (rc=%VC64_DIRECT_RC%)."
+                call :LogOK "VCRedist x64 installed from Microsoft."
             )
         )
     )
@@ -861,14 +872,16 @@ if "%VC86_RC%"=="0" (
             del /q "%VC_X86%" >nul 2>&1
         ) else (
             start /wait "" "%VC_X86%" /install /quiet /norestart
-            set "VC86_DIRECT_RC=%errorlevel%"
-
-            if "%VC86_DIRECT_RC%"=="0" (
-                call :LogOK "VCRedist x86 installed from Microsoft."
-            ) else if "%VC86_DIRECT_RC%"=="3010" (
-                call :LogOK "VCRedist x86 installed from Microsoft (restart required)."
+            if errorlevel 3010 (
+                if not errorlevel 3011 (
+                    call :LogOK "VCRedist x86 installed from Microsoft (restart required)."
+                ) else (
+                    call :LogErr "VCRedist x86 Microsoft installer failed (rc=3010+)."
+                )
+            ) else if errorlevel 1 (
+                call :LogErr "VCRedist x86 Microsoft installer failed."
             ) else (
-                call :LogErr "VCRedist x86 Microsoft installer failed (rc=%VC86_DIRECT_RC%)."
+                call :LogOK "VCRedist x86 installed from Microsoft."
             )
         )
     )
@@ -881,7 +894,7 @@ call :LogInfo "Downloading DirectX Web Setup..."
 setlocal EnableDelayedExpansion
 set "DX_OK=1"
 curl -L -f -s -o "%temp%\dxwebsetup.exe" "https://download.microsoft.com/download/1/7/1/1718CCC4-6315-4D8E-9543-8E28A4E18C4C/dxwebsetup.exe" >nul 2>&1
-if %errorlevel% neq 0 set "DX_OK=0"
+if errorlevel 1 set "DX_OK=0"
 
 if "%DX_OK%"=="1" (
     call :LogOK "DirectX Web Setup downloaded."
@@ -912,7 +925,7 @@ if exist "%SystemRoot%\System32\OneDriveSetup.exe" (
     if errorlevel 1 (call :LogErr "OneDrive uninstall failed") else (call :LogOK "OneDrive uninstalled via setup")
 )
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.OneDrive* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "OneDrive Appx removed") else (call :LogWarn "OneDrive Appx removal skipped")
+if not errorlevel 1 (call :LogOK "OneDrive Appx removed") else (call :LogWarn "OneDrive Appx removal skipped")
 
 rd /s /q "%LOCALAPPDATA%\Microsoft\OneDrive" >nul 2>&1
 rd /s /q "%PROGRAMDATA%\Microsoft OneDrive" >nul 2>&1
@@ -969,20 +982,30 @@ powershell -NoProfile -Command "Get-AppxPackage Microsoft.MicrosoftEdge -AllUser
 powershell -NoProfile -Command "Get-AppxPackage Microsoft.Win32WebViewHost -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.MicrosoftEdge|Microsoft.Win32WebViewHost' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
 
-call :LogInfo "Nuking leftover directories..."
-if exist "C:\Program Files (x86)\Microsoft\Edge\"         call :TIRun cmd.exe /c rd /s /q "C:\Program Files (x86)\Microsoft\Edge" >nul 2>&1
-if exist "C:\Program Files\Microsoft\Edge\"               call :TIRun cmd.exe /c rd /s /q "C:\Program Files\Microsoft\Edge" >nul 2>&1
-if exist "C:\Program Files (x86)\Microsoft\EdgeWebView\"  call :TIRun cmd.exe /c rd /s /q "C:\Program Files (x86)\Microsoft\EdgeWebView" >nul 2>&1
-if exist "C:\Program Files\Microsoft\EdgeWebView\"        call :TIRun cmd.exe /c rd /s /q "C:\Program Files\Microsoft\EdgeWebView" >nul 2>&1
-if exist "C:\Program Files (x86)\Microsoft\EdgeUpdate\"   call :TIRun cmd.exe /c rd /s /q "C:\Program Files (x86)\Microsoft\EdgeUpdate" >nul 2>&1
+call :LogInfo "Removing Edge/WebView2 files while preserving protected placeholder directories..."
+for %%D in (
+    "C:\Program Files (x86)\Microsoft\Edge"
+    "C:\Program Files\Microsoft\Edge"
+    "C:\Program Files (x86)\Microsoft\EdgeWebView"
+    "C:\Program Files\Microsoft\EdgeWebView"
+    "C:\Program Files (x86)\Microsoft\EdgeUpdate"
+) do (
+    if exist "%%~D" call :TIRun cmd.exe /c rd /s /q "%%~D" >nul 2>&1
+    if not exist "%%~D" mkdir "%%~D" >nul 2>&1
+)
 rd /s /q "%LOCALAPPDATA%\Microsoft\Edge" >nul 2>&1
 rd /s /q "%LOCALAPPDATA%\Microsoft\EdgeWebView" >nul 2>&1
 
-call :LogInfo "Hardening against Windows Update reinstalls..."
-call :TIRun icacls "C:\Program Files (x86)\Microsoft\Edge" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
-call :TIRun icacls "C:\Program Files\Microsoft\Edge" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
-call :TIRun icacls "C:\Program Files (x86)\Microsoft\EdgeWebView" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
-call :TIRun icacls "C:\Program Files\Microsoft\EdgeWebView" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
+call :LogInfo "Hardening Edge/WebView2 placeholder directories against Windows Update reinstalls..."
+for %%D in (
+    "C:\Program Files (x86)\Microsoft\Edge"
+    "C:\Program Files\Microsoft\Edge"
+    "C:\Program Files (x86)\Microsoft\EdgeWebView"
+    "C:\Program Files\Microsoft\EdgeWebView"
+    "C:\Program Files (x86)\Microsoft\EdgeUpdate"
+) do (
+    if exist "%%~D" call :TIRun icacls "%%~D" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
+)
 
 call :LogInfo "Disabling EdgeUpdate & Elevation services..."
 call :TIScLog stop "edgeupdate"
@@ -1006,7 +1029,7 @@ del /q /f "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Accessories\Micro
 REM Kill the Edge shortcut re-creation stub (Edge leaves a stub .lnk that
 REM Windows re-resolves on logon). Wipe stub + cached icon too.
 del /q /f "%LOCALAPPDATA%\Microsoft\Edge\Application\*Microsoft Edge*.lnk" >nul 2>&1
-del /q /f "%LOCALAPPDATA%\Microsoft\Windows\INetCache\Microsoft Edge" >nul 2>&1
+rd /s /q "%LOCALAPPDATA%\Microsoft\Windows\INetCache\Microsoft Edge" >nul 2>&1
 rd /s /q "%LOCALAPPDATA%\Microsoft\Edge\Bin" >nul 2>&1
 REM Block Edge from re-pinning itself via the AppX shortcut cache
 if exist "%LOCALAPPDATA%\Microsoft\Windows\Caches" attrib +r "%LOCALAPPDATA%\Microsoft\Windows\Caches\*Edge*" >nul 2>&1
@@ -1014,12 +1037,14 @@ if exist "%LOCALAPPDATA%\Microsoft\Windows\Caches" attrib +r "%LOCALAPPDATA%\Mic
 call :LogOK "Microsoft Edge and WebView2 completely eradicated!"
 
 call :LogInfo "Disabling User Account Control (UAC) completely..."
+:: [USER REQUEST] Restore the original aggressive UAC configuration from the supplied script.
+:: EnableLUA=0 disables the UAC architecture rather than merely suppressing prompts.
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableLUA" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorUser" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableInstallerDetection" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableVirtualization" /t REG_DWORD /d "1" /f
-call :LogWarn "UAC fully disabled (EnableLUA=0). A system restart is required for this to take effect."
+call :LogWarn "UAC fully disabled (EnableLUA=0). A restart is required for this change to take effect."
 call :LogInfo "NOTE: AdvancedRun TrustedInstaller test now pre-starts the TrustedInstaller service with retry logic."
 
 call :LogInfo "Applying registry optimizations..."
@@ -1112,25 +1137,25 @@ call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting" /v "F
 call :RegLog add "HKLM\SOFTWARE\Microsoft\PCHealth\ErrorReporting" /v "DoReport" /t REG_DWORD /d 0 /f
 
 call :LogInfo "Disabling extra background services..."
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\CDPUserSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\ConnectedDevicesPlatformUserSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\PimIndexMaintenanceSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\UnistoreSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\UserDataSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\ContactDataSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\MessagingSyncSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\OneSyncSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\MessagingService" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\CortanaCtiUserSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DevicePickerUserSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\SCNotification" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\InstalledAppsProviderService" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WbioSrvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\BcastDVRUserService" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\CaptureService" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\FrameServer" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\DeviceAssociationBrokerSvc" /v "Start" /t REG_DWORD /d 4 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\TabletInputService" /v "Start" /t REG_DWORD /d 4 /f
+call :TIDisableServiceInstances "CDPUserSvc"
+call :TIDisableServiceInstances "ConnectedDevicesPlatformUserSvc"
+call :TIDisableServiceInstances "PimIndexMaintenanceSvc"
+call :TIDisableServiceInstances "UnistoreSvc"
+call :TIDisableServiceInstances "UserDataSvc"
+call :TIDisableServiceInstances "ContactDataSvc"
+call :TIDisableServiceInstances "MessagingSyncSvc"
+call :TIDisableServiceInstances "OneSyncSvc"
+call :TIDisableServiceInstances "MessagingService"
+call :TIDisableServiceInstances "CortanaCtiUserSvc"
+call :TIDisableServiceInstances "DevicePickerUserSvc"
+call :TIDisableServiceInstances "SCNotification"
+call :TIDisableServiceInstances "InstalledAppsProviderService"
+call :TIDisableServiceInstances "WbioSrvc"
+call :TIDisableServiceInstances "BcastDVRUserService"
+call :TIDisableServiceInstances "CaptureService"
+call :TIDisableServiceInstances "FrameServer"
+call :TIDisableServiceInstances "DeviceAssociationBrokerSvc"
+call :TIDisableServiceInstances "TabletInputService"
 
 call :LogInfo "Applying game mode settings..."
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d 38 /f
@@ -1269,7 +1294,7 @@ call :LogInfo "Disabling Windows System Sounds"
 call :RegLog add "HKCU\AppEvents\Schemes" /ve /d ".None" /f
 
 powershell -NoProfile -Command "Get-ChildItem 'HKCU:\AppEvents\Schemes\Apps\.Default' -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -eq '.Current' } | Remove-Item -Force -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "System sound assignments cleared") else (call :LogWarn "System sound assignments already cleared")
+if not errorlevel 1 (call :LogOK "System sound assignments cleared") else (call :LogWarn "System sound assignments already cleared")
 
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v "DisableStartupSound" /t REG_DWORD /d "1" /f
 call :LogOK "Windows Startup Sound disabled"
@@ -1336,9 +1361,10 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEnga
 call :LogInfo "Disabling Meet Now and Teams startup..."
 call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "com.squirrel.Teams.Teams" /f
 
+call :LogInfo "Windows Defender handling moved to menu option 17 (Disable Defender)."
 call :LogInfo "Disabling SMBv1 (security)..."
 powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable SMB1Protocol") else (call :LogWarn "Disable SMB1Protocol")
+if not errorlevel 1 (call :LogOK "Disable SMB1Protocol") else (call :LogWarn "Disable SMB1Protocol")
 call :TIScLog config lanmanworkstation depend= "Bowser/Srv2/SrvNet"
 call :LogInfo "Disabling LLMNR and NetBIOS (security)..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v "EnableMulticast" /t REG_DWORD /d 0 /f
@@ -1422,58 +1448,58 @@ for /f "delims=" %%I in ('powershell -NoProfile -Command "Get-CimInstance Win32_
 endlocal
 
 call :LogInfo "Disabling PnP Devices..."
-%dmv% "SWD\MSRRAS\MS_IKEEV2_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_IKEEV2_MINIPORT") else (call :LogErr "Disable MS_IKEEV2_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_IP_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_IP_MINIPORT") else (call :LogErr "Disable MS_IP_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_IPV6_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_IPV6_MINIPORT") else (call :LogErr "Disable MS_IPV6_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_L2TP_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_L2TP_MINIPORT") else (call :LogErr "Disable MS_L2TP_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_PPPOE_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_PPPOE_MINIPORT") else (call :LogErr "Disable MS_PPPOE_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_PPTP_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_PPTP_MINIPORT") else (call :LogErr "Disable MS_PPTP_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_SSTP_MINIPORT" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_SSTP_MINIPORT") else (call :LogErr "Disable MS_SSTP_MINIPORT")
-%dmv% "SWD\MSRRAS\MS_NDISWANBH" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_NDISWANBH") else (call :LogErr "Disable MS_NDISWANBH")
-%dmv% "SWD\MSRRAS\MS_NDISWANIP" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_NDISWANIP") else (call :LogErr "Disable MS_NDISWANIP")
-%dmv% "SWD\MSRRAS\MS_NDISWANIPV6" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable MS_NDISWANIPV6") else (call :LogErr "Disable MS_NDISWANIPV6")
-%dmv% "ROOT\vmic_guestinterface\0000" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable vmic_guestinterface") else (call :LogErr "Disable vmic_guestinterface")
+call :DisablePnpByID "SWD\MSRRAS\MS_IKEEV2_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_IKEEV2_MINIPORT") else (call :LogErr "Disable MS_IKEEV2_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_IP_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_IP_MINIPORT") else (call :LogErr "Disable MS_IP_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_IPV6_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_IPV6_MINIPORT") else (call :LogErr "Disable MS_IPV6_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_L2TP_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_L2TP_MINIPORT") else (call :LogErr "Disable MS_L2TP_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_PPPOE_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_PPPOE_MINIPORT") else (call :LogErr "Disable MS_PPPOE_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_PPTP_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_PPTP_MINIPORT") else (call :LogErr "Disable MS_PPTP_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_SSTP_MINIPORT" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_SSTP_MINIPORT") else (call :LogErr "Disable MS_SSTP_MINIPORT")
+call :DisablePnpByID "SWD\MSRRAS\MS_NDISWANBH" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_NDISWANBH") else (call :LogErr "Disable MS_NDISWANBH")
+call :DisablePnpByID "SWD\MSRRAS\MS_NDISWANIP" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_NDISWANIP") else (call :LogErr "Disable MS_NDISWANIP")
+call :DisablePnpByID "SWD\MSRRAS\MS_NDISWANIPV6" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable MS_NDISWANIPV6") else (call :LogErr "Disable MS_NDISWANIPV6")
+call :DisablePnpByID "ROOT\vmic_guestinterface\0000" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Disable vmic_guestinterface") else (call :LogErr "Disable vmic_guestinterface")
 
 call :LogInfo "Whitelisting core gaming paths..."
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'C:\Program Files\Epic Games'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude Epic Games path") else (call :LogErr "Exclude Epic Games path")
+if not errorlevel 1 (call :LogOK "Exclude Epic Games path") else (call :LogErr "Exclude Epic Games path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'C:\Program Files (x86)\Steam'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude Steam path") else (call :LogErr "Exclude Steam path")
+if not errorlevel 1 (call :LogOK "Exclude Steam path") else (call :LogErr "Exclude Steam path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'C:\Program Files\Riot Games'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude Riot Games path") else (call :LogErr "Exclude Riot Games path")
+if not errorlevel 1 (call :LogOK "Exclude Riot Games path") else (call :LogErr "Exclude Riot Games path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'C:\Program Files\EA Games'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude EA Games path") else (call :LogErr "Exclude EA Games path")
+if not errorlevel 1 (call :LogOK "Exclude EA Games path") else (call :LogErr "Exclude EA Games path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'C:\Games'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude C:\Games path") else (call :LogErr "Exclude C:\Games path")
+if not errorlevel 1 (call :LogOK "Exclude C:\Games path") else (call :LogErr "Exclude C:\Games path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'D:\Games'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude D:\Games path") else (call :LogErr "Exclude D:\Games path")
+if not errorlevel 1 (call :LogOK "Exclude D:\Games path") else (call :LogErr "Exclude D:\Games path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath 'E:\Games'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude E:\Games path") else (call :LogErr "Exclude E:\Games path")
+if not errorlevel 1 (call :LogOK "Exclude E:\Games path") else (call :LogErr "Exclude E:\Games path")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionProcess 'FortniteClient-Win64-Shipping.exe'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude FortniteClient Process") else (call :LogErr "Exclude FortniteClient Process")
+if not errorlevel 1 (call :LogOK "Exclude FortniteClient Process") else (call :LogErr "Exclude FortniteClient Process")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionProcess 'FortniteLauncher.exe'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude FortniteLauncher Process") else (call :LogErr "Exclude FortniteLauncher Process")
+if not errorlevel 1 (call :LogOK "Exclude FortniteLauncher Process") else (call :LogErr "Exclude FortniteLauncher Process")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionProcess 'EpicGamesLauncher.exe'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude EpicGamesLauncher Process") else (call :LogErr "Exclude EpicGamesLauncher Process")
+if not errorlevel 1 (call :LogOK "Exclude EpicGamesLauncher Process") else (call :LogErr "Exclude EpicGamesLauncher Process")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionProcess 'steam.exe'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude steam Process") else (call :LogErr "Exclude steam Process")
+if not errorlevel 1 (call :LogOK "Exclude steam Process") else (call :LogErr "Exclude steam Process")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionProcess 'RiotClientServices.exe'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude RiotClientServices Process") else (call :LogErr "Exclude RiotClientServices Process")
+if not errorlevel 1 (call :LogOK "Exclude RiotClientServices Process") else (call :LogErr "Exclude RiotClientServices Process")
 powershell -NoProfile -Command "Add-MpPreference -ExclusionExtension 'pak','upk','big','bsp','vtf','assets'" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Exclude Game Extensions") else (call :LogErr "Exclude Game Extensions")
+if not errorlevel 1 (call :LogOK "Exclude Game Extensions") else (call :LogErr "Exclude Game Extensions")
 powershell -NoProfile -Command "$paths = @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture'); foreach ($p in $paths) { if (Test-Path $p) { Get-ChildItem $p | ForEach-Object { $fx = Join-Path $_.PSPath 'FxProperties'; if (Test-Path $fx) { Set-ItemProperty -Path $fx -Name '{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } } }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "disable Audio Enhancements") else (call :LogErr "disable Audio Enhancements")
+if not errorlevel 1 (call :LogOK "disable Audio Enhancements") else (call :LogErr "disable Audio Enhancements")
 
 call :LogInfo "Windows Tweaks section complete."
 timeout /t 1 /nobreak > NUL
@@ -1528,7 +1554,7 @@ if not exist "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" goto 
 if not exist "C:\bardhzzY Utility Tools\Nvidia\vortex.nip" goto NPI_MISSING_NIP
 
 "C:\bardhzzY Utility Tools\Nvidia\nvidiaProfileInspector.exe" -silentImport "C:\bardhzzY Utility Tools\Nvidia\vortex.nip" >nul 2>&1
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
     call :LogOK "Vortex Driver Profile Applied!"
 ) else (
     call :LogErr "Vortex Driver Profile Injection Failed"
@@ -1548,61 +1574,113 @@ timeout /t 1 >nul
 
 call :LogInfo "Disabling Nvidia Telemetry Tasks..."
 setlocal EnableDelayedExpansion
-for /f "tokens=2 delims=:" %%t in ('schtasks /query /fo list ^| findstr /i "TaskName:" ^| findstr /i "NvTmMon NvTmRep NvDriverUpdateCheckDaily GeForce Experience SelfUpdate"') do (
-    set "task=%%t"
-    for /f "tokens=* delims= " %%s in ("!task!") do set "task=%%s"
-    if not "!task!"=="" call :SchLog /change /disable /tn "!task!"
-)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$targets=@('NvTmMon','NvTmRep','NvDriverUpdateCheckDaily','GeForce Experience','SelfUpdate'); $tasks=Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $targets -contains $_.TaskName }; foreach($t in $tasks){ try { Disable-ScheduledTask -InputObject $t -ErrorAction Stop | Out-Null } catch {} }; if($tasks){exit 0}else{exit 2}" >nul 2>&1
+if not errorlevel 1 (call :LogOK "NVIDIA telemetry tasks disabled (exact task names only).") else if errorlevel 2 (call :LogSkip "No matching NVIDIA telemetry tasks found.") else (call :LogWarn "NVIDIA telemetry task query returned an error.")
 endlocal
 
-call :LogInfo "Applying NVIDIA Registry Tweaks..."
-
+call :LogInfo "Applying Nvidia Registry Tweaks..."
 call :RegLog add "HKLM\SOFTWARE\NVIDIA Corporation\Global\GlobalSettings" /v "ShaderCacheMaxSizeBytes" /t REG_QWORD /d 10737418240 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\DirectX\GraphicsDeviceManager" /v "ShaderCacheSize" /t REG_DWORD /d 10240 /f
 call :RegLog add "HKLM\SOFTWARE\NVIDIA Corporation\Global\Stereo3D" /v "ShaderCacheSize" /t REG_DWORD /d 10240 /f
 
-set "NVIDIA_FOUND=0"
-
-for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /s /f "DriverDesc" ^| findstr "HKEY"') do (
-    reg query "%%a" /v "DriverDesc" 2>nul | findstr /i "NVIDIA" >nul
-
-    if !errorlevel! equ 0 (
-        set "NVIDIA_FOUND=1"
-
-        call :LogInfo "Applying NVIDIA adapter tweaks to: %%a"
-        call :RegLog add "%%a" /v "PowerMizerEnable" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "PerfLevelSrc" /t REG_DWORD /d 8738 /f
-        call :RegLog add "%%a" /v "PowerMizerLevel" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "PowerMizerLevelAC" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "EnableCoreSlowdown" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "EnableMCLKSlowdown" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "EnableNVCLKSlowdown" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "RMHdcpKeyglobZero" /t REG_DWORD /d 1 /f
-
-        call :TIRegLog add "%%a" /v "SendTelemetryData" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "OptInOrOutPreference" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "EnableRID44231" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "EnableRID64640" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "EnableRID66610" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "RMIntrDetailedLogs" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "RMCtxswLog" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "RMNvLog" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "RMSuppressGPIOIntrErrLog" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "RMEnableEventTracer" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "ShowDlssIndicator" /t REG_DWORD /d 0 /f
-        call :TIRegLog add "%%a" /v "RmDisableHdcp22" /t REG_DWORD /d 1 /f
-    )
+for %%i in (0000 0001 0002 0003 0004 0005) do (
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "PowerMizerEnable" /t REG_DWORD /d 0 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "PerfLevelSrc" /t REG_DWORD /d 8738 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "PowerMizerLevel" /t REG_DWORD /d 1 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "PowerMizerLevelAC" /t REG_DWORD /d 1 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableCoreSlowdown" /t REG_DWORD /d 0 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableMCLKSlowdown" /t REG_DWORD /d 0 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableNVCLKSlowdown" /t REG_DWORD /d 0 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "DisableDynamicPstate" /t REG_DWORD /d 1 /f
+    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMHdcpKeyglobZero" /t REG_DWORD /d 1 /f
 )
 
-if "%NVIDIA_FOUND%"=="0" (
-    call :LogWarn "No NVIDIA display adapter registry instance was found."
-) else (
-    call :LogOK "NVIDIA registry tweaks applied to detected NVIDIA adapter(s)."
+call :LogInfo "Applying NVIDIA RM* depth tweaks (engine gatings, GC6, runtime PM, LRC, latency tolerance)..."
+
+:: All RM* keys applied to all 6 GPU subkey slots. Desktop-focused.
+for %%i in (0000 0001 0002 0003 0004 0005) do (
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableHwFaultBuffer" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisablePerIntrDPCQueueing" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMElcg" /t REG_DWORD /d 1431655765 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMBlcg" /t REG_DWORD /d 286331153 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMElpg" /t REG_DWORD /d 4095 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMSlcg" /t REG_DWORD /d 262131 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMFspg" /t REG_DWORD /d 15 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDidleFeatureGC5" /t REG_DWORD /d 44731050 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMHotPlugSupportDisable" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmFbsrPagedDMA" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisablePostL2Compression" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmRcWatchdog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLogonRC" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMIntrDetailedLogs" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMCtxswLog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMNvLog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMSuppressGPIOIntrErrLog" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMUsbcDebugMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableFeatureDisablement" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmBreakonRC" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDebugSetSMCMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableLRCCoalescing" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmEnableI2CNanny" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMPcieLtrOverride" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMPcieLtrL12ThresholdOverride" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDeepL1EntryLatencyUsec" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisablePreosapps" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmPerfLimitsOverride" /t REG_DWORD /d 21 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMGCOffFeature" /t REG_DWORD /d 2 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmOverrideSupportChipsetAspm" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMEnableASPMDT" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableGpuASPMFlags" /t REG_DWORD /d 3 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMEnableASPMAtLoad" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMEnableEventTracer" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SkipSwStateErrChecks" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMAERRForceDisable" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmWar1760398" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLpwrArch" /t REG_DWORD /d 349525 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLpwrGrPgSwFilterFunction" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmLpwrCacheStatsOnD3" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDwbMscg" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableInforomBBX" /t REG_DWORD /d 15 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "PreferSystemMemoryContiguous" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmSec2EnableApm" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmOverrideIdleSlowdownSettings" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMClkSlowDown" /t REG_DWORD /d 71303168 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMNativePcieL1WarFlags" /t REG_DWORD /d 16 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMResetPerfMonD4" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmFbsrWDDMMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmFbsrFileMode" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmMIONoPowerOff" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableOptimalPowerForPadlinkPll" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmClkPowerOffDramPllWhenUnused" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMOPSB" /t REG_DWORD /d 10914 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "DisableAsyncPstates" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SlideMCLK" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMNvlinkUPHYInitControl" /t REG_DWORD /d 16 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmGpsGenoa" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "OptInOrOutPreference" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SendTelemetryData" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRID44231" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRID64640" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRID66610" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableRegistryCaching" /t REG_DWORD /d 15 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "D3PCLatency" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableMsHybrid" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableIntrIllegalCompstatAccess" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "SetPanelRefreshRate" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisableNoncontigAlloc" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableHdcp22" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableRuntimePowerManagement" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmProfilingAdminOnly" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "ShowDlssIndicator" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "EnableHDAudioD3Cold" /t REG_DWORD /d 0 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDevToolsVisible" /t REG_DWORD /d 1 /f
+    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "NvDevToolsVisible" /t REG_DWORD /d 1 /f
 )
+call :LogOK "NVIDIA RM* depth tweaks applied."
 
 call :LogInfo "Applying DisableDynamicPstate to active GPU"
 powershell -NoProfile -Command "$gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like 'PCI\VEN_10DE*' }; foreach ($gpu in $gpus) { $pnp = $gpu.PNPDeviceID; $regBase = 'HKLM:\SYSTEM\CurrentControlSet\Enum\' + $pnp; $driverVal = (Get-ItemProperty -Path $regBase -Name 'Driver' -ErrorAction SilentlyContinue).Driver; if ($driverVal) { $classPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\' + $driverVal; if (Test-Path $classPath) { Set-ItemProperty -Path $classPath -Name 'DisableDynamicPstate' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "DisableDynamicPstate applied") else (call :LogWarn "DisableDynamicPstate skipped (No matching GPU found)")
+if not errorlevel 1 (call :LogOK "DisableDynamicPstate applied") else (call :LogWarn "DisableDynamicPstate skipped (No matching GPU found)")
 
 rem nvidia msi mode
 call :LogInfo "Enabling MSI Mode for NVIDIA GPU..."
@@ -1678,16 +1756,19 @@ endlocal
 
 call :LogInfo "Applying DirectX Optimizations..."
 powershell -NoProfile -Command "$p='HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'; $n='DirectXUserGlobalSettings'; $tweak='SwapEffectUpgradeEnable=1;VRROptimizeEnable=0;'; $val=(Get-ItemProperty -Path $p -Name $n -ErrorAction SilentlyContinue).$n; if($val){ $parts=$val -split ';' | Where-Object { $_ -notmatch 'SwapEffectUpgradeEnable' -and $_ -notmatch 'VRROptimizeEnable' }; $new=($parts -join ';').';'+$tweak } else { $new=$tweak }; Set-ItemProperty -Path $p -Name $n -Value $new -Type String -Force" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "DirectX Global Settings applied") else (call :LogErr "DirectX Global Settings failed")
+if not errorlevel 1 (call :LogOK "DirectX Global Settings applied") else (call :LogErr "DirectX Global Settings failed")
 
 call :RegLog add "HKCU\Software\Microsoft\DXGIExtensions" /v "ForceIndependentFlip" /t REG_DWORD /d 1 /f
 call :LogInfo "Disabling Multiplane Overlay (MPO)..."
 call :RegLog delete "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestType" /f >nul 2>&1
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "DisableOverlays" /t REG_DWORD /d "1" /f
 
+:: --- HDCP Tweaks (Bugfixed to use 'delims=') ---
 for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /f "00*" /k ^| findstr "000"') do (
-    call :RegLog add "%%a" /v "RmHdcpKeybackDisable" /t REG_DWORD /d 1 /f
-    call :RegLog add "%%a" /v "RMHdcpPowerSavingDisable" /t REG_DWORD /d 1 /f
+    set "RL_DYN_KEY=%%a"
+    call :DynRegLog /v "RmHdcpKeybackDisable" /t REG_DWORD /d 1 /f
+    set "RL_DYN_KEY=%%a"
+    call :DynRegLog /v "RMHdcpPowerSavingDisable" /t REG_DWORD /d 1 /f
 )
 call :LogOK "NVIDIA DirectX Optimizations perfectly applied!"
 
@@ -1736,28 +1817,190 @@ echo.
 echo [!] Searching for AMD GPU Registry Keys...
 echo.
 setlocal EnableDelayedExpansion
-
 for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /s /f "DriverDesc" ^| findstr "HKEY"') do (
     reg query "%%a" /v "DriverDesc" 2>nul | findstr /i "AMD" >nul
-
     if !errorlevel! equ 0 (
-        call :LogInfo "Applying AMD Performance Tweaks to: %%a"
-        call :RegLog add "%%a" /v "PP_RTPMComputeF1Latency" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "PP_DGBMMMaxTransitionLatencyUvd" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "PP_DGBPMMaxTransitionLatencyGfx" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "DalNBLatencyForUnderFlow" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "BGM_LTRSnoopL1Latency" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "BGM_LTRSnoopL0Latency" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "BGM_LTRNoSnoopL1Latency" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "BGM_LTRNoSnoopL0Latency" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "BGM_LTRMaxSnoopLatencyValue" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "BGM_LTRMaxNoSnoopLatencyValue" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "KMD_EnableComputePreemption" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "KMD_DeLagEnabled" /t REG_DWORD /d 1 /f
-        call :RegLog add "%%a" /v "KMD_RadeonBoostEnabled" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "ChillEnabled" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "AutoUpdateTriggered" /t REG_DWORD /d 0 /f
-        call :RegLog add "%%a" /v "AutoUpdate" /t REG_DWORD /d 0 /f
+        call :LogInfo "Applying Performance Tweaks to: %%a"
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PP_RTPMComputeF1Latency" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PP_DGBMMMaxTransitionLatencyUvd" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PP_DGBPMMaxTransitionLatencyGfx" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DalNBLatencyForUnderFlow" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "BGM_LTRSnoopL1Latency" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "BGM_LTRSnoopL0Latency" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "BGM_LTRNoSnoopL1Latency" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "BGM_LTRNoSnoopL0Latency" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "BGM_LTRMaxSnoopLatencyValue" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "BGM_LTRMaxNoSnoopLatencyValue" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "KMD_EnableComputePreemption" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "KMD_DeLagEnabled" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisablePreemption" /t REG_DWORD /d 1 /f
+
+        call :LogInfo "Applying AMD depth tweaks (clock gating, power gating, ASPM, sleep) to: %%a"
+
+        :: Performance mode + sleep disables
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PP_Force3DPerformanceMode" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PP_ForceHighDPMLevel" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxCoarseGrainLightSleep" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxCpLightSleep" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxMediumGrainLightSleep" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxRlcLightSleep" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableDrmLightSleep" /t REG_DWORD /d 1 /f
+
+        :: Radeon Boost off
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "KMD_RadeonBoostEnabled" /t REG_DWORD /d 0 /f
+
+        :: Clock gating keys
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfx3DCGLS" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxCGTS" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxCGTS_LS" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxMGCGPerfMon" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableDrmdmaMGCG" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableDrmMGCG" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfx3DCGCG" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableUvdClockGating" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableVceSwClockGating" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableGfxClockGatingThruSmu" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableSysClockGatingThruSmu" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "IRQMgrDisableIHClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "swGcClockGatingMask" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "swGcClockGatingOverride" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableRomMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableRomMGCGClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableSamuClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableSysClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableVceClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxCoarseGrainClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableMcMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableNbioMediumGrainClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DalDisableClockGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DalFineGrainClockGating" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableAllClockGating" /t REG_DWORD /d 1 /f
+
+        :: Power gating keys
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxPGCondClearStateWA" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableCpPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableAcpPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableDrmdmaPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableDynamicGfxMGPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGDSPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGfxCGPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableGFXPipelinePowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableUVDPowerGatingDynamic" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisablePowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableQuickGfxMGPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableSAMUPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableStaticGfxMGPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableUVDPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableVCEPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableXdmaPowerGating" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableXdmaSclkGating" /t REG_DWORD /d 1 /f
+
+        :: Powerdown + ASPM
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DalPSRSkipCRTCPowerDown" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PP_GPUPowerDownEnabled" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableAspmSWL1" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableAspmL0s" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableAspmL1" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableAspmL0s" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableAspmL1" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableAspmL1SS" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "AspmL0sTimeout" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "AspmL1Timeout" /t REG_DWORD /d 0 /f
+
+        :: Misc disable
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableClkReqSupport" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableFBCSupport" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "DisableForceUvdToSclk" /t REG_DWORD /d 1 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "EnableSpreadSpectrum" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "PowerSaverAutoEnable_CUR" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "ChillEnabled" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "AutoUpdateTriggered" /t REG_DWORD /d 0 /f
+        set "RL_DYN_KEY=%%a"
+        call :DynRegLog /v "AutoUpdate" /t REG_DWORD /d 0 /f
     )
 )
 endlocal
@@ -1791,9 +2034,13 @@ call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11c
 call :RegLog add "HKLM\Software\Intel\GMM" /v "DedicatedSegmentSize" /t REG_DWORD /d "512" /f
 
 call :LogInfo "Setting interrupt policies for Intel GPU..."
-for /f "delims=" %%g in ('powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Where-Object { $_.PNPDeviceID -like '*VEN_8086*' } | Select-Object -ExpandProperty PNPDeviceID" 2^>nul') do (
-    call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Enum\%%g\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d "1" /f
-)
+:: Intel GPU MSI: keep the whole PNP ID inside PowerShell so '&' can never be
+:: interpreted by CMD as a command separator.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $gpus=Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | Where-Object { $_.PNPDeviceID -like '*VEN_8086*' }; $count=0; foreach($g in $gpus){ $p='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\'+$g.PNPDeviceID+'\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties'; if(Test-Path $p){ try { New-ItemProperty -Path $p -Name 'MSISupported' -PropertyType DWord -Value 1 -Force -ErrorAction Stop | Out-Null; $count++ } catch {} } }; Write-Output $count" > "%TEMP%\bardhzz_intel_msi_count.txt" 2>nul
+set "INTEL_MSI_COUNT=0"
+for /f "delims=" %%A in ('type "%TEMP%\bardhzz_intel_msi_count.txt" 2^>nul') do set "INTEL_MSI_COUNT=%%A"
+del /q "%TEMP%\bardhzz_intel_msi_count.txt" >nul 2>&1
+if "%INTEL_MSI_COUNT%"=="0" (call :LogSkip "Intel iGPU MSI: no existing MSI property path was modified.") else (set "LOG_MSG=Intel iGPU MSI enabled on %INTEL_MSI_COUNT% adapter(s)." & call :LogOK)
 call :LogOK "Intel iGPU Tweaks Applied Successfully!"
 timeout /t 1 /nobreak > NUL
 pause
@@ -1812,7 +2059,7 @@ call :RegLog add "HKCU\Control Panel\Accessibility\SoundSentry" /v "Flags" /t RE
 call :RegLog add "HKCU\Control Panel\Accessibility\TimeOut" /v "Flags" /t REG_SZ /d "0" /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "LbrEnabled" /t REG_DWORD /d 0 /f
 powercfg /setacvalueindex scheme_current sub_pciexpress aspm 0
-if %errorlevel% equ 0 (call :LogOK "powercfg sub_pciexpress") else (call :LogErr "powercfg sub_pciexpress")
+if not errorlevel 1 (call :LogOK "powercfg sub_pciexpress") else (call :LogErr "powercfg sub_pciexpress")
 
 echo %PROCESSOR_IDENTIFIER% | findstr /i "AMD" >nul && (
     call :LogInfo "AMD CPU detected - Applying AMD-specific tweaks..."
@@ -1833,12 +2080,19 @@ for %%S in (Ndu 1394ohci fdc flpydisk sfloppy HidBth HidIr) do (
 )
 
 call :LogInfo "Applying Device Priority tweaks..."
-for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\PCI" /s /f "VEN_" ^| findstr "HKEY" ^| findstr /v "Parameters"') do (
-    call :RegLog add "%%a\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /t REG_DWORD /d 3 /f
-)
+:: DevicePriority: use PowerShell/registry provider here because PCI hardware IDs
+:: contain '&' (for example VEN_xxxx&DEV_CAFE&SUBSYS_...), and CALL re-parses '&'
+:: as a command separator in batch files.
+set "CPU_AFFINITY_RC=0"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $base='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\PCI'; $keys=Get-ChildItem -Path $base -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -and $_.Name -eq 'Affinity Policy' }; $count=0; foreach($k in $keys){ try { New-ItemProperty -Path $k.PSPath -Name 'DevicePriority' -PropertyType DWord -Value 3 -Force -ErrorAction Stop | Out-Null; $count++ } catch {} }; Write-Output $count" > "%TEMP%\bardhzz_cpu_affinity_count.txt" 2>nul
+set "CPU_AFFINITY_COUNT=0"
+for /f "delims=" %%A in ('type "%TEMP%\bardhzz_cpu_affinity_count.txt" 2^>nul') do set "CPU_AFFINITY_COUNT=%%A"
+del /q "%TEMP%\bardhzz_cpu_affinity_count.txt" >nul 2>&1
+if not defined CPU_AFFINITY_COUNT set "CPU_AFFINITY_COUNT=0"
+if "%CPU_AFFINITY_COUNT%"=="0" (call :LogSkip "DevicePriority: no existing PCI Affinity Policy keys were modified.") else (set "LOG_MSG=DevicePriority applied to %CPU_AFFINITY_COUNT% PCI device(s)." & call :LogOK)
 
 bcdedit /set debug off >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit debug off") else (call :LogErr "bcdedit debug off")
+if not errorlevel 1 (call :LogOK "bcdedit debug off") else (call :LogErr "bcdedit debug off")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "DistributeTimers" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\I/O System" /v "CountOperations" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
@@ -1862,11 +2116,11 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\Hy
 
 call :LogInfo "Disabling Hyper-V & VMP..."
 dism /online /Disable-Feature /FeatureName:VirtualMachinePlatform /NoRestart >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable VMP feature") else (call :LogErr "Disable VMP feature")
+if not errorlevel 1 (call :LogOK "Disable VMP feature") else (call :LogErr "Disable VMP feature")
 dism /online /Disable-Feature /FeatureName:Microsoft-Hyper-V-All /NoRestart >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable Hyper-V feature") else (call :LogErr "Disable Hyper-V feature")
+if not errorlevel 1 (call :LogOK "Disable Hyper-V feature") else (call :LogErr "Disable Hyper-V feature")
 bcdedit /set hypervisorlaunchtype off >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit hypervisor off") else (call :LogErr "bcdedit hypervisor off")
+if not errorlevel 1 (call :LogOK "bcdedit hypervisor off") else (call :LogErr "bcdedit hypervisor off")
 
 setlocal enabledelayedexpansion
 
@@ -2043,14 +2297,14 @@ call :LogSection "RAM Tweaks (16GB)"
 echo You selected 16 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "16777216" /f
 powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 echo Disabling Memory Compression
 powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
 powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
@@ -2067,15 +2321,15 @@ call :LogSection "RAM Tweaks (24GB)"
 echo You selected 24 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "25165824" /f
 powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
 powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
 powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ZeroPagedMemory" /t REG_DWORD /d 0 /f
@@ -2091,15 +2345,15 @@ call :LogSection "RAM Tweaks (32GB)"
 echo You selected 32 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "33554432" /f
 powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
 powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
 powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ZeroPagedMemory" /t REG_DWORD /d 0 /f
@@ -2115,15 +2369,15 @@ call :LogSection "RAM Tweaks (64GB)"
 echo You selected 64 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "67108864" /f
 powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
 powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
 powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
+if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ZeroPagedMemory" /t REG_DWORD /d 0 /f
@@ -2250,11 +2504,11 @@ call :TIScLog config wercplsupport start= disabled
 
 call :TIScLog config WinHttpAutoProxySvc start= disabled
 call :TIScLog config DsmSvc start= disabled
-call :TIScLog config ALG start= disabled
+call :TIScLog config ALG start= demand
 call :TIScLog config AppIDSvc start= demand
-call :TIScLog config CertPropSvc start= disabled
-call :TIScLog config EntAppSvc start= disabled
-call :TIScLog config LxpSvc start= disabled
+call :TIScLog config CertPropSvc start= demand
+call :TIScLog config EntAppSvc start= demand
+call :TIScLog config LxpSvc start= demand
 
 call :TIScLog config RasMan start= demand
 call :TIScLog config RemoteAccess start= demand
@@ -2295,8 +2549,8 @@ call :TIDisableServiceInstances "MessagingService"
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\CompatTelRunner.exe" /v "Debugger" /t REG_SZ /d "%windir%\System32\systray.exe" /f
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "Off" /f
-call :TIRegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "EnableWebContentEvaluation" /t REG_DWORD /d 0 /f
-call :TIRegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "DisableSearchBoxSuggestions" /t REG_DWORD /d 1 /f
+call :RegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "EnableWebContentEvaluation" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "DisableSearchBoxSuggestions" /t REG_DWORD /d 1 /f
 call :TIScLog stop "bthserv"
 call :TIScLog stop "Spooler"
 call :TIScLog stop "wisvc"
@@ -2357,13 +2611,13 @@ call :LogInfo "Removing Snipping Tool (using Lightshot instead)..."
 taskkill /f /im SnippingTool.exe >nul 2>&1
 taskkill /f /im ScreenSketch.exe >nul 2>&1
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ScreenSketch* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove ScreenSketch") else (call :LogErr "Remove ScreenSketch")
+if not errorlevel 1 (call :LogOK "Remove ScreenSketch") else (call :LogErr "Remove ScreenSketch")
 call :LogInfo "Deprovisioning ScreenSketch (blocks reinstall on updates/new users)..."
 powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.ScreenSketch' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Deprovision ScreenSketch") else (call :LogErr "Deprovision ScreenSketch")
+if not errorlevel 1 (call :LogOK "Deprovision ScreenSketch") else (call :LogErr "Deprovision ScreenSketch")
 call :LogInfo "Releasing Print Screen key for Lightshot..."
 call :RegLog add "HKCU\Control Panel\Keyboard" /v "PrintScreenKeyForSnippingEnabled" /t REG_DWORD /d 0 /f
-powershell -NoProfile -Command "Get-AppxPackage *MicrosoftWindows.Client.WebExperience* -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue" >nul 2>&1
+powershell -NoProfile -Command "Get-AppxPackage *MicrosoftWindows.Client.WebExperience* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
 powershell -NoProfile -Command "Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*MicrosoftWindows.Client.WebExperience*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Widgets" /v "AllowWidgets" /t REG_DWORD /d 0 /f
@@ -2379,6 +2633,7 @@ call :SchLog /DELETE /TN "ModifyLinkUpdate" /f
 call :SchLog /DELETE /TN "SoftMakerUpdater" /f
 call :SchLog /DELETE /TN "StartCN" /f
 call :SchLog /DELETE /TN "StartDVR" /f
+call :SchLog /Change /TN "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Application Experience\PcaPatchDbTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Application Experience\ProgramDataUpdater" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Application Experience\StartupAppTask" /Disable
@@ -2393,6 +2648,7 @@ call :SchLog /Change /TN "Microsoft\Windows\UpdateOrchestrator\Scan Independent 
 call :SchLog /Change /TN "Microsoft\Windows\AppID\SmartScreenSpecific" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticResolver" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\NetTrace\GatherNetworkInfo" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\Ras\MobilityManager" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\RetailDemo\CleanupOfflineContent" /Disable
 call :SchLog /Change /TN "\Microsoft\Windows\Wininet\CacheTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" /Disable
@@ -2438,6 +2694,7 @@ call :SchLog /Change /TN "Microsoft\Windows\PushToInstall\Registration" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Ras\MobilityManager" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\RecoveryEnvironment\VerifyWinRE" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\RemoteAssistance\RemoteAssistanceTask" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\RetailDemo\CleanupOfflineContent" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Servicing\StartComponentCleanup" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\SettingSync\NetworkStateChangeTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\Setup\SetupCleanupTask" /Disable
@@ -2465,9 +2722,11 @@ call :SchLog /Change /TN "Microsoft\Windows\Workplace Join\Automatic-Device-Join
 call :SchLog /Change /TN "Microsoft\Windows\WwanSvc\NotificationTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\WwanSvc\OobeDiscovery" /Disable
 call :SchLog /Change /TN "Microsoft\XblGameSave\XblGameSaveTask" /Disable
+call :SchLog /Change /TN "\Microsoft\Windows\Wininet\CacheTask" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\WindowsUpdate\Scheduled Start" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\WindowsUpdate\sih" /Disable
 call :SchLog /Change /TN "Microsoft\Windows\WindowsUpdate\sihboot" /Disable
+call :SchLog /Change /TN "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" /Disable
 call :SchLog /change /disable /tn "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" 
 call :SchLog /change /disable /tn "Microsoft\Windows\CloudExperienceHost\CreateObjectTask" 
 call :SchLog /change /disable /tn "Microsoft\Windows\Windows Error Reporting\Generic" 
@@ -2593,15 +2852,8 @@ for %%S in (
     call :TIScLog config "%%S" start= disabled
 )
 
-call :LogInfo "Disabling Spaced Intel Services"
-for %%S in (
-    "Intel(R) TPM Provisioning Service"
-    "Intel(R) Platform License Manager Service"
-    "Intel(R) Capability Licensing Service TCP IP Interface"
-    "Intel(R) SUR QC SAM"
-) do (
-    call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\%%~S" /v "Start" /t REG_DWORD /d "4" /f
-)
+REM [FINAL FIX] Display names are not SCM service-key names. Real Intel short names are handled above.
+call :LogSkip "Intel display-name service-key block skipped (real short names handled above)."
 
 call :LogInfo "Disabling Browser Background Updater Services..."
 for %%S in (
@@ -2634,7 +2886,7 @@ for %%S in (
 )
 
 call :TIScLog config "StorSvc" start= demand
-if %errorlevel% equ 0 (call :LogOK "StorSvc set to demand") else (call :LogErr "StorSvc config failed")
+if not errorlevel 1 (call :LogOK "StorSvc set to demand") else (call :LogErr "StorSvc config failed")
 
 call :TIScLog stop "AppReadiness"
 call :TIScLog config "AppReadiness" start= disabled
@@ -2642,49 +2894,50 @@ call :TIScLog config "AppReadiness" start= disabled
 call :TIScLog stop "LanmanServer"
 call :TIScLog config "LanmanServer" start= disabled
 
-call :LogInfo "Nuking GameBarPresenceWriter..."
+call :LogInfo "Handling GameBarPresenceWriter without deleting protected system binaries..."
 set "fileToDelete=%SystemRoot%\System32\GameBarPresenceWriter.exe"
 if exist "%fileToDelete%" (
-    call :TIRun takeown /F "%fileToDelete%" >nul 2>&1
-    call :TIRun icacls "%fileToDelete%" /grant administrators:F >nul 2>&1
-    call :TIRun cmd.exe /c del "%fileToDelete%" /f /q >nul 2>&1
-    if exist "%fileToDelete%" (call :LogWarn "Failed to delete GameBarPresenceWriter.exe") else (call :LogOK "GameBarPresenceWriter.exe deleted")
+    taskkill /f /im GameBarPresenceWriter.exe >nul 2>&1
+    call :LogSkip "GameBarPresenceWriter.exe kept in place (protected Windows component); process terminated if running"
 ) else (
     call :LogSkip "GameBarPresenceWriter.exe not found"
 )
 
-call :LogInfo "Nuking UsoClient and MoUsoCoreWorker..."
-set "usoClientFile=C:\Windows\System32\UsoClient.exe"
-set "usoCoreWorkerFile=C:\Windows\UUS\amd64\MoUsoCoreWorker.exe"
+call :LogInfo "Keeping UsoClient and MoUsoCoreWorker binaries intact; disabling Update Orchestrator at service level..."
+set "usoClientFile=%SystemRoot%\System32\UsoClient.exe"
+set "usoCoreWorkerFile=%SystemRoot%\UUS\amd64\MoUsoCoreWorker.exe"
 
 if exist "%usoClientFile%" (
-    call :TIRun takeown /F "%usoClientFile%" >nul 2>&1
-    call :TIRun icacls "%usoClientFile%" /grant administrators:F >nul 2>&1
-    call :TIRun cmd.exe /c del "%usoClientFile%" /f /q >nul 2>&1
-    if exist "%usoClientFile%" (call :LogWarn "Failed to delete UsoClient.exe") else (call :LogOK "UsoClient.exe deleted")
+    call :LogSkip "UsoClient.exe deletion skipped (Windows Update repair component kept intact)"
 ) else (
     call :LogSkip "UsoClient.exe not found"
 )
 
 if exist "%usoCoreWorkerFile%" (
-    call :TIRun takeown /F "%usoCoreWorkerFile%" >nul 2>&1
-    call :TIRun icacls "%usoCoreWorkerFile%" /grant administrators:F >nul 2>&1
-    call :TIRun cmd.exe /c del "%usoCoreWorkerFile%" /f /q >nul 2>&1
-    if exist "%usoCoreWorkerFile%" (call :LogWarn "Failed to delete MoUsoCoreWorker.exe") else (call :LogOK "MoUsoCoreWorker.exe deleted")
+    call :LogSkip "MoUsoCoreWorker.exe deletion skipped (preserved for SFC/DISM and servicing)"
 ) else (
     call :LogSkip "MoUsoCoreWorker.exe not found"
 )
 
 call :LogInfo "Nuking AutoLogger-Diagtrack..."
+call :TIScLog stop DiagTrack >nul 2>&1
 set "autoLoggerDir=%PROGRAMDATA%\Microsoft\Diagnosis\ETLLogs\AutoLogger"
 if exist "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" (
     call :TIRun cmd.exe /c del /q "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" >nul 2>&1
-    call :LogOK "AutoLogger ETL deleted"
+    if exist "%autoLoggerDir%\AutoLogger-Diagtrack-Listener.etl" (
+        call :LogWarn "AutoLogger ETL is still in use; delete skipped after shutdown attempt"
+    ) else (
+        call :LogOK "AutoLogger ETL deleted"
+    )
 ) else (
     call :LogSkip "AutoLogger ETL not found"
 )
-call :TIRun icacls "%autoLoggerDir%" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "AutoLogger SYSTEM permissions denied") else (call :LogErr "AutoLogger permission deny failed")
+if exist "%autoLoggerDir%" (
+    call :TIRun icacls "%autoLoggerDir%" /deny "SYSTEM:(OI)(CI)F" >nul 2>&1
+    if not errorlevel 1 (call :LogOK "AutoLogger SYSTEM permissions denied") else (call :LogWarn "AutoLogger SYSTEM permission deny failed")
+) else (
+    call :LogSkip "AutoLogger directory not present"
+)
 
 call :LogOK "Manufactor bloat and more services disabled!"
 
@@ -2694,136 +2947,136 @@ call :TIScLog start AppXSvc
 timeout /t 2 /nobreak >nul
 
 call :LogInfo "Removing Appx Packages..."
-powershell -NoProfile -Command "Get-AppxPackage -allusers *3DBuilder* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: 3DBuilder") else (call :LogErr "Remove Appx: 3DBuilder")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *bing* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: bing") else (call :LogErr "Remove Appx: bing")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *bingfinance* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: bingfinance") else (call :LogErr "Remove Appx: bingfinance")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *bingsports* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: bingsports") else (call :LogErr "Remove Appx: bingsports")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *BingWeather* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: BingWeather") else (call :LogErr "Remove Appx: BingWeather")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *CommsPhone* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: CommsPhone") else (call :LogErr "Remove Appx: CommsPhone")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *Drawboard PDF* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Drawboard PDF") else (call :LogErr "Remove Appx: Drawboard PDF")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *Facebook* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Facebook") else (call :LogErr "Remove Appx: Facebook")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *Getstarted* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Getstarted") else (call :LogErr "Remove Appx: Getstarted")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *Microsoft.Messaging* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.Messaging") else (call :LogErr "Remove Appx: Microsoft.Messaging")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *MicrosoftOfficeHub* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: MicrosoftOfficeHub") else (call :LogErr "Remove Appx: MicrosoftOfficeHub")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *people* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: people") else (call :LogErr "Remove Appx: people")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *SkypeApp* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: SkypeApp") else (call :LogErr "Remove Appx: SkypeApp")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *solit* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: solit") else (call :LogErr "Remove Appx: solit")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *Sway* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Sway") else (call :LogErr "Remove Appx: Sway")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *Twitter* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Twitter") else (call :LogErr "Remove Appx: Twitter")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsAlarms* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsAlarms") else (call :LogErr "Remove Appx: WindowsAlarms")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsPhone* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsPhone") else (call :LogErr "Remove Appx: WindowsPhone")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsMaps* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsMaps") else (call :LogErr "Remove Appx: WindowsMaps")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsFeedbackHub* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsFeedbackHub") else (call :LogErr "Remove Appx: WindowsFeedbackHub")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsSoundRecorder* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsSoundRecorder") else (call :LogErr "Remove Appx: WindowsSoundRecorder")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *windowscommunicationsapps* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: windowscommunicationsapps") else (call :LogErr "Remove Appx: windowscommunicationsapps")
-powershell -NoProfile -Command "Get-AppxPackage -allusers *zune* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: zune") else (call :LogErr "Remove Appx: zune")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *3DBuilder* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: 3DBuilder") else (call :LogErr "Remove Appx: 3DBuilder")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *bing* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: bing") else (call :LogErr "Remove Appx: bing")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *bingfinance* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: bingfinance") else (call :LogErr "Remove Appx: bingfinance")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *bingsports* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: bingsports") else (call :LogErr "Remove Appx: bingsports")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *BingWeather* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: BingWeather") else (call :LogErr "Remove Appx: BingWeather")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *CommsPhone* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: CommsPhone") else (call :LogErr "Remove Appx: CommsPhone")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Drawboard PDF* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: Drawboard PDF") else (call :LogErr "Remove Appx: Drawboard PDF")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Facebook* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: Facebook") else (call :LogErr "Remove Appx: Facebook")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Getstarted* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: Getstarted") else (call :LogErr "Remove Appx: Getstarted")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Microsoft.Messaging* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.Messaging") else (call :LogErr "Remove Appx: Microsoft.Messaging")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *MicrosoftOfficeHub* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: MicrosoftOfficeHub") else (call :LogErr "Remove Appx: MicrosoftOfficeHub")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *people* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: people") else (call :LogErr "Remove Appx: people")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *SkypeApp* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: SkypeApp") else (call :LogErr "Remove Appx: SkypeApp")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *solit* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: solit") else (call :LogErr "Remove Appx: solit")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Sway* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: Sway") else (call :LogErr "Remove Appx: Sway")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Twitter* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: Twitter") else (call :LogErr "Remove Appx: Twitter")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsAlarms* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: WindowsAlarms") else (call :LogErr "Remove Appx: WindowsAlarms")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsPhone* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: WindowsPhone") else (call :LogErr "Remove Appx: WindowsPhone")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsMaps* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: WindowsMaps") else (call :LogErr "Remove Appx: WindowsMaps")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsFeedbackHub* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: WindowsFeedbackHub") else (call :LogErr "Remove Appx: WindowsFeedbackHub")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *WindowsSoundRecorder* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: WindowsSoundRecorder") else (call :LogErr "Remove Appx: WindowsSoundRecorder")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *windowscommunicationsapps* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: windowscommunicationsapps") else (call :LogErr "Remove Appx: windowscommunicationsapps")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *zune* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove Appx: zune") else (call :LogErr "Remove Appx: zune")
 powershell -NoProfile -Command "Get-AppxPackage *skype* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: skype") else (call :LogErr "Remove Appx: skype")
+if not errorlevel 1 (call :LogOK "Remove Appx: skype") else (call :LogErr "Remove Appx: skype")
 powershell -NoProfile -Command "Get-AppxPackage *solitaire* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: solitaire") else (call :LogErr "Remove Appx: solitaire")
+if not errorlevel 1 (call :LogOK "Remove Appx: solitaire") else (call :LogErr "Remove Appx: solitaire")
 powershell -NoProfile -Command "Get-AppxPackage *officehub* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: officehub") else (call :LogErr "Remove Appx: officehub")
+if not errorlevel 1 (call :LogOK "Remove Appx: officehub") else (call :LogErr "Remove Appx: officehub")
 powershell -NoProfile -Command "Get-AppxPackage *candycrush* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: candycrush") else (call :LogErr "Remove Appx: candycrush")
+if not errorlevel 1 (call :LogOK "Remove Appx: candycrush") else (call :LogErr "Remove Appx: candycrush")
 powershell -NoProfile -Command "Get-AppxPackage *YourPhone* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: YourPhone") else (call :LogErr "Remove Appx: YourPhone")
+if not errorlevel 1 (call :LogOK "Remove Appx: YourPhone") else (call :LogErr "Remove Appx: YourPhone")
 powershell -NoProfile -Command "Get-AppxPackage *OneDrive* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: OneDrive") else (call :LogErr "Remove Appx: OneDrive")
+if not errorlevel 1 (call :LogOK "Remove Appx: OneDrive") else (call :LogErr "Remove Appx: OneDrive")
 powershell -NoProfile -Command "taskkill /f /im OneDrive.exe" >nul 2>&1
 %SystemRoot%\System32\OneDriveSetup.exe /uninstall >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Uninstall OneDriveSetup") else (call :LogErr "Uninstall OneDriveSetup")
+if not errorlevel 1 (call :LogOK "Uninstall OneDriveSetup") else (call :LogErr "Uninstall OneDriveSetup")
 powershell -NoProfile -Command "Get-AppxPackage *Cortana* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Cortana") else (call :LogErr "Remove Appx: Cortana")
+if not errorlevel 1 (call :LogOK "Remove Appx: Cortana") else (call :LogErr "Remove Appx: Cortana")
 powershell -NoProfile -Command "Get-AppxPackage *WindowsCamera* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: WindowsCamera") else (call :LogErr "Remove Appx: WindowsCamera")
+if not errorlevel 1 (call :LogOK "Remove Appx: WindowsCamera") else (call :LogErr "Remove Appx: WindowsCamera")
 powershell -NoProfile -Command "Get-AppxPackage *photos* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: photos") else (call :LogErr "Remove Appx: photos")
+if not errorlevel 1 (call :LogOK "Remove Appx: photos") else (call :LogErr "Remove Appx: photos")
 powershell -NoProfile -Command "Get-AppxPackage *ConnectivityStore* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: ConnectivityStore") else (call :LogErr "Remove Appx: ConnectivityStore")
+if not errorlevel 1 (call :LogOK "Remove Appx: ConnectivityStore") else (call :LogErr "Remove Appx: ConnectivityStore")
 powershell -NoProfile -Command "Get-AppxPackage *ContentDeliveryManager* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: ContentDeliveryManager") else (call :LogErr "Remove Appx: ContentDeliveryManager")
+if not errorlevel 1 (call :LogOK "Remove Appx: ContentDeliveryManager") else (call :LogErr "Remove Appx: ContentDeliveryManager")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.WindowsStore* -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.WindowsStore") else (call :LogErr "Remove Appx: Microsoft.WindowsStore")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.WindowsStore") else (call :LogErr "Remove Appx: Microsoft.WindowsStore")
 powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -match 'Microsoft.WindowsStore' }; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
 call :LogOK "Microsoft Store completely eradicated (Provisioned Package removed)!"
 powershell -NoProfile -Command "Get-AppxPackage Microsoft.OneDrive | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.OneDrive") else (call :LogErr "Remove Appx: Microsoft.OneDrive")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.OneDrive") else (call :LogErr "Remove Appx: Microsoft.OneDrive")
 powershell -NoProfile -Command "Get-AppxPackage Clipchamp | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Clipchamp") else (call :LogErr "Remove Appx: Clipchamp")
+if not errorlevel 1 (call :LogOK "Remove Appx: Clipchamp") else (call :LogErr "Remove Appx: Clipchamp")
 powershell -NoProfile -Command "Get-AppxPackage Microsoft.YourPhone | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.YourPhone") else (call :LogErr "Remove Appx: Microsoft.YourPhone")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.YourPhone") else (call :LogErr "Remove Appx: Microsoft.YourPhone")
 powershell -NoProfile -Command "Get-AppxPackage Microsoft.GamingApp | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.GamingApp") else (call :LogErr "Remove Appx: Microsoft.GamingApp")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.GamingApp") else (call :LogErr "Remove Appx: Microsoft.GamingApp")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.BingSearch* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.BingSearch") else (call :LogErr "Remove Appx: Microsoft.BingSearch")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.BingSearch") else (call :LogErr "Remove Appx: Microsoft.BingSearch")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.Office.OneNote* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.Office.OneNote") else (call :LogErr "Remove Appx: Microsoft.Office.OneNote")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.Office.OneNote") else (call :LogErr "Remove Appx: Microsoft.Office.OneNote")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.SkypeApp* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.SkypeApp") else (call :LogErr "Remove Appx: Microsoft.SkypeApp")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.SkypeApp") else (call :LogErr "Remove Appx: Microsoft.SkypeApp")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.ZuneVideo* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.ZuneVideo") else (call :LogErr "Remove Appx: Microsoft.ZuneVideo")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.ZuneVideo") else (call :LogErr "Remove Appx: Microsoft.ZuneVideo")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.WindowsFeedbackHub* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.WindowsFeedbackHub") else (call :LogErr "Remove Appx: Microsoft.WindowsFeedbackHub")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.WindowsFeedbackHub") else (call :LogErr "Remove Appx: Microsoft.WindowsFeedbackHub")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.XboxGamingOverlay* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.XboxGamingOverlay") else (call :LogErr "Remove Appx: Microsoft.XboxGamingOverlay")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.XboxGamingOverlay") else (call :LogErr "Remove Appx: Microsoft.XboxGamingOverlay")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.XboxGameOverlay* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Microsoft.XboxGameOverlay") else (call :LogErr "Remove Appx: Microsoft.XboxGameOverlay")
+if not errorlevel 1 (call :LogOK "Remove Appx: Microsoft.XboxGameOverlay") else (call :LogErr "Remove Appx: Microsoft.XboxGameOverlay")
 powershell -NoProfile -Command "Get-AppxPackage *GamingServices* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: GamingServices") else (call :LogErr "Remove Appx: GamingServices")
+if not errorlevel 1 (call :LogOK "Remove Appx: GamingServices") else (call :LogErr "Remove Appx: GamingServices")
 powershell -NoProfile -Command "$p = Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like '*549981C3F5F10*'; if ($p) { $p | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue } }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: 549981C3F5F10") else (call :LogErr "Remove AppxProv: 549981C3F5F10")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DevHome* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DevHome*' -or $_.PackageName -like '*DevHome*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: DevHome") else (call :LogErr "Remove AppxProv: DevHome")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *OutlookForWindows* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*OutlookForWindows*' -or $_.PackageName -like '*OutlookForWindows*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: OutlookForWindows") else (call :LogErr "Remove AppxProv: OutlookForWindows")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *PowerAutomateDesktop* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*PowerAutomateDesktop*' -or $_.PackageName -like '*PowerAutomateDesktop*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: PowerAutomateDesktop") else (call :LogErr "Remove AppxProv: PowerAutomateDesktop")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Todos* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*Todos*' -or $_.PackageName -like '*Todos*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Todos") else (call :LogErr "Remove AppxProv: Todos")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *Whiteboard* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*Whiteboard*' -or $_.PackageName -like '*Whiteboard*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Whiteboard") else (call :LogErr "Remove AppxProv: Whiteboard")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *MixedReality.Portal* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*MixedReality.Portal*' -or $_.PackageName -like '*MixedReality.Portal*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: MixedReality.Portal") else (call :LogErr "Remove AppxProv: MixedReality.Portal")
-powershell -NoProfile -Command "Get-AppxPackage -AllUsers *DisneyMagicKingdoms* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DisneyMagicKingdoms*' -or $_.PackageName -like '*DisneyMagicKingdoms*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: DisneyMagicKingdoms") else (call :LogErr "Remove AppxProv: DisneyMagicKingdoms")
+if not errorlevel 1 (call :LogOK "Remove AppxProv: 549981C3F5F10") else (call :LogErr "Remove AppxProv: 549981C3F5F10")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *DevHome* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DevHome*' -or $_.PackageName -like '*DevHome*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: DevHome") else (call :LogErr "Remove AppxProv: DevHome")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *OutlookForWindows* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*OutlookForWindows*' -or $_.PackageName -like '*OutlookForWindows*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: OutlookForWindows") else (call :LogErr "Remove AppxProv: OutlookForWindows")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *PowerAutomateDesktop* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*PowerAutomateDesktop*' -or $_.PackageName -like '*PowerAutomateDesktop*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: PowerAutomateDesktop") else (call :LogErr "Remove AppxProv: PowerAutomateDesktop")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Todos* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*Todos*' -or $_.PackageName -like '*Todos*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: Todos") else (call :LogErr "Remove AppxProv: Todos")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *Whiteboard* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*Whiteboard*' -or $_.PackageName -like '*Whiteboard*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: Whiteboard") else (call :LogErr "Remove AppxProv: Whiteboard")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *MixedReality.Portal* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*MixedReality.Portal*' -or $_.PackageName -like '*MixedReality.Portal*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: MixedReality.Portal") else (call :LogErr "Remove AppxProv: MixedReality.Portal")
+powershell -NoProfile -Command "Get-AppxPackage -allusers *DisneyMagicKingdoms* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like '*DisneyMagicKingdoms*' -or $_.PackageName -like '*DisneyMagicKingdoms*' } | ForEach-Object { Remove-AppxProvisionedPackage -Online -AllUsers -PackageName $_.PackageName -ErrorAction SilentlyContinue }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Remove AppxProv: DisneyMagicKingdoms") else (call :LogErr "Remove AppxProv: DisneyMagicKingdoms")
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$pkgs = Get-AppxPackage -AllUsers | Where-Object { $_.Name -like '*WebExperience*' -or $_.PackageFullName -like '*WebExperience*' }; if ($pkgs) { $pkgs | ForEach-Object { Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction SilentlyContinue }; exit 0 } else { exit 1 }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove AppxProv: Windows Web Experience Pack removal.") else (call :LogSkip "Windows Web Experience Pack not present or already removed.")
+if not errorlevel 1 (call :LogOK "Remove AppxProv: Windows Web Experience Pack removal.") else (call :LogSkip "Windows Web Experience Pack not present or already removed.")
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Dsh" /v "AllowNewsAndInterests" /t REG_DWORD /d 0 /f
-if %errorlevel% equ 0 (call :LogOK "Winget uninstall: Web Exp Pack") else (call :LogErr "Winget uninstall: Web Exp Pack")
+if not errorlevel 1 (call :LogOK "Winget uninstall: Web Exp Pack") else (call :LogErr "Winget uninstall: Web Exp Pack")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.GetHelp* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: GetHelp") else (call :LogErr "Remove Appx: GetHelp")
+if not errorlevel 1 (call :LogOK "Remove Appx: GetHelp") else (call :LogErr "Remove Appx: GetHelp")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.Todos* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Todos") else (call :LogErr "Remove Appx: Todos")
+if not errorlevel 1 (call :LogOK "Remove Appx: Todos") else (call :LogErr "Remove Appx: Todos")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.BingNews* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: BingNews") else (call :LogErr "Remove Appx: BingNews")
+if not errorlevel 1 (call :LogOK "Remove Appx: BingNews") else (call :LogErr "Remove Appx: BingNews")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.Microsoft3DViewer* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: 3DViewer") else (call :LogErr "Remove Appx: 3DViewer")
+if not errorlevel 1 (call :LogOK "Remove Appx: 3DViewer") else (call :LogErr "Remove Appx: 3DViewer")
 powershell -NoProfile -Command "Get-AppxPackage *Microsoft.Windows.Cortana* | Remove-AppxPackage" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Remove Appx: Cortana") else (call :LogErr "Remove Appx: Cortana")
+if not errorlevel 1 (call :LogOK "Remove Appx: Cortana") else (call :LogErr "Remove Appx: Cortana")
 
 call :LogInfo "Disabling Windows AI & Copilot"
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "ShowCopilotButton" /t REG_DWORD /d 0 /f
@@ -2835,7 +3088,7 @@ call :LogOK "AI Features Disabled!"
 call :LogInfo "Cleaning Temporary Files (Flawless Execution)..."
 
 for /d %%D in ("%temp%\*") do (
-    if /i not "%%~nxD"=="BARDHZZY_Logs" (
+    if /i not "%%~nxD"=="bardhzzY_Logs" (
         rd /s /q "%%D" >nul 2>&1
     )
 )
@@ -2950,7 +3203,7 @@ del /s /f /q "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Store\*" >
 call :LogInfo "Running DISM Component Cleanup..."
 :: FIX: Removed /resetbase to prevent crashing, added /NoRestart
 dism /online /cleanup-image /startcomponentcleanup /NoRestart >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "DISM Component Cleanup") else (call :LogWarn "DISM Component Cleanup (Skipped or failed)")
+if not errorlevel 1 (call :LogOK "DISM Component Cleanup") else (call :LogWarn "DISM Component Cleanup (Skipped or failed)")
 
 call :LogInfo "Clearing Ghost Devices and USB cache."
 Setlocal EnableExtensions EnableDelayedExpansion
@@ -2991,6 +3244,7 @@ pause
 goto main
 
 :netw
+setlocal EnableExtensions EnableDelayedExpansion
 call :LogSection "Network Tweaks"
 echo.
 
@@ -3075,8 +3329,10 @@ endlocal
 
 call :LogInfo "Applying Advanced Network Tweaks..."
 for /f "skip=2 delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"') do (
-    call :RegLog add "%%i" /v "TcpAckFrequency" /t REG_DWORD /d 1 /f
-    call :RegLog add "%%i" /v "TCPNoDelay" /t REG_DWORD /d 1 /f
+    set "RL_DYN_KEY=%%i"
+    call :DynRegLog /v "TcpAckFrequency" /t REG_DWORD /d 1 /f
+    set "RL_DYN_KEY=%%i"
+    call :DynRegLog /v "TCPNoDelay" /t REG_DWORD /d 1 /f
 )
 
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "NetworkThrottlingIndex" /t REG_DWORD /d 0xffffffff /f
@@ -3085,26 +3341,26 @@ call :LogInfo "Disabling Network Diagnostic Usage (NDU)..."
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Ndu" /v "Start" /t REG_DWORD /d 4 /f
 
 netsh advfirewall firewall set rule group="Network Discovery" new enable=no >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh advfirewall Network Discovery") else (call :LogErr "netsh advfirewall Network Discovery")
+if not errorlevel 1 (call :LogOK "netsh advfirewall Network Discovery") else (call :LogErr "netsh advfirewall Network Discovery")
 netsh int tcp set supplemental Template=Compat CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh cubic Compat") else (call :LogErr "netsh cubic Compat")
+if not errorlevel 1 (call :LogOK "netsh cubic Compat") else (call :LogErr "netsh cubic Compat")
 netsh int tcp set supplemental Template=Internet CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh cubic Internet") else (call :LogErr "netsh cubic Internet")
+if not errorlevel 1 (call :LogOK "netsh cubic Internet") else (call :LogErr "netsh cubic Internet")
 netsh int tcp set supplemental Template=Datacenter CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh cubic Datacenter") else (call :LogErr "netsh cubic Datacenter")
+if not errorlevel 1 (call :LogOK "netsh cubic Datacenter") else (call :LogErr "netsh cubic Datacenter")
 netsh int tcp set supplemental Template=InternetCustom CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh cubic InternetCustom") else (call :LogErr "netsh cubic InternetCustom")
+if not errorlevel 1 (call :LogOK "netsh cubic InternetCustom") else (call :LogErr "netsh cubic InternetCustom")
 netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=cubic >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh cubic DatacenterCustom") else (call :LogErr "netsh cubic DatacenterCustom")
+if not errorlevel 1 (call :LogOK "netsh cubic DatacenterCustom") else (call :LogErr "netsh cubic DatacenterCustom")
 netsh int tcp set global ecncapability=disabled >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh ecncapability=disabled") else (call :LogErr "netsh ecncapability=disabled")
+if not errorlevel 1 (call :LogOK "netsh ecncapability=disabled") else (call :LogErr "netsh ecncapability=disabled")
 netsh int tcp set global autotuninglevel=normal >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh autotuninglevel=normal") else (call :LogErr "netsh autotuninglevel=normal")
+if not errorlevel 1 (call :LogOK "netsh autotuninglevel=normal") else (call :LogErr "netsh autotuninglevel=normal")
 netsh interface ip delete arpcache >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh delete arpcache") else (call :LogErr "netsh delete arpcache")
+if not errorlevel 1 (call :LogOK "netsh delete arpcache") else (call :LogErr "netsh delete arpcache")
 call :LogInfo "Enabling TCP Fast Open..."
 netsh int tcp set global fastopen=1 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh fastopen=1") else (call :LogErr "netsh fastopen=1")
+if not errorlevel 1 (call :LogOK "netsh fastopen=1") else (call :LogErr "netsh fastopen=1")
 
 call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer" /v EnableOplocks /t REG_DWORD /d 0 /f
 call :RegLog add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer" /v OplocksDisabled /t REG_DWORD /d 1 /f
@@ -3126,213 +3382,61 @@ call :TIScLog stop SSDPSRV
 call :TIScLog config VacSvc start= disabled
 call :TIScLog stop VacSvc
 netsh int tcp set global Chimney=disabled >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh Chimney=disabled") else (call :LogErr "netsh Chimney=disabled")
+if not errorlevel 1 (call :LogOK "netsh Chimney=disabled") else (call :LogErr "netsh Chimney=disabled")
 netsh int tcp set global rsc=disabled >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh rsc=disabled") else (call :LogErr "netsh rsc=disabled")
+if not errorlevel 1 (call :LogOK "netsh rsc=disabled") else (call :LogErr "netsh rsc=disabled")
 powershell -NoProfile -Command "Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object { $_.IPEnabled -eq $true } | ForEach-Object { $_.SetTCPIPNetBIOS(2) }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable NetBIOS over TCP/IP") else (call :LogErr "Disable NetBIOS over TCP/IP")
+if not errorlevel 1 (call :LogOK "Disable NetBIOS over TCP/IP") else (call :LogErr "Disable NetBIOS over TCP/IP")
 powershell -NoProfile -Command "Get-NetAdapter | Enable-NetAdapterRss -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Enable-NetAdapterRss") else (call :LogErr "Enable-NetAdapterRss")
+if not errorlevel 1 (call :LogOK "Enable-NetAdapterRss") else (call :LogErr "Enable-NetAdapterRss")
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "NumTcbTablePartitions" /t REG_DWORD /d 16 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxUserPort" /t REG_DWORD /d 65534 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpTimedWaitDelay" /t REG_DWORD /d 30 /f
-powershell -NoProfile -Command "Get-NetAdapter | Disable-NetAdapterPowerManagement -ErrorAction SilentlyContinue" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable-NetAdapterPowerManagement") else (call :LogErr "Disable-NetAdapterPowerManagement")
-powershell -NoProfile -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Energy*'} | Set-NetAdapterAdvancedProperty -RegistryValue '0' -NoRestart" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable NetAdapter Energy") else (call :LogErr "Disable NetAdapter Energy")
-powershell -NoProfile -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Green*'} | Set-NetAdapterAdvancedProperty -RegistryValue '0' -NoRestart" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable NetAdapter Green") else (call :LogErr "Disable NetAdapter Green")
-powershell -NoProfile -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Power*'} | Set-NetAdapterAdvancedProperty -RegistryValue '0' -NoRestart" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Disable NetAdapter Power") else (call :LogErr "Disable NetAdapter Power")
+REM [FINAL FIX - NIC] Fragile global/wildcard adapter setters removed. The per-NIC block below
+REM applies the same requested properties with -AllProperties, valid-value checks and -NoRestart.
 
-setlocal DisableDelayedExpansion
+ipconfig /flushdns >nul 2>&1
+if not errorlevel 1 (call :LogOK "ipconfig /flushdns") else (call :LogErr "ipconfig /flushdns")
 
-call :LogInfo "Applying supported per-NIC low-latency network tuning..."
-
-where powershell.exe >nul 2>&1
+:: Per-NIC Adapter Tuning
+:: Each property is discovered on the adapter first. Unsupported/vendor-specific
+:: properties are skipped instead of throwing, so one bad property cannot abort the batch.
+call :LogInfo "Applying Per-NIC Adapter Tuning (supported properties only)..."
+set "NIC_PS=%TEMP%\bardhzz_nic_tune.ps1"
+set "NIC_LOG=%TEMP%\bardhzz_nic.log"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$b64='JEVycm9yQWN0aW9uUHJlZmVyZW5jZSA9ICdTdG9wJwokdGFyZ2V0cyA9IEAoCiAgQHsgUGF0dGVybiA9ICdSZWNlaXZlIEJ1ZmZlcnMnOyBWYWx1ZSA9ICcyMDQ4JyB9LAogIEB7IFBhdHRlcm4gPSAnVHJhbnNtaXQgQnVmZmVycyc7IFZhbHVlID0gJzEwMjQnIH0sCiAgQHsgUGF0dGVybiA9ICdFbmVyZ3kgRWZmaWNpZW50IEV0aGVybmV0JzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ0ludGVycnVwdCBNb2RlcmF0aW9uJzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ0ludGVycnVwdCBNb2RlcmF0aW9uIFJhdGUnOyBWYWx1ZSA9ICcwJyB9LAogIEB7IFBhdHRlcm4gPSAnV2FrZSBvbiBNYWdpYyBQYWNrZXQnOyBWYWx1ZSA9ICcwJyB9LAogIEB7IFBhdHRlcm4gPSAnV2FrZSBvbiBQYXR0ZXJuIE1hdGNoJzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ0Zsb3cgQ29udHJvbCc7IFZhbHVlID0gJzAnIH0sCiAgQHsgUGF0dGVybiA9ICdQcmlvcml0eSAmIFZMQU4nOyBWYWx1ZSA9ICcwJyB9LAogIEB7IFBhdHRlcm4gPSAnTG9nIExpbmsgU3RhdGUgRXZlbnQnOyBWYWx1ZSA9ICcxNicgfSwKICBAeyBQYXR0ZXJuID0gJ1Bvd2VyIFNhdmluZyBNb2RlJzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ1NlbGVjdGl2ZSBTdXNwZW5kJzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ0dyZWVuIEV0aGVybmV0JzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ0dpZ2FMaXRlJzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ1VMUCBNb2RlJzsgVmFsdWUgPSAnMCcgfSwKICBAeyBQYXR0ZXJuID0gJ0F1dG8gUG93ZXIgU2F2ZSBNb2RlJzsgVmFsdWUgPSAnMCcgfQopCiRhZGFwdGVycyA9IEAoR2V0LU5ldEFkYXB0ZXIgLUVycm9yQWN0aW9uIFN0b3AgfCBXaGVyZS1PYmplY3QgeyAkXy5TdGF0dXMgLWVxICdVcCcgLW9yICRfLk1lZGlhQ29ubmVjdGlvblN0YXRlIC1lcSAnQ29ubmVjdGVkJyB9KQpmb3JlYWNoKCRhIGluICRhZGFwdGVycyl7IHRyeSB7IERpc2FibGUtTmV0QWRhcHRlclBvd2VyTWFuYWdlbWVudCAtTmFtZSAkYS5OYW1lIC1Ob1Jlc3RhcnQgLUVycm9yQWN0aW9uIFN0b3AgfCBPdXQtTnVsbDsgJ09LfCcgKyAkYS5OYW1lICsgJ3xBZGFwdGVyIFBvd2VyIE1hbmFnZW1lbnR8RGlzYWJsZWQnIH0gY2F0Y2ggeyAnU0tJUHwnICsgJGEuTmFtZSArICd8QWRhcHRlciBQb3dlciBNYW5hZ2VtZW50fFVuc3VwcG9ydGVkIG9yIHVuYXZhaWxhYmxlJyB9IH0KaWYoJGFkYXB0ZXJzLkNvdW50IC1lcSAwKXsgJ1dBUk58Tk9ORXxObyBjb25uZWN0ZWQgYWRhcHRlcnMgZm91bmQnOyBleGl0IDAgfQpmb3JlYWNoKCRhIGluICRhZGFwdGVycyl7CiAgdHJ5IHsgJHByb3BzID0gQChHZXQtTmV0QWRhcHRlckFkdmFuY2VkUHJvcGVydHkgLU5hbWUgJGEuTmFtZSAtQWxsUHJvcGVydGllcyAtRXJyb3JBY3Rpb24gU3RvcCkgfSBjYXRjaCB7ICdXQVJOfCcgKyAkYS5OYW1lICsgJ3xDYW5ub3QgZW51bWVyYXRlIGFkdmFuY2VkIHByb3BlcnRpZXMnOyBjb250aW51ZSB9CiAgZm9yZWFjaCgkdGFyZ2V0IGluICR0YXJnZXRzKXsKICAgICRwID0gJHByb3BzIHwgV2hlcmUtT2JqZWN0IHsgJF8uRGlzcGxheU5hbWUgLWFuZCAkXy5EaXNwbGF5TmFtZSAtbGlrZSAoJyonICsgJHRhcmdldC5QYXR0ZXJuICsgJyonKSB9IHwgU2VsZWN0LU9iamVjdCAtRmlyc3QgMQogICAgaWYoLW5vdCAkcCl7ICdTS0lQfCcgKyAkYS5OYW1lICsgJ3wnICsgJHRhcmdldC5QYXR0ZXJuICsgJ3xOb3QgZXhwb3NlZCBieSBkcml2ZXInOyBjb250aW51ZSB9CiAgICAkcmVxdWVzdGVkID0gW3N0cmluZ10kdGFyZ2V0LlZhbHVlCiAgICAkdmFsaWQgPSBAKCRwLlZhbGlkUmVnaXN0cnlWYWx1ZXMgfCBGb3JFYWNoLU9iamVjdCB7IFtzdHJpbmddJF8gfSkKICAgIGlmICgkdmFsaWQuQ291bnQgLWd0IDAgLWFuZCAtbm90ICgkdmFsaWQgLWNvbnRhaW5zICRyZXF1ZXN0ZWQpKSB7ICdTS0lQfCcgKyAkYS5OYW1lICsgJ3wnICsgJHAuRGlzcGxheU5hbWUgKyAnfFVuc3VwcG9ydGVkIHJlZ2lzdHJ5IHZhbHVlICcgKyAkcmVxdWVzdGVkOyBjb250aW51ZSB9CiAgICB0cnkgeyBTZXQtTmV0QWRhcHRlckFkdmFuY2VkUHJvcGVydHkgLUlucHV0T2JqZWN0ICRwIC1SZWdpc3RyeVZhbHVlICRyZXF1ZXN0ZWQgLU5vUmVzdGFydCAtRXJyb3JBY3Rpb24gU3RvcCB8IE91dC1OdWxsOyAnT0t8JyArICRhLk5hbWUgKyAnfCcgKyAkcC5EaXNwbGF5TmFtZSB9CiAgICBjYXRjaCB7ICdTS0lQfCcgKyAkYS5OYW1lICsgJ3wnICsgJHAuRGlzcGxheU5hbWUgKyAnfFJlamVjdGVkIHZhbHVlIG9yIGRyaXZlciBsaW1pdGF0aW9uJyB9CiAgfQp9Cg=='; [IO.File]::WriteAllText("%NIC_PS%", [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b64)))" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -File "%NIC_PS%" > "%NIC_LOG%" 2>nul
 if errorlevel 1 (
-    call :LogErr "PowerShell was not found. NIC tuning skipped."
-    endlocal
-    goto :eof
-)
-
-set "NIC_LOG=%TEMP%\amd_nic_tuning_%RANDOM%_%RANDOM%_%RANDOM%.log"
-
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
-"$ErrorActionPreference = 'Stop'; ^
-$results = New-Object System.Collections.Generic.List[string]; ^
-try { ^
-    $adapters = @(Get-NetAdapter -Physical -ErrorAction Stop | Where-Object { $_.Status -eq 'Up' }); ^
-} catch { ^
-    $msg = ($_.Exception.Message -replace '[\r\n|]', ' '); ^
-    $results.Add(('ERR|System|Unable to enumerate physical adapters: {0}' -f $msg)); ^
-    $adapters = @(); ^
-} ^
-if ($adapters.Count -eq 0) { ^
-    $results.Add('WARN|System|No connected physical network adapters found'); ^
-} else { ^
-    foreach ($adapter in $adapters) { ^
-        $name = [string]$adapter.Name; ^
-        try { ^
-            $props = @(Get-NetAdapterAdvancedProperty -Name $name -AllProperties -ErrorAction Stop); ^
-            if ($props.Count -eq 0) { ^
-                $results.Add(('WARN|{0}|No advanced properties exposed by driver' -f $name)); ^
-                continue; ^
-            } ^
-            function Find-Property { ^
-                param([object[]]$Properties, [string[]]$Names); ^
-                foreach ($wanted in $Names) { ^
-                    $match = $Properties | Where-Object { ^
-                        $_.DisplayName -and ($_.DisplayName.Trim() -ieq $wanted) ^
-                    } | Select-Object -First 1; ^
-                    if ($null -ne $match) { ^
-                        return $match; ^
-                    } ^
-                } ^
-                return $null; ^
-            } ^
-            function Get-RegistryValues { ^
-                param([object]$Property); ^
-                $values = New-Object System.Collections.Generic.List[string]; ^
-                foreach ($raw in @($Property.ValidRegistryValues)) { ^
-                    if ($null -ne $raw) { ^
-                        $value = ([string]$raw).Trim(); ^
-                        if ($value -ne '' -and $values -notcontains $value) { ^
-                            $values.Add($value); ^
-                        } ^
-                    } ^
-                } ^
-                return @($values); ^
-            } ^
-            function Set-SupportedValue { ^
-                param( ^
-                    [string]$AdapterName, ^
-                    [object]$Property, ^
-                    [string]$Value, ^
-                    [string]$Label ^
-                ); ^
-                if ($null -eq $Property) { ^
-                    return; ^
-                } ^
-                $valid = @(Get-RegistryValues $Property); ^
-                if ($valid.Count -eq 0) { ^
-                    $results.Add(('SKIP|{0}|{1}|Driver did not advertise registry values' -f $AdapterName,$Label)); ^
-                    return; ^
-                } ^
-                if ($valid -notcontains $Value) { ^
-                    $results.Add(('SKIP|{0}|{1}|Unsupported value {2}' -f $AdapterName,$Label,$Value)); ^
-                    return; ^
-                } ^
-                $current = @($Property.RegistryValue) -join ','; ^
-                if ($current -eq $Value) { ^
-                    $results.Add(('OK|{0}|{1}|Already {2}' -f $AdapterName,$Label,$Value)); ^
-                    return; ^
-                } ^
-                try { ^
-                    Set-NetAdapterAdvancedProperty -Name $AdapterName -DisplayName $Property.DisplayName -RegistryValue $Value -NoRestart -ErrorAction Stop; ^
-                    $verify = Get-NetAdapterAdvancedProperty -Name $AdapterName -DisplayName $Property.DisplayName -AllProperties -ErrorAction Stop; ^
-                    $after = @($verify.RegistryValue) -join ','; ^
-                    if ($after -eq $Value) { ^
-                        $results.Add(('OK|{0}|{1}|Set to {2}' -f $AdapterName,$Label,$Value)); ^
-                    } else { ^
-                        $results.Add(('WARN|{0}|{1}|Verification returned {2}' -f $AdapterName,$Label,$after)); ^
-                    } ^
-                } catch { ^
-                    $msg = ($_.Exception.Message -replace '[\r\n|]', ' '); ^
-                    $results.Add(('ERR|{0}|{1}|{2}' -f $AdapterName,$Label,$msg)); ^
-                } ^
-            } ^
-            function Set-NumericTarget { ^
-                param( ^
-                    [string]$AdapterName, ^
-                    [object]$Property, ^
-                    [int]$Target, ^
-                    [string]$Label ^
-                ); ^
-                if ($null -eq $Property) { ^
-                    return; ^
-                } ^
-                $valid = @(Get-RegistryValues $Property); ^
-                $numbers = New-Object System.Collections.Generic.List[int]; ^
-                foreach ($raw in $valid) { ^
-                    $number = 0; ^
-                    if ([int]::TryParse($raw, [ref]$number)) { ^
-                        $numbers.Add($number); ^
-                    } ^
-                } ^
-                $usable = @($numbers | Where-Object { $_ -le $Target } | Sort-Object -Descending -Unique); ^
-                if ($usable.Count -eq 0) { ^
-                    $results.Add(('SKIP|{0}|{1}|No supported numeric value at or below {2}' -f $AdapterName,$Label,$Target)); ^
-                    return; ^
-                } ^
-                $chosen = [string]$usable[0]; ^
-                Set-SupportedValue -AdapterName $AdapterName -Property $Property -Value $chosen -Label $Label; ^
-            } ^
-            $p = Find-Property $props @('Receive Buffers'); ^
-            Set-NumericTarget $name $p 2048 'Receive Buffers'; ^
-            $p = Find-Property $props @('Transmit Buffers','Tx Buffers'); ^
-            Set-NumericTarget $name $p 1024 'Transmit Buffers'; ^
-            $p = Find-Property $props @('Interrupt Moderation'); ^
-            Set-SupportedValue $name $p '0' 'Interrupt Moderation'; ^
-            $p = Find-Property $props @('Interrupt Moderation Rate'); ^
-            Set-SupportedValue $name $p '0' 'Interrupt Moderation Rate'; ^
-            $p = Find-Property $props @('Energy Efficient Ethernet','Energy-Efficient Ethernet','EnergyEfficientEthernet'); ^
-            Set-SupportedValue $name $p '0' 'Energy Efficient Ethernet'; ^
-            $p = Find-Property $props @('Selective Suspend'); ^
-            Set-SupportedValue $name $p '0' 'Selective Suspend'; ^
-            $p = Find-Property $props @('Power Saving Mode','Power Saving'); ^
-            Set-SupportedValue $name $p '0' 'Power Saving'; ^
-            $p = Find-Property $props @('Green Ethernet','GreenEthernet'); ^
-            Set-SupportedValue $name $p '0' 'Green Ethernet'; ^
-            $p = Find-Property $props @('GigaLite'); ^
-            Set-SupportedValue $name $p '0' 'GigaLite'; ^
-            $p = Find-Property $props @('ULP Mode'); ^
-            Set-SupportedValue $name $p '0' 'ULP Mode'; ^
-            $p = Find-Property $props @('Auto Power Save Mode'); ^
-            Set-SupportedValue $name $p '0' 'Auto Power Save Mode'; ^
-        } catch { ^
-            $msg = ($_.Exception.Message -replace '[\r\n|]', ' '); ^
-            $results.Add(('ERR|{0}|Adapter processing failed: {1}' -f $name,$msg)); ^
-        } ^
-    } ^
-} ^
-$results | ForEach-Object { $_ }" > "%NIC_LOG%" 2>nul
-
-set "NIC_PROCESSED=0"
-
-if exist "%NIC_LOG%" (
+    call :LogErr "Per-NIC tuning PowerShell failed to start or enumerate adapters."
+) else (
+    set "NIC_OK=0"
+    set "NIC_SKIP=0"
     for /f "tokens=1-4 delims=|" %%A in ('type "%NIC_LOG%" 2^>nul') do (
-        set "NIC_PROCESSED=1"
-
-        if "%%A"=="OK" (
-            call :LogOK "NIC %%B - %%C %%D"
-        )
-
-        if "%%A"=="SKIP" (
-            call :LogWarn "NIC %%B - %%C %%D"
-        )
-
-        if "%%A"=="WARN" (
-            call :LogWarn "NIC %%B - %%C %%D"
-        )
-
-        if "%%A"=="ERR" (
-            call :LogErr "NIC %%B - %%C %%D"
-        )
+        if /I "%%A"=="OK" (set /a NIC_OK+=1 >nul & set "LOG_MSG=Per-NIC applied: %%B - %%C" & call :LogOK)
+        if /I "%%A"=="SKIP" (set /a NIC_SKIP+=1 >nul & set "LOG_MSG=Per-NIC skipped: %%B - %%C %%D" & call :LogSkip)
+        if /I "%%A"=="WARN" (set "LOG_MSG=Per-NIC warning: %%B %%C" & call :LogWarn)
     )
+    set "LOG_MSG=Per-NIC summary: !NIC_OK! applied, !NIC_SKIP! skipped."
+    call :LogInfo
 )
+del /q "%NIC_PS%" "%NIC_LOG%" >nul 2>&1
 
-if "%NIC_PROCESSED%"=="0" (
-    call :LogWarn "NIC tuning: no results were returned."
-)
+:: Full Network Cleanup
+call :LogInfo "Performing non-disruptive Network Cleanup..."
+:: Do not force DHCP /release + /renew here. In VMs and some enterprise NICs it can
+:: temporarily remove the only interface and make the batch look frozen.
+call :LogSkip "ipconfig /release + /renew skipped (non-disruptive mode)."
+arp -d * >nul 2>&1
+if not errorlevel 1 (call :LogOK "arp -d *") else (call :LogWarn "arp -d *")
+nbtstat -R >nul 2>&1
+if not errorlevel 1 (call :LogOK "nbtstat -R") else (call :LogWarn "nbtstat -R")
+nbtstat -RR >nul 2>&1
+if not errorlevel 1 (call :LogOK "nbtstat -RR") else (call :LogWarn "nbtstat -RR")
+ipconfig /registerdns >nul 2>&1
+if not errorlevel 1 (call :LogOK "ipconfig /registerdns") else (call :LogWarn "ipconfig /registerdns")
 
-del /q "%NIC_LOG%" >nul 2>&1
-
-call :LogInfo "NIC tuning complete. Reboot Windows if you want to ensure all driver settings are reloaded."
-
+call :LogOK "Advanced Network Tweaks Applied!"
 endlocal
-
-call :LogOK "Network Tweaks Applied!"
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -3345,11 +3449,11 @@ call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "NtfsDisa
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "NtfsDisableLastAccessUpdate" /t REG_DWORD /d 1 /f
 
 fsutil behavior set memoryusage 2 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil memoryusage 2") else (call :LogErr "fsutil memoryusage 2")
+if not errorlevel 1 (call :LogOK "fsutil memoryusage 2") else (call :LogErr "fsutil memoryusage 2")
 fsutil behavior set Disabledeletenotify 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil Disabledeletenotify 0") else (call :LogErr "fsutil Disabledeletenotify 0")
+if not errorlevel 1 (call :LogOK "fsutil Disabledeletenotify 0") else (call :LogErr "fsutil Disabledeletenotify 0")
 fsutil behavior set encryptpagingfile 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil encryptpagingfile 0") else (call :LogErr "fsutil encryptpagingfile 0")
+if not errorlevel 1 (call :LogOK "fsutil encryptpagingfile 0") else (call :LogErr "fsutil encryptpagingfile 0")
 
 :: ------------------------------------------------------------
 :: Storage MSI / MSI-X
@@ -3406,16 +3510,17 @@ call :LogInfo "Disabling Sleep Study"
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "SleepStudyDisabled" /t REG_DWORD /d "1" /f
 
 fsutil behavior set disablelastaccess 1 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil disablelastaccess 1") else (call :LogErr "fsutil disablelastaccess 1")
+if not errorlevel 1 (call :LogOK "fsutil disablelastaccess 1") else (call :LogErr "fsutil disablelastaccess 1")
 fsutil behavior set mftzone 1 > nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil mftzone 1") else (call :LogErr "fsutil mftzone 1")
+if not errorlevel 1 (call :LogOK "fsutil mftzone 1") else (call :LogErr "fsutil mftzone 1")
 fsutil behavior set disable8dot3 1 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "fsutil disable8dot3 1") else (call :LogErr "fsutil disable8dot3 1")
+if not errorlevel 1 (call :LogOK "fsutil disable8dot3 1") else (call :LogErr "fsutil disable8dot3 1")
 
 call :SchLog /run /tn "Microsoft\Windows\DiskCleanup\SilentCleanup"
 
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SwapfileControl" /t REG_DWORD /d 0 /f
 call :LogOK "All Storage Tweaks applied successfully!"
+endlocal
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -3481,7 +3586,7 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Audio" /v "Disa
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Priority" /t REG_DWORD /d 4 /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio" /v "Scheduling Category" /t REG_SZ /d "Medium" /f
 powershell -NoProfile -Command "Get-PnpDevice -Class HIDClass | Where-Object {$_.Status -eq 'OK'} | ForEach-Object { powercfg /devicedisablewake \"$($_.FriendlyName)\" }"
-if %errorlevel% equ 0 (call :LogOK "powercfg hid device power") else (call :LogErr "powercfg hid device power")
+if not errorlevel 1 (call :LogOK "powercfg hid device power") else (call :LogErr "powercfg hid device power")
 
 call :LogOK "Input tweaks applied successfully!"
 timeout /t 1 /nobreak > NUL
@@ -3546,7 +3651,7 @@ echo        %ESC%[34m██╔══██╗██╔══██║██╔�
 echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
 echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
 echo.
-echo  %ESC%[91m[!] BARDHZZY Tweaks - Aggressive Warning%ESC%[0m
+echo  %ESC%[91m[!] bardhzzY Tweaks - Aggressive Warning%ESC%[0m
 echo ======================================================
 echo.
 echo  %ESC%[91m[!]%ESC%[0m The following tweaks will disable 48 hardware devices:
@@ -3593,8 +3698,10 @@ echo.
 echo [+] Scanning for active system devices...
 call :LogInfo "Preparing Device Manager PnP Tweaks..."
 
+:: Flawless PowerShell execution: No pipes to confuse CMD, handles multiple instances, forces UTF-8 output
 powershell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $devices = @('High Precision Event Timer', 'System Timer', 'Direct memory access controller', 'Numeric Data Processor', 'Composite Bus Enumerator', 'Microsoft GS Wavetable Synth', 'ACPI Processor Aggregator', 'ACPI Thermal Zone', 'ACPI Wake Alarm', 'AMD Controller Emulation', 'AMD Crash Defender', 'AMD PSP', 'Bluetooth Device (Personal Area Network)', 'Bluetooth Device (RFCOMM Protocol TDI)', 'Intel(R) Management Engine Interface', 'Intel(R) Dynamic Application Loader Host Interface', 'Intel(R) Management Engine WMI Provider', 'Intel(R) Platform Monitoring Technology Device', 'Intel(R) SMBus - 7AA3', 'Intel(R) SPI (Flash) Controller - 7AA4', 'Microsoft Bluetooth Enumerator', 'Microsoft Bluetooth LE Enumerator', 'Microsoft Device Association Root Enumerator', 'Microsoft Hyper-V Virtualization Infrastructure Driver', 'Microsoft Hypervisor Service', 'Microsoft Kernel Debug Network Adapter', 'Microsoft Print to PDF', 'Microsoft Radio Device Enumeration Bus', 'Microsoft RRAS Root Enumerator', 'Microsoft Virtual Drive Enumerator', 'Microsoft Windows Management Interface for ACPI', 'NDIS Virtual Network Adapter Enumerator', 'NVIDIA High Definition Audio', 'Programmable interrupt controller', 'Remote Desktop Device Redirector Bus', 'Resource Hub proxy device', 'Root Print Queue', 'UMBus Root Bus Enumerator', 'WAN Miniport (IKEv2)', 'WAN Miniport (IP)', 'WAN Miniport (IPv6)', 'WAN Miniport (L2TP)', 'WAN Miniport (Network Monitor)', 'WAN Miniport (PPPOE)', 'WAN Miniport (PPTP)', 'WAN Miniport (SSTP)'); $found=0; foreach ($d in $devices) { $devs = Get-PnpDevice -FriendlyName $d -ErrorAction SilentlyContinue; foreach ($dev in $devs) { if ($dev.Status -eq 'OK') { try { Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop; Write-Output ('OK:' + $d); $found=1 } catch { Write-Output ('FAIL:' + $d); $found=1 } } } }; if ($found -eq 0) { Write-Output 'WARN:No active target devices were found.' }" > "%TEMP%\bardhzz_pnp_log.txt"
 
+:: Parse the results flawlessly
 set "pnp_processed=0"
 for /f "tokens=1,* delims=:" %%A in ('type "%TEMP%\bardhzz_pnp_log.txt" 2^>nul') do (
     set "pnp_processed=1"
@@ -3615,58 +3722,72 @@ pause
 goto main
 
 :pwr
+setlocal EnableExtensions EnableDelayedExpansion
 call :LogSection "Power Tweaks"
 echo [++] Activating Ultimate Performance Power Plan...
-powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg duplicatescheme") else (call :LogErr "powercfg duplicatescheme")
-for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do (
-    powercfg -setactive %%a >nul 2>&1
-    call :LogOK "powercfg setactive %%a"
+set "ULTIMATE_GUID="
+for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do if not defined ULTIMATE_GUID set "ULTIMATE_GUID=%%a"
+if defined ULTIMATE_GUID (
+    powercfg -setactive !ULTIMATE_GUID! >nul 2>&1
+    if not errorlevel 1 (call :LogOK "Ultimate Performance power plan activated.") else (call :LogWarn "Ultimate Performance plan exists but could not be activated.")
+) else (
+    powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 >nul 2>&1
+    if not errorlevel 1 (
+        for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do if not defined ULTIMATE_GUID set "ULTIMATE_GUID=%%a"
+        if defined ULTIMATE_GUID (powercfg -setactive !ULTIMATE_GUID! >nul 2>&1 & if not errorlevel 1 (call :LogOK "Ultimate Performance power plan created and activated.") else (call :LogWarn "Ultimate Performance plan was created but activation failed.")) else (call :LogWarn "Ultimate Performance plan could not be located after creation attempt.")
+    ) else (call :LogWarn "Ultimate Performance plan already exists but was not discoverable by name, or creation is unsupported on this system.")
 )
 powercfg /hibernate off >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg hibernate off") else (call :LogErr "powercfg hibernate off")
+if not errorlevel 1 (call :LogOK "powercfg hibernate off") else (call :LogErr "powercfg hibernate off")
 
 call :LogInfo "Configuring Core parking..."
 call :LogInfo "Applying Core Unparking Registry Keys..."
 call :RegLog add "HKLM\System\CurrentControlSet\Control\Power\PowerSettings\54533251-82be-4824-96c1-47b60b740d00\0cc5b647-c1df-4637-891a-dec35c318583" /v "Attributes" /t REG_DWORD /d 0 /f
-if %errorlevel% equ 0 (call :LogOK "reg CPMINCORES 0") else (call :LogErr "reg CPMINCORES 0")
+if not errorlevel 1 (call :LogOK "reg CPMINCORES 0") else (call :LogErr "reg CPMINCORES 0")
 call :RegLog add "HKLM\System\CurrentControlSet\Control\Power\PowerSettings\54533251-82be-4824-96c1-47b60b740d00\0cc5b647-c1df-4637-891a-dec35c318583" /v "ValueMax" /t REG_DWORD /d 100 /f
-if %errorlevel% equ 0 (call :LogOK "reg CPMAXCORES 100") else (call :LogErr "reg CPMAXCORES 100")
+if not errorlevel 1 (call :LogOK "reg CPMAXCORES 100") else (call :LogErr "reg CPMAXCORES 100")
 powercfg -setacvalueindex scheme_current sub_processor CPMINCORES 100 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg CPMINCORES 100") else (call :LogErr "powercfg CPMINCORES 100")
+if not errorlevel 1 (call :LogOK "powercfg CPMINCORES 100") else (call :LogErr "powercfg CPMINCORES 100")
 powercfg -setacvalueindex scheme_current sub_processor CPMAXCORES 100 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
+if not errorlevel 1 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_PCIEXPRESS ASPM 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg ASPM 0") else (call :LogErr "powercfg ASPM 0")
+if not errorlevel 1 (call :LogOK "powercfg ASPM 0") else (call :LogErr "powercfg ASPM 0")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP RTCWAKE 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg disablewaketimersac") else (call :LogErr "disablewaketimersac")
+if not errorlevel 1 (call :LogOK "powercfg disablewaketimersac") else (call :LogErr "disablewaketimersac")
 powercfg /setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg 48e6b7a6 0") else (call :LogErr "powercfg 48e6b7a6 0")
+if not errorlevel 1 (call :LogOK "powercfg 48e6b7a6 0") else (call :LogSkip "powercfg 48e6b7a6 0 (setting not exposed by this power plan/hardware)")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR SYSCOOLPOL 1 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg SYSCOOLPOL 1") else (call :LogErr "powercfg SYSCOOLPOL 1")
+if not errorlevel 1 (call :LogOK "powercfg SYSCOOLPOL 1") else (call :LogSkip "powercfg SYSCOOLPOL 1 (setting not exposed by this power plan/hardware)")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_DISK DISKIDLE 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg DISKIDLE 0") else (call :LogErr "powercfg DISKIDLE 0")
+if not errorlevel 1 (call :LogOK "powercfg DISKIDLE 0") else (call :LogSkip "powercfg DISKIDLE 0 (setting not exposed by this power plan/hardware)")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP UnattendSleepTimeout 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg unattendsleeptimeout") else (call :LogErr "powercfg unattendsleeptimeout")
+if not errorlevel 1 (call :LogOK "powercfg unattendsleeptimeout") else (call :LogSkip "powercfg unattendsleeptimeout (setting not exposed by this power plan/hardware)")
 powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg VIDEOIDLE 0") else (call :LogErr "powercfg VIDEOIDLE 0")
+if not errorlevel 1 (call :LogOK "powercfg VIDEOIDLE 0") else (call :LogSkip "powercfg VIDEOIDLE 0 (setting not exposed by this power plan/hardware)")
 powercfg -setactive scheme_current >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg setactive scheme_current") else (call :LogErr "powercfg setactive scheme_current")
+if not errorlevel 1 (call :LogOK "powercfg setactive scheme_current") else (call :LogErr "powercfg setactive scheme_current")
 
-for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "AllowIdleIrpInD3" 2^>nul ^| findstr "HKEY_LOCAL_MACHINE"') do (
-    call :RegLog add "%%a" /v "AllowIdleIrpInD3" /t REG_DWORD /d 0 /f
-)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$base='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB'; $count=0; Get-ChildItem -Path $base -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -and (Get-ItemProperty -Path $_.PSPath -Name 'AllowIdleIrpInD3' -ErrorAction SilentlyContinue) } | ForEach-Object { try { Set-ItemProperty -Path $_.PSPath -Name 'AllowIdleIrpInD3' -Type DWord -Value 0 -ErrorAction Stop; $count++ } catch {} }; Write-Output $count" > "%TEMP%\bardhzz_usb_idle_count.txt" 2>nul
+set "USB_IDLE_COUNT=0"
+for /f "delims=" %%A in ('type "%TEMP%\bardhzz_usb_idle_count.txt" 2^>nul') do set "USB_IDLE_COUNT=%%A"
+del /q "%TEMP%\bardhzz_usb_idle_count.txt" >nul 2>&1
+if "%USB_IDLE_COUNT%"=="0" (call :LogSkip "USB AllowIdleIrpInD3: no existing values were modified.") else (set "LOG_MSG=USB AllowIdleIrpInD3 disabled on %USB_IDLE_COUNT% device(s)." & call :LogOK)
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\HidUsb\Parameters" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\usbhub\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\501a4d13-42af-4429-9fd1-a8218c268e20\ee12f906-d277-404b-b6da-e5fa1a576df5" /v "Attributes" /t REG_DWORD /d 2 /f
 powercfg -setacvalueindex scheme_current 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg ee12f906 0") else (call :LogErr "powercfg ee12f906 0")
+if not errorlevel 1 (call :LogOK "powercfg ee12f906 0") else (call :LogSkip "powercfg ee12f906 0 (setting not exposed by this power plan/hardware)")
 
-for /f "delims=" %%i in ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB" /s /f "Device Parameters" /k ^| findstr "Device Parameters"') do (
-    call :RegLog add "%%i" /v "EnhancedPowerManagementEnabled" /t REG_DWORD /d 0 /f
-    call :RegLog add "%%i" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
-)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$base='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB'; $e=0; $s=0; Get-ChildItem -Path $base -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -and $_.PSChildName -eq 'Device Parameters' } | ForEach-Object { try { if(Get-ItemProperty -Path $_.PSPath -Name 'EnhancedPowerManagementEnabled' -ErrorAction SilentlyContinue){ Set-ItemProperty -Path $_.PSPath -Name 'EnhancedPowerManagementEnabled' -Type DWord -Value 0 -ErrorAction Stop; $e++ } } catch {}; try { if(Get-ItemProperty -Path $_.PSPath -Name 'SelectiveSuspendEnabled' -ErrorAction SilentlyContinue){ Set-ItemProperty -Path $_.PSPath -Name 'SelectiveSuspendEnabled' -Type DWord -Value 0 -ErrorAction Stop; $s++ } } catch {} }; Write-Output ($e.ToString()+','+$s.ToString())" > "%TEMP%\bardhzz_usb_power_counts.txt" 2>nul
+set "USB_EPM_COUNT=0"
+set "USB_SUSPEND_COUNT=0"
+for /f "tokens=1,2 delims=," %%A in ('type "%TEMP%\bardhzz_usb_power_counts.txt" 2^>nul') do (set "USB_EPM_COUNT=%%A" & set "USB_SUSPEND_COUNT=%%B")
+del /q "%TEMP%\bardhzz_usb_power_counts.txt" >nul 2>&1
+set "LOG_MSG=USB EnhancedPowerManagementEnabled modified on %USB_EPM_COUNT% device(s)."
+call :LogOK
+set "LOG_MSG=USB SelectiveSuspendEnabled modified on %USB_SUSPEND_COUNT% device(s)."
+call :LogOK
 
 call :LogInfo "Disabling Power Throttling"
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
@@ -3744,39 +3865,39 @@ call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Memory\N
 
 call :LogInfo "Applying bcdedit and powercfg settings..."
 bcdedit /set disabledynamictick Yes >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit disabledynamictick Yes") else (call :LogErr "bcdedit disabledynamictick Yes")
+if not errorlevel 1 (call :LogOK "bcdedit disabledynamictick Yes") else (call :LogErr "bcdedit disabledynamictick Yes")
 bcdedit /deletevalue {current} useplatformclock >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit deletevalue useplatformclock") else (call :LogWarn "bcdedit deletevalue useplatformclock")
+if not errorlevel 1 (call :LogOK "bcdedit deletevalue useplatformclock") else (call :LogWarn "bcdedit deletevalue useplatformclock")
 bcdedit /deletevalue useplatformtick >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit deletevalue useplatformtick") else (call :LogWarn "bcdedit deletevalue useplatformtick")
+if not errorlevel 1 (call :LogOK "bcdedit deletevalue useplatformtick") else (call :LogWarn "bcdedit deletevalue useplatformtick")
 bcdedit /set quietboot yes >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit quietboot yes") else (call :LogErr "bcdedit quietboot yes")
+if not errorlevel 1 (call :LogOK "bcdedit quietboot yes") else (call :LogErr "bcdedit quietboot yes")
 bcdedit /set bootuxdisabled yes >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit bootuxdisabled yes") else (call :LogErr "bcdedit bootuxdisabled yes")
-bcdedit /timeout 3
-if %errorlevel% equ 0 (call :LogOK "bcdedit timeout 3") else (call :LogErr "bcdedit timeout 3")
+if not errorlevel 1 (call :LogOK "bcdedit bootuxdisabled yes") else (call :LogErr "bcdedit bootuxdisabled yes")
+bcdedit /timeout 3 >nul 2>&1
+if not errorlevel 1 (call :LogOK "bcdedit timeout 3") else (call :LogErr "bcdedit timeout 3")
 bcdedit /set bootstatuspolicy ignoreallfailures >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit bootstatuspolicy ignoreallfailures") else (call :LogErr "bcdedit bootstatuspolicy ignoreallfailures")
+if not errorlevel 1 (call :LogOK "bcdedit bootstatuspolicy ignoreallfailures") else (call :LogErr "bcdedit bootstatuspolicy ignoreallfailures")
 bcdedit /set {current} bootmenupolicy Standard >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit bootmenupolicy Standard") else (call :LogErr "bcdedit bootmenupolicy Standard")
+if not errorlevel 1 (call :LogOK "bcdedit bootmenupolicy Standard") else (call :LogErr "bcdedit bootmenupolicy Standard")
 bcdedit /set x2apicpolicy Enable >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit x2apicpolicy Enable") else (call :LogErr "bcdedit x2apicpolicy Enable")
+if not errorlevel 1 (call :LogOK "bcdedit x2apicpolicy Enable") else (call :LogErr "bcdedit x2apicpolicy Enable")
 bcdedit /set numaoptimize 1 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit numaoptimize 1") else (call :LogErr "bcdedit numaoptimize 1")
+if not errorlevel 1 (call :LogOK "bcdedit numaoptimize 1") else (call :LogErr "bcdedit numaoptimize 1")
 bcdedit /set bootlog No >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit bootlog No") else (call :LogErr "bcdedit bootlog No")
+if not errorlevel 1 (call :LogOK "bcdedit bootlog No") else (call :LogErr "bcdedit bootlog No")
 bcdedit /set configaccesspolicy Default >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "bcdedit configaccesspolicy Default") else (call :LogErr "bcdedit configaccesspolicy Default")
+if not errorlevel 1 (call :LogOK "bcdedit configaccesspolicy Default") else (call :LogErr "bcdedit configaccesspolicy Default")
 powercfg -h off >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg -h off") else (call :LogErr "powercfg -h off")
+if not errorlevel 1 (call :LogOK "powercfg -h off") else (call :LogErr "powercfg -h off")
 powercfg -change -disk-timeout-ac 0 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg -change -disk-timeout-ac 0") else (call :LogErr "powercfg -change -disk-timeout-ac 0")
+if not errorlevel 1 (call :LogOK "powercfg -change -disk-timeout-ac 0") else (call :LogErr "powercfg -change -disk-timeout-ac 0")
 powercfg /setacvalueindex scheme_current sub_processor CPMAXCORES 100 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
+if not errorlevel 1 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
 powercfg /setacvalueindex scheme_current sub_processor PERFBOOSTMODE 2 >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg PERFBOOSTMODE 2") else (call :LogErr "powercfg PERFBOOSTMODE 2")
+if not errorlevel 1 (call :LogOK "powercfg PERFBOOSTMODE 2") else (call :LogErr "powercfg PERFBOOSTMODE 2")
 powercfg -setactive SCHEME_CURRENT >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "powercfg -setactive SCHEME_CURRENT") else (call :LogErr "powercfg -setactive SCHEME_CURRENT")
+if not errorlevel 1 (call :LogOK "powercfg -setactive SCHEME_CURRENT") else (call :LogErr "powercfg -setactive SCHEME_CURRENT")
 call :LogInfo "Disabling High Precision Event Timer device..."
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
@@ -3804,6 +3925,7 @@ if "%HPET_RC%"=="0" (
 )
 
 call :LogOK "Power tweaks applied successfully!"
+endlocal
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -3823,9 +3945,9 @@ echo.
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f
 
 echo [+] Enabling System Protection on C: drive...
-set "PS_SCRIPT=%TEMP%\bardhzzy_srp.ps1"
+set "PS_SCRIPT=%TEMP%\bardhzzY_srp.ps1"
 echo Enable-ComputerRestore -Drive 'C:\' > "%PS_SCRIPT%"
-echo Checkpoint-Computer -Description 'BardhzzyTweak_Restore' -RestorePointType 'MODIFY_SETTINGS' >> "%PS_SCRIPT%"
+echo Checkpoint-Computer -Description 'bardhzzY_Tweak_Restore' -RestorePointType 'MODIFY_SETTINGS' >> "%PS_SCRIPT%"
 
 echo [+] Creating restore point (This may take a moment)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" >nul 2>&1
@@ -3837,13 +3959,13 @@ chcp 65001 >nul 2>&1
 echo %ESC%[0m
 
 if %SRP_STATUS% equ 0 (
-    call :LogOK "Restore point created successfully! (BardhzzyTweak_Restore)"
+    call :LogOK "Restore point created successfully! (bardhzzY_Tweak_Restore)"
     echo =============================================
     echo     Creating System Restore Point
     echo =============================================
     echo.
     echo [OK] Restore point created successfully!
-    echo     Description: BardhzzyTweak_Restore
+    echo     Description: bardhzzY_Tweak_Restore
 ) else (
     call :LogErr "Restore point creation failed."
     echo =============================================
@@ -3864,7 +3986,7 @@ goto main
 :backup
 call :LogSection "Registry Backup"
 cls
-MODE 100,40
+MODE 92,42
 chcp 65001 >nul 2>&1
 echo %ESC%[0m
 color 0F
@@ -3883,7 +4005,7 @@ echo.
 echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
 echo.
 
-set "BACKUP_DIR=%ProgramData%\BARDHZZY\Backup"
+set "BACKUP_DIR=%ProgramData%\bardhzzY\Backup"
 
 if exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
     echo        %ESC%[33m[!]%ESC%[37m A registry backup already exists at:%ESC%[0m
@@ -3911,10 +4033,10 @@ if not exist "%BACKUP_DIR%" (
 )
 
 set "BACKUP_OK=1"
-set "BK_TOTAL=4"
+set "BK_TOTAL=6"
 set "BK_DONE=0"
 
-echo        %ESC%[36m[1/4]%ESC%[37m Exporting HKLM\SYSTEM...%ESC%[0m
+echo        %ESC%[36m[1/6]%ESC%[37m Exporting HKLM\SYSTEM...%ESC%[0m
 reg export "HKLM\SYSTEM" "%BACKUP_DIR%\HKLM_SYSTEM.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SYSTEM failed."
@@ -3925,7 +4047,7 @@ if errorlevel 1 (
     echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SYSTEM backup created%ESC%[0m
 )
 
-echo        %ESC%[36m[2/4]%ESC%[37m Exporting HKLM\SOFTWARE...%ESC%[0m
+echo        %ESC%[36m[2/6]%ESC%[37m Exporting HKLM\SOFTWARE...%ESC%[0m
 reg export "HKLM\SOFTWARE" "%BACKUP_DIR%\HKLM_SOFTWARE.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SOFTWARE failed."
@@ -3936,7 +4058,7 @@ if errorlevel 1 (
     echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SOFTWARE backup created%ESC%[0m
 )
 
-echo        %ESC%[36m[3/4]%ESC%[37m Exporting HKCU\Software...%ESC%[0m
+echo        %ESC%[36m[3/6]%ESC%[37m Exporting HKCU\Software...%ESC%[0m
 reg export "HKCU\Software" "%BACKUP_DIR%\HKCU_Software.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_Software failed."
@@ -3947,7 +4069,7 @@ if errorlevel 1 (
     echo        %ESC%[32m    [OK]%ESC%[37m HKCU_Software backup created%ESC%[0m
 )
 
-echo        %ESC%[36m[4/4]%ESC%[37m Exporting HKCU\Control Panel...%ESC%[0m
+echo        %ESC%[36m[4/6]%ESC%[37m Exporting HKCU\Control Panel...%ESC%[0m
 reg export "HKCU\Control Panel" "%BACKUP_DIR%\HKCU_CPanel.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_CPanel failed."
@@ -3955,6 +4077,30 @@ if errorlevel 1 (
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCU_CPanel"
+    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
+)
+
+echo        %ESC%[36m[5/6]%ESC%[37m Exporting HKCR (HKEY_CLASSES_ROOT)...%ESC%[0m
+reg export "HKCR" "%BACKUP_DIR%\HKCR.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKCR failed."
+    echo        %ESC%[31m    [X]%ESC%[37m HKCR backup FAILED%ESC%[0m
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKCR"
+    echo        %ESC%[32m    [OK]%ESC%[37m HKCR backup created%ESC%[0m
+)
+
+echo        %ESC%[36m[6/6]%ESC%[37m Exporting HKU (HKEY_USERS)...%ESC%[0m
+reg export "HKU" "%BACKUP_DIR%\HKU.reg" /y >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Export HKU failed."
+    echo        %ESC%[31m    [X]%ESC%[37m HKU backup FAILED%ESC%[0m
+    set "BACKUP_OK=0"
+) else (
+    call :LogOK "Export HKU"
+    echo        %ESC%[32m    [OK]%ESC%[37m HKU backup created%ESC%[0m
+)    call :LogOK "Export HKCU_CPanel"
     echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
 )
 
@@ -4006,7 +4152,7 @@ echo.
 
 call :LogInfo "Enabling support for global timer resolution requests..."
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d 1 /f
-if %errorlevel% equ 0 (
+if not errorlevel 1 (
     call :LogOK "GlobalTimerResolutionRequests enabled."
 ) else (
     call :LogErr "Failed to enable GlobalTimerResolutionRequests."
@@ -4211,8 +4357,11 @@ set "TIMER_VAL=!custom_val!"
 
 :timer_apply
 call :LogInfo "Setting %TIMER_VAL%us Timer Resolution on startup..."
-call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "BardhzzyTimerResolution" /t REG_SZ /d ^""%TIMER_EXE%" --resolution %TIMER_VAL% --no-console^" /f
-if %errorlevel% equ 0 (
+set "TIMER_RUN_VALUE="%TIMER_EXE%" --resolution %TIMER_VAL% --no-console"
+:: Remove the legacy mixed-case value so upgrades do not leave two timer launch entries.
+call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bardhzzYTimerResolution" /f
+call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bardhzzYTimerResolution" /t REG_SZ /d "%TIMER_RUN_VALUE%" /f
+if not errorlevel 1 (
     call :LogOK "Timer Resolution set to %TIMER_VAL%us permanently (Startup Registry)."
 ) else (
     call :LogErr "Failed to set startup registry key."
@@ -4304,11 +4453,11 @@ echo.
 
 call :LogInfo "[1/7] Unlocking Native Group Policy Editor..."
 pushd "%~dp0"
-dir /b %SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientTools-Package*.mum >nul 2>&1
-if %errorLevel% equ 0 (
-    for /f "delims=" %%i in ('dir /b /s %SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientTools-Package*.mum') do dism /online /norestart /add-package:"%%i" >nul 2>&1
+dir /b "%SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientTools-Package*.mum" >nul 2>&1
+if not errorlevel 1 (
+    for /f "delims=" %%i in ('dir /b /s "%SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientTools-Package*.mum"') do dism /online /norestart /add-package:"%%i" >nul 2>&1
     call :LogOK "dism add gpedit ClientTools"
-    for /f "delims=" %%i in ('dir /b /s %SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientExtensions-Package~3*.mum') do dism /online /norestart /add-package:"%%i" >nul 2>&1
+    for /f "delims=" %%i in ('dir /b /s "%SystemRoot%\servicing\Packages\Microsoft-Windows-GroupPolicy-ClientExtensions-Package~3*.mum"') do dism /online /norestart /add-package:"%%i" >nul 2>&1
     call :LogOK "dism add gpedit ClientExtensions"
     popd
     echo        - Native gpedit.msc successfully unlocked.
@@ -4340,19 +4489,19 @@ echo.
 
 call :LogInfo "[5/7] Aligning TCP Auto-Tuning..."
 netsh int tcp set global autotuninglevel=normal >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "netsh autotuninglevel=normal") else (call :LogErr "netsh autotuninglevel=normal")
+if not errorlevel 1 (call :LogOK "netsh autotuninglevel=normal") else (call :LogErr "netsh autotuninglevel=normal")
 echo        - TCP window scaling optimized for stable packet delivery.
 echo.
 
 call :LogInfo "[6/7] Activating adapter stream configuration..."
 powershell -NoProfile -Command "Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | ForEach-Object { Enable-NetAdapterQos -Name $_.Name -ErrorAction SilentlyContinue }" >nul 2>&1
-if %errorlevel% equ 0 (call :LogOK "Enable-NetAdapterQos") else (call :LogErr "Enable-NetAdapterQos")
+if not errorlevel 1 (call :LogOK "Enable-NetAdapterQos") else (call :LogErr "Enable-NetAdapterQos")
 echo        - Hardware streams successfully aligned.
 echo.
 
 call :LogInfo "[7/7] Injecting Fortnite Game Packet Matrix Rule..."
 powershell -NoProfile -Command "Remove-NetQosPolicy -Name 'FortniteQoS' -ErrorAction SilentlyContinue; New-NetQosPolicy -Name 'FortniteQoS' -AppPathName 'FortniteClient-Win64-Shipping.exe' -DSCPAction 46 -NetworkProfile All -ErrorAction Stop" >nul 2>&1
-if %errorLevel% equ 0 (
+if not errorlevel 1 (
     call :LogOK "Fortnite Client prioritized (DSCP 46 | Profile: ALL)."
     echo        - Success: Fortnite Client prioritized ^(DSCP 46 ^| Profile: ALL^).
 ) else (
@@ -4449,13 +4598,25 @@ set "FN_FileURL=https://github.com/QuakedK/Fortnite-Optimizer/raw/refs/heads/mai
 set "FN_FileName=Fortnite Optimizer Tools.zip"
 set "FN_ExtractFolder=C:\Fortnite Optimizer Tools"
 set "FN_DownloadsFolder=C:\"
-curl -s -L "%FN_FileURL%" -o "%FN_DownloadsFolder%\%FN_FileName%"
+curl -s -L -f --retry 3 --retry-delay 2 "%FN_FileURL%" -o "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
 if exist "%FN_DownloadsFolder%\%FN_FileName%" (
    call :LogOK "Fortnite Tools downloaded."
+   if exist "%FN_ExtractFolder%" rd /s /q "%FN_ExtractFolder%" >nul 2>&1
    mkdir "%FN_ExtractFolder%" >nul 2>&1
    pushd "%FN_ExtractFolder%" >nul 2>&1
-   tar -xf "%FN_DownloadsFolder%\%FN_FileName%" --strip-components=1 >nul 2>&1
+   tar -tf "%FN_DownloadsFolder%\%FN_FileName%" 2>nul | findstr /r "^[^/\\]*/$" >nul 2>&1
+   if not errorlevel 1 (
+      tar -xf "%FN_DownloadsFolder%\%FN_FileName%" --strip-components=1 >nul 2>&1
+   ) else (
+      tar -xf "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
+   )
+   if errorlevel 1 (set "FN_TAR_RC=1") else (set "FN_TAR_RC=0")
    popd >nul 2>&1
+   if not "%FN_TAR_RC%"=="0" (
+      call :LogErr "Fortnite Tools archive extraction failed (rc=%FN_TAR_RC%)."
+      del /q "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
+      goto :FN_Download_Failed
+   )
    del /q "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
    goto :FN_Start_Screen
 ) else (
@@ -4708,21 +4869,21 @@ echo %ESC%[0m
 color 0C
 echo.
 echo ======================================================
-echo           bardhzzyY Tweaks - Revert / Undo Mode
+echo           bardhzzY Tweaks - Revert / Undo Mode
 echo ======================================================
 echo.
 echo [!] WARNING: This will forcefully overwrite your current
-echo     registry with the backup created via Option 18.
+echo     registry with the backup created via Option 15.
 echo.
 echo [!] NOTE: If you used the 'Clean Up' tool to remove Windows Apps,
 echo     those specific apps will NOT be reinstalled by this process.
-echo     Use Windows System Restore (Option 17) for a full app rollback.
+echo     Use Windows System Restore (Option 11) for a full app rollback.
 echo.
 choice /c YN /n /m "Do you want to revert all registry tweaks to default? (Y/N): "
 if %errorlevel% equ 2 goto main
 
 echo.
-set "BACKUP_DIR=%ProgramData%\BARDHZZY\Backup"
+set "BACKUP_DIR=%ProgramData%\bardhzzY\Backup"
 set "BACKUP_OK=1"
 
 if not exist "%BACKUP_DIR%" (
@@ -4771,19 +4932,21 @@ call :LogInfo "Forcibly Importing Original System Registry..."
 echo [+] Importing Original System Registry...
 
 call :TIRun reg import "%BACKUP_DIR%\HKLM_SYSTEM.reg" >nul 2>&1
-if errorlevel 1 (
-    call :LogErr "Import HKLM_SYSTEM failed (err=%errorlevel%)"
-    set "REVERT_OK=0"
-) else (
+set "REVERT_RC=%errorlevel%"
+if "%REVERT_RC%"=="0" (
     call :LogOK "Import HKLM_SYSTEM"
+) else (
+    call :LogErr "Import HKLM_SYSTEM failed (err=%REVERT_RC%)"
+    set "REVERT_OK=0"
 )
 
 call :TIRun reg import "%BACKUP_DIR%\HKLM_SOFTWARE.reg" >nul 2>&1
-if errorlevel 1 (
-    call :LogErr "Import HKLM_SOFTWARE failed (err=%errorlevel%)"
-    set "REVERT_OK=0"
-) else (
+set "REVERT_RC=%errorlevel%"
+if "%REVERT_RC%"=="0" (
     call :LogOK "Import HKLM_SOFTWARE"
+) else (
+    call :LogErr "Import HKLM_SOFTWARE failed (err=%REVERT_RC%)"
+    set "REVERT_OK=0"
 )
 
 call :LogInfo "Importing Original User Registry..."
@@ -4803,6 +4966,21 @@ if errorlevel 1 (
     set "REVERT_OK=0"
 ) else (
     call :LogOK "Import HKCU_CPanel"
+)
+
+call :LogInfo "Importing HKCR + HKU..."
+call :TIRun reg import "%BACKUP_DIR%\HKCR.reg" >nul 2>&1
+if errorlevel 1 (
+    call :LogWarn "Import HKCR failed (non-critical, may need TI)."
+) else (
+    call :LogOK "Import HKCR"
+)
+
+reg import "%BACKUP_DIR%\HKU.reg" >nul 2>&1
+if errorlevel 1 (
+    call :LogWarn "Import HKU failed (non-critical, may need TI)."
+) else (
+    call :LogOK "Import HKU"
 )
 
 echo.
@@ -4839,37 +5017,37 @@ goto main
 call :LogSection "Disable Defender (Enhanced)"
 cls
 MODE 100,40
-color 0E
+color 0F
 echo %ESC%[0m
 
 echo.
-echo  ============================================================
-echo            WINDOWS DEFENDER DISABLE (ENHANCED)
-echo  ============================================================
+echo  %ESC%[91m==========================================================================%ESC%[0m
+echo  %ESC%[91m                 WINDOWS DEFENDER DISABLE - AGGRESSIVE%ESC%[0m
+echo  %ESC%[91m==========================================================================%ESC%[0m
 echo.
-echo  This will DISABLE:
-echo    - Windows Defender AntiSpyware + Real-Time Protection
-echo    - Behavior Monitoring, IOAV, OnAccess, Script Scanning
-echo    - Tamper Protection (manual guide first if enabled)
-echo    - WdNisSvc (Network Inspection), WdBoot (Boot)
-echo    - Security Center (wscsvc) + SecurityHealthService
-echo    - Windows Security Health startup entry
-echo    - SmartScreen (Explorer, Edge, AppHost, AppRep)
-echo    - Defender Advanced Threat Protection (Sense)
-echo    - Defender scheduled tasks
-echo    - IFEO failsafe: MsMpEng/NisSrv/SecurityHealth/SmartScreen
-echo      redirected to systray.exe (survives Tamper Protection)
+echo  %ESC%[37mThis option is intentionally aggressive and will disable Windows security%ESC%[0m
+echo  %ESC%[37mcomponents including Defender, SmartScreen, Security Center services,%ESC%[0m
+echo  %ESC%[37mscheduled scans, and the Defender executable fallback protection.%ESC%[0m
 echo.
-echo  %ESC%[33m[!] NOTE: Windows Firewall is NOT touched.%ESC%[0m
+echo  %ESC%[91m[!] WARNING: This reduces Windows security protections significantly.%ESC%[0m
+echo  %ESC%[33m[!] Windows Firewall will NOT be changed by this option.%ESC%[0m
+echo  %ESC%[33m[!] A restart is required for the changes to fully apply.%ESC%[0m
+echo  %ESC%[36m[ i ] Re-enable Defender is available from the main menu.%ESC%[0m
 echo.
-echo  %ESC%[91m[!] CRITICAL: Tamper Protection MUST be OFF for registry%ESC%[0m
-echo  %ESC%[91m    writes to stick. If TP is ON, this section will open%ESC%[0m
-echo  %ESC%[91m    windowsdefender: so you can turn it off manually.%ESC%[0m
+echo  %ESC%[91m--------------------------------------------------------------------------%ESC%[0m
+echo  %ESC%[97mContinue with aggressive Defender disabling?%ESC%[0m
+
+echo        %ESC%[32m[Y]%ESC%[37m Yes - continue
+echo        %ESC%[31m[N]%ESC%[37m No  - return to main menu
 echo.
-echo  %ESC%[33m[!] A REVERT option is available as menu option 15.%ESC%[0m
+choice /c YN /n /m "       Continue? [Y/N]: "
+if errorlevel 2 (
+    call :LogWarn "Defender disable cancelled by user."
+    goto main
+)
+
 echo.
-echo  Press any key to continue, or CTRL+C to abort...
-pause >nul
+call :LogInfo "Defender disable confirmed by user."
 
 call :LogInfo "Step 1/8: Detecting Tamper Protection state..."
 set "TP_STATE="
@@ -4880,17 +5058,24 @@ if "%TP_STATE%"=="0x5" (
     call :LogInfo "Opening windowsdefender: so you can turn off RTP + TP manually..."
     start windowsdefender:
     echo.
-    echo  ============================================================
-    echo   In the Defender window:
-    echo     1. "Virus ^& threat protection" ^> "Manage settings"
-    echo     2. Toggle OFF "Real-time protection"
-    echo     3. Toggle OFF "Cloud-delivered protection"
-    echo     4. Toggle OFF "Automatic sample submission"
-    echo     5. Back ^> "Tamper Protection" ^> Toggle OFF
-    echo  ============================================================
-    echo  Press any key once all 5 toggles are OFF...
-    pause >nul
+    echo  %ESC%[33m--------------------------------------------------------------------------%ESC%[0m
+    echo  %ESC%[97mIn the Windows Security window:%ESC%[0m
+    echo    1. Virus ^& threat protection ^> Manage settings
+    echo    2. Turn OFF Real-time protection
+    echo    3. Turn OFF Cloud-delivered protection
+    echo    4. Turn OFF Automatic sample submission
+    echo    5. Turn OFF Tamper Protection
+    echo  %ESC%[33m--------------------------------------------------------------------------%ESC%[0m
+    echo        %ESC%[32m[Y]%ESC%[37m Done - continue disabling Defender
+    echo        %ESC%[31m[N]%ESC%[37m Cancel - return to main menu
+    choice /c YN /n /m "       Continue? [Y/N]: "
+    if errorlevel 2 (
+        call :LogWarn "Defender disable cancelled while Tamper Protection was enabled."
+        goto main
+    )
     taskkill /f /im SecHealthUI.exe >nul 2>&1
+) else if not defined TP_STATE (
+    call :LogWarn "Tamper Protection state is unavailable on this Windows build; continuing without assuming it is OFF."
 ) else (
     call :LogOK "Tamper Protection is OFF (state=%TP_STATE%). Proceeding."
 )
@@ -4911,11 +5096,13 @@ call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v "Passi
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows Defender\Features" /v "TamperProtection" /t REG_DWORD /d 0 /f
 
 call :LogInfo "Step 3/8: Disabling all Defender services..."
-call :TIScLog stop WinDefend
+rem PPL-protected Defender services may refuse a live stop even when the startup/policy changes are applied.
+sc stop WinDefend >nul 2>&1
+sc stop WdNisSvc >nul 2>&1
+sc stop WdBoot >nul 2>&1
+call :LogSkip "WinDefend/WdNisSvc/WdBoot live-stop requests suppressed from error log (PPL protected)"
 call :TIScLog config WinDefend start= disabled
-call :TIScLog stop WdNisSvc
 call :TIScLog config WdNisSvc start= disabled
-call :TIScLog stop WdBoot
 call :TIScLog config WdBoot start= disabled
 call :TIScLog stop Sense
 call :TIScLog config Sense start= disabled
@@ -4937,11 +5124,11 @@ call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "S
 
 call :LogInfo "Step 5/8: Disabling SmartScreen (Explorer, Edge, AppHost, AppRep)..."
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "Off" /f
-call :TIRegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "EnableWebContentEvaluation" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "EnableWebContentEvaluation" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "EnableSmartScreen" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SmartScreenEnabled" /t REG_DWORD /d 0 /f
 call :TIRegLog add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SmartScreenPuaEnabled" /t REG_DWORD /d 0 /f
-call :TIRegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "PreventOverride" /t REG_DWORD /d 0 /f
+call :RegLog add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\AppHost" /v "PreventOverride" /t REG_DWORD /d 0 /f
 
 call :LogInfo "Step 6/8: Disabling Defender scheduled tasks..."
 call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender Cache Maintenance" /Disable
@@ -5011,6 +5198,10 @@ call :TIScLog config WdNisSvc start= demand
 call :TIScLog config WdBoot start= demand
 call :TIScLog config wscsvc start= demand
 call :TIScLog config SecurityHealthService start= demand
+
+call :LogInfo "Removing gaming Defender exclusions created by Windows Tweaks..."
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { Remove-MpPreference -ExclusionPath 'C:\Program Files\Epic Games','C:\Program Files (x86)\Steam','C:\Program Files\Riot Games','C:\Program Files\EA Games','C:\Games','D:\Games','E:\Games' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionProcess 'FortniteClient-Win64-Shipping.exe','FortniteLauncher.exe','EpicGamesLauncher.exe','steam.exe','RiotClientServices.exe' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionExtension 'pak','upk','big','bsp','vtf','assets' -ErrorAction SilentlyContinue; exit 0 } catch { exit 1 }" >nul 2>&1
+if not errorlevel 1 (call :LogOK "Gaming Defender exclusions removed") else (call :LogWarn "Could not fully remove gaming Defender exclusions (Defender may still be unavailable)" )
 
 call :LogInfo "Re-enabling SmartScreen..."
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "On" /f
@@ -5120,8 +5311,8 @@ goto fixes
 
 :fix_rockstar
 call :LogInfo "Rockstar Games Fixer - re-enabling Rockstar service..."
-call :TIScLog config "Rockstar Service" start= demand
-call :TIScLog start "Rockstar Service"
+call :TIScLog config "RockstarService" start= demand
+call :TIScLog start "RockstarService"
 call :LogOK "Rockstar service re-enabled."
 echo.
 pause
@@ -5186,13 +5377,13 @@ if %errorlevel% equ 1 (
 )
 
 :: =====================================================================
-:: BARDHZZY PROFESSIONAL LOGGING SYSTEM v14.2
+:: bardhzzY PROFESSIONAL LOGGING SYSTEM v14.2
 :: =====================================================================
 
 :LogInit
 set "SCRIPT_VERSION=v3.0.0.3"
-set "SCRIPT_BUILD=08-08-2026"
-set "LOG_ROOT=%ProgramData%\BARDHZZY\Logs"
+set "SCRIPT_BUILD=09-02-2026"
+set "LOG_ROOT=%ProgramData%\bardhzzY\Logs"
 set "LOG_ENABLED=0"
 set "LOG_SECTION=SYSTEM"
 
@@ -5204,11 +5395,11 @@ if not defined LOG_STAMP set "LOG_STAMP=00000000_000000"
 mkdir "%LOG_ROOT%" >nul 2>&1
 if exist "%LOG_ROOT%" goto :LogInit_Success
 
-set "LOG_ROOT=%TEMP%\BARDHZZY_Logs"
+set "LOG_ROOT=%TEMP%\bardhzzY_Logs"
 mkdir "%LOG_ROOT%" >nul 2>&1
 if exist "%LOG_ROOT%" goto :LogInit_Success
 
-set "LOG_ROOT=%CD%\BARDHZZY_Logs"
+set "LOG_ROOT=%CD%\bardhzzY_Logs"
 mkdir "%LOG_ROOT%" >nul 2>&1
 if exist "%LOG_ROOT%" goto :LogInit_Success
 
@@ -5222,7 +5413,7 @@ set "LOG_ERR=%LOG_ROOT%\errors_%LOG_STAMP%.log"
 set "LOG_ENABLED=1"
 
 >>"%LOG_FILE%" echo ============================================================
->>"%LOG_FILE%" echo   BARDHZZY TWEAKS - PROFESSIONAL EXECUTION LOG
+>>"%LOG_FILE%" echo   bardhzzY TWEAKS - PROFESSIONAL EXECUTION LOG
 >>"%LOG_FILE%" echo   Script Ver. : %SCRIPT_VERSION% (%SCRIPT_BUILD%)
 >>"%LOG_FILE%" echo   Timestamp   : %LOG_STAMP%
 >>"%LOG_FILE%" echo   User        : %USERNAME%
@@ -5392,27 +5583,40 @@ reg !RL_ARGS! >nul 2>&1
 set "BARDHZZ_ERR=!errorlevel!"
 set "LOG_MSG=%*"
 if "!BARDHZZ_ERR!"=="0" goto RegLog_OK
-REM Verification step: for "add" ops, query the value to see if it was
-REM actually set. If it matches, treat as success (reg sometimes returns 1
-REM on Win11 24H2 for protected/managed keys even though the write worked).
-set "RL_VERIFY=0"
-echo !RL_ARGS! | findstr /B /I "add " >nul 2>&1 && set "RL_VERIFY=1"
-if "!RL_VERIFY!"=="0" goto RegLog_Fail
-REM Parse: key path is the first arg after "add", /v NAME, /d DATA
+REM reg.exe can return non-zero on some managed/protected keys even when the write landed.
+REM Verify only typed add operations and compare numeric DWORD/QWORD values numerically.
+echo !RL_ARGS! | findstr /B /I "add " >nul 2>&1 || goto RegLog_Fail
 set "RL_KEY="
 set "RL_VAL_NAME="
 set "RL_VAL_DATA="
+set "RL_TYPE="
 set "RL_NEXT_KEY=0"
 set "RL_NEXT_VAL=0"
 set "RL_NEXT_DATA=0"
+set "RL_NEXT_TYPE=0"
 for %%A in (!RL_ARGS!) do (
-    if "!RL_NEXT_KEY!"=="1" ( set "RL_KEY=%%~A" & set "RL_NEXT_KEY=0" ) else if "!RL_NEXT_VAL!"=="1" ( set "RL_VAL_NAME=%%~A" & set "RL_NEXT_VAL=0" ) else if "!RL_NEXT_DATA!"=="1" ( set "RL_VAL_DATA=%%~A" & set "RL_NEXT_DATA=0" ) else if /I "%%~A"=="add" ( set "RL_NEXT_KEY=1" ) else if /I "%%~A"=="/v" ( set "RL_NEXT_VAL=1" ) else if /I "%%~A"=="/d" ( set "RL_NEXT_DATA=1" )
+    if "!RL_NEXT_KEY!"=="1" (set "RL_KEY=%%~A" & set "RL_NEXT_KEY=0") else if "!RL_NEXT_VAL!"=="1" (set "RL_VAL_NAME=%%~A" & set "RL_NEXT_VAL=0") else if "!RL_NEXT_DATA!"=="1" (set "RL_VAL_DATA=%%~A" & set "RL_NEXT_DATA=0") else if "!RL_NEXT_TYPE!"=="1" (set "RL_TYPE=%%~A" & set "RL_NEXT_TYPE=0") else if /I "%%~A"=="add" (set "RL_NEXT_KEY=1") else if /I "%%~A"=="/v" (set "RL_NEXT_VAL=1") else if /I "%%~A"=="/d" (set "RL_NEXT_DATA=1") else if /I "%%~A"=="/t" (set "RL_NEXT_TYPE=1")
 )
 if not defined RL_KEY goto RegLog_Fail
 if not defined RL_VAL_NAME goto RegLog_Fail
-REM Query current value
-for /f "tokens=2,*" %%X in ('reg query "!RL_KEY!" /v "!RL_VAL_NAME!" 2^>nul ^| findstr /I "REG_"') do set "RL_ACTUAL=%%Y"
-if /I "!RL_ACTUAL!"=="!RL_VAL_DATA!" goto RegLog_OK
+if /I "!RL_TYPE!"=="REG_DWORD" goto RegLog_VerifyNumeric
+if /I "!RL_TYPE!"=="REG_QWORD" goto RegLog_VerifyNumeric
+if /I "!RL_TYPE!"=="REG_SZ" goto RegLog_VerifyString
+goto RegLog_Fail
+:RegLog_VerifyString
+set "RL_ACTUAL="
+for /f "tokens=2,*" %%X in ('reg query "!RL_KEY!" /v "!RL_VAL_NAME!" 2^>nul ^| findstr /I "REG_SZ"') do set "RL_ACTUAL=%%Y"
+if defined RL_ACTUAL if /I "!RL_ACTUAL!"=="!RL_VAL_DATA!" goto RegLog_OK
+goto RegLog_Fail
+:RegLog_VerifyNumeric
+set "RL_ACTUAL="
+for /f "tokens=2,*" %%X in ('reg query "!RL_KEY!" /v "!RL_VAL_NAME!" 2^>nul ^| findstr /I "REG_DWORD REG_QWORD"') do set "RL_ACTUAL=%%Y"
+if not defined RL_ACTUAL goto RegLog_Fail
+set "RL_VERIFY_ACTUAL=!RL_ACTUAL!"
+set "RL_VERIFY_EXPECTED=!RL_VAL_DATA!"
+powershell -NoProfile -Command "$a=$env:RL_VERIFY_ACTUAL;$w=$env:RL_VERIFY_EXPECTED; try { if($a -match '^0x'){ $an=[UInt64]::Parse($a.Substring(2),'HexNumber') } else { $an=[UInt64]$a }; if($w -match '^0x'){ $wn=[UInt64]::Parse($w.Substring(2),'HexNumber') } else { $wn=[UInt64]$w }; if($an -eq $wn){exit 0}else{exit 1} } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 goto RegLog_Fail
+goto RegLog_OK
 :RegLog_Fail
 set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
 call :LogErr
@@ -5443,33 +5647,59 @@ if /I "%TI_PROGRAM%"=="icacls" set "TI_EXE=%SystemRoot%\System32\icacls.exe"
 if /I "%TI_PROGRAM%"=="reg" set "TI_EXE=%SystemRoot%\System32\reg.exe"
 if /I "%TI_PROGRAM%"=="sc" set "TI_EXE=%SystemRoot%\System32\sc.exe"
 
-if not defined TI_AVAILABLE goto TIRun_Admin
+if not "%TI_AVAILABLE%"=="1" goto TIRun_Admin
 
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%TI_EXE%" /CommandLine '%TI_ARGS%' /RunAs 8 /WaitProcess 1 /Run
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%TI_EXE%" /CommandLine '%TI_ARGS%' /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
 set "TIRUN_RC=%errorlevel%"
+if not "%TIRUN_RC%"=="0" goto TIRun_Admin
 endlocal & exit /b %TIRUN_RC%
 
 :TIRun_Admin
-"%TI_EXE%" %TI_ARGS%
+"%TI_EXE%" %TI_ARGS% >nul 2>&1
 set "TIRUN_RC=%errorlevel%"
 endlocal & exit /b %TIRUN_RC%
 
 :TIRegLog
-setlocal DisableDelayedExpansion
+setlocal EnableDelayedExpansion
 set "BARDHZZ_ARGS=%*"
-if "%TI_AVAILABLE%"=="1" set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\reg.exe" /CommandLine '%BARDHZZ_ARGS%' /RunAs 8 /WaitProcess 1 /Run"
-if "%TI_AVAILABLE%"=="1" %BARDHZZ_CMD% >nul 2>&1
-if not "%TI_AVAILABLE%"=="1" reg %* >nul 2>&1
+:: Never create fake service registry keys just to set Start=4. If the service
+:: itself is not installed, report SKIP instead of a misleading red failure.
+if /I "%~1"=="add" if /I not "%~2"=="" if "%~2:~0,39%"=="HKLM\SYSTEM\CurrentControlSet\Services\" (
+    reg query "%~2" >nul 2>&1
+    if errorlevel 1 (
+        set "LOG_MSG=%~2 (service key not present)"
+        call :LogSkip
+        endlocal
+        exit /b 0
+    )
+)
 
-set "BARDHZZ_ERR=%errorlevel%"
-set "LOG_MSG=%*"
-if not "%BARDHZZ_ERR%"=="0" goto TIRegLog_Fail
+if "%TI_AVAILABLE%"=="1" (
+    set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\reg.exe" /CommandLine '%BARDHZZ_ARGS%' /RunAs 8 /WaitProcess 1 /Run"
+    %BARDHZZ_CMD% >nul 2>&1
+    set "BARDHZZ_ERR=!errorlevel!"
+    if not "!BARDHZZ_ERR!"=="0" (
+        :: AdvancedRun failed for this operation. Fall back to the current
+        :: Administrator token rather than aborting the tweak.
+        reg %* >nul 2>&1
+        set "BARDHZZ_ERR=!errorlevel!"
+        set "LOG_MSG=%* (Administrator fallback)"
+    ) else (
+        set "LOG_MSG=%*"
+    )
+) else (
+    reg %* >nul 2>&1
+    set "BARDHZZ_ERR=!errorlevel!"
+    set "LOG_MSG=%* (Administrator)"
+)
+
+if not "!BARDHZZ_ERR!"=="0" goto TIRegLog_Fail
 call :LogOK
 endlocal
 goto :eof
 
 :TIRegLog_Fail
-set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
 call :LogErr
 endlocal
 goto :eof
@@ -5485,19 +5715,33 @@ endlocal
 goto :eof
 
 :ScLog_Fail
-set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
+set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
 call :LogErr
 endlocal
 goto :eof
+
+
+:RunOpenShellInstaller
+start /wait "" "%~1" /qn
+exit /b %errorlevel%
 
 :TIDisableServiceInstances
 setlocal DisableDelayedExpansion
 set "TIS_PREFIX=%~1"
 if not defined TIS_PREFIX goto TISInstances_Done
 set "TIS_FOUND=0"
+
+rem Per-user services have a bare template plus GUID-suffixed live instances.
+sc query "%TIS_PREFIX%" >nul 2>&1
+if not errorlevel 1 (
+    set "TIS_FOUND=1"
+    call :TIScLog config "%TIS_PREFIX%" start= disabled
+)
+
 for /f "tokens=2" %%S in ('sc query type^= service state^= all ^| findstr /I /C:"SERVICE_NAME: %TIS_PREFIX%_"') do call :TIDisableServiceInstance "%%S"
+
 if not "%TIS_FOUND%"=="0" goto TISInstances_Done
-set "LOG_MSG=%TIS_PREFIX%_ service instance not present (skipped)"
+set "LOG_MSG=%TIS_PREFIX% service/instance not present (skipped)"
 call :LogSkip
 :TISInstances_Done
 endlocal
@@ -5508,15 +5752,37 @@ set "TIS_FOUND=1"
 call :TIScLog config "%~1" start= disabled
 goto :eof
 
-:TIScLog
+:DynRegLog
 setlocal DisableDelayedExpansion
+if not defined RL_DYN_KEY (set "LOG_MSG=DynRegLog: dynamic registry key not defined" & call :LogErr & endlocal & exit /b 87)
+reg add "%RL_DYN_KEY%" %* >nul 2>&1
+set "BARDHZZ_ERR=%errorlevel%"
+set "LOG_MSG=reg add %RL_DYN_KEY% %*"
+if not "%BARDHZZ_ERR%"=="0" goto DynRegLog_Fail
+call :LogOK
+endlocal & exit /b 0
+:DynRegLog_Fail
+set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
+call :LogErr
+endlocal & exit /b %BARDHZZ_ERR%
+
+:DisablePnpByID
+setlocal DisableDelayedExpansion
+set "DPID_ID=%~1"
+if not defined DPID_ID (endlocal & exit /b 87)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Disable-PnpDevice -InstanceId '%DPID_ID%' -Confirm:$false -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+set "DPID_RC=%errorlevel%"
+endlocal & exit /b %DPID_RC%
+
+:TIScLog
+setlocal EnableDelayedExpansion
 set "TIS_ACTION=%~1"
 set "TIS_SERVICE=%~2"
 if not defined TIS_ACTION goto TIScLog_BadArgs
 if not defined TIS_SERVICE goto TIScLog_BadArgs
 
 sc query "%TIS_SERVICE%" >nul 2>&1
-set "TIS_QUERY_ERR=%errorlevel%"
+set "TIS_QUERY_ERR=!errorlevel!"
 if "%TIS_QUERY_ERR%"=="1060" goto TIScLog_Skip
 if not "%TIS_QUERY_ERR%"=="0" goto TIScLog_QueryFail
 
@@ -5525,9 +5791,15 @@ if not "%TI_AVAILABLE%"=="1" goto TIScLog_NoTI
 set "BARDHZZ_ARGS=%*"
 set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\sc.exe" /CommandLine '%BARDHZZ_ARGS%' /RunAs 8 /WaitProcess 1 /Run"
 %BARDHZZ_CMD% >nul 2>&1
-set "BARDHZZ_ERR=%errorlevel%"
-set "LOG_MSG=%*"
-if not "%BARDHZZ_ERR%"=="0" goto TIScLog_Fail
+set "BARDHZZ_ERR=!errorlevel!"
+if not "!BARDHZZ_ERR!"=="0" (
+    :: AdvancedRun failed; retry this service operation with the current
+    :: Administrator token so the script can continue without breaking.
+    sc %* >nul 2>&1
+    set "BARDHZZ_ERR=!errorlevel!"
+    set "LOG_MSG=%* (Administrator fallback)"
+)
+if not "!BARDHZZ_ERR!"=="0" goto TIScLog_Fail
 
 if /I not "%TIS_ACTION%"=="config" goto TIScLog_OK
 if /I not "%~3"=="start=" goto TIScLog_OK
@@ -5548,12 +5820,11 @@ call :LogErr
 endlocal
 goto :eof
 
-
 :TIScLog_NoTI
 sc %* >nul 2>&1
-set "BARDHZZ_ERR=%errorlevel%"
-set "LOG_MSG=%* (Admin Fallback)"
-if not "%BARDHZZ_ERR%"=="0" goto TIScLog_Fail
+set "BARDHZZ_ERR=!errorlevel!"
+set "LOG_MSG=%* (Administrator)"
+if not "!BARDHZZ_ERR!"=="0" goto TIScLog_Fail
 
 if /I not "%TIS_ACTION%"=="config" goto TIScLog_OK
 if /I not "%~3"=="start=" goto TIScLog_OK
@@ -5569,7 +5840,7 @@ set "TIS_ACTUAL_CODE="
 for /f "tokens=3" %%A in ('sc qc "%TIS_SERVICE%" ^| findstr /I /C:"START_TYPE"') do set "TIS_ACTUAL_CODE=%%A"
 if "%TIS_ACTUAL_CODE%"=="%TIS_EXPECT_CODE%" goto TIScLog_OK
 
-set "LOG_MSG=%* (Admin Fallback verification failed: expected %TIS_EXPECT_CODE%, actual %TIS_ACTUAL_CODE%)"
+set "LOG_MSG=%* (Administrator verification failed: expected %TIS_EXPECT_CODE%, actual %TIS_ACTUAL_CODE%)"
 call :LogErr
 endlocal
 goto :eof
@@ -5580,7 +5851,7 @@ endlocal
 goto :eof
 
 :TIScLog_Fail
-set "LOG_MSG=%* (err=%BARDHZZ_ERR%)"
+set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
 call :LogErr
 endlocal
 goto :eof
@@ -5617,8 +5888,7 @@ for %%A in (!SCH_ALL!) do (
         set "SCH_IN_TN=1"
     )
 )
-REM Strip leading backslash which is invalid for schtasks and causes err=1
-if defined SCH_TASK if "!SCH_TASK:~0,1!"=="\" set "SCH_TASK=!SCH_TASK:~1!"
+REM Preserve rooted task paths; schtasks accepts names beginning with a leading backslash.
 
 if not defined SCH_TASK goto SchLog_Run
 REM Check task existence first; if missing, log as SKIP (not error)
