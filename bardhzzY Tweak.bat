@@ -1,19 +1,24 @@
 @ECHO off
 setlocal
+rem Console colors.
+set "CONSOLE_ERROR=0C"
+set "CONSOLE_DEFAULT=0F"
+set "CONSOLE_SUCCESS=0A"
+set "CONSOLE_INFO=0B"
+set "CONSOLE_BLUE=09"
+
 title bardhzzY Tweaks - admin check
 set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0;%PATH%"
-
-REM [FINAL FIX] Broken PnP macro removed: nested quotes truncated the command body.
 
 fltmc >nul 2>&1
 
 if not "%errorlevel%"=="0" (
     mode con: cols=78 lines=18
-    color 0C
+    color %CONSOLE_ERROR%
     title [!] ACCESS DENIED - ELEVATION REQUIRED
     cls
 
-    :: Plays a two-tone failure error sound
+    rem Play an error sound.
     powershell -NoProfile -Command "[console]::beep(800, 200); Start-Sleep -m 50; [console]::beep(500, 300)" >nul 2>&1
 
     echo.
@@ -48,6 +53,22 @@ reg add "HKCU\Console" /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul 2>&1
 
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
 
+rem ANSI colors.
+set "RESET=%ESC%[0m"
+set "BLUE=%ESC%[34m"
+set "WHITE=%ESC%[37m"
+set "CYAN=%ESC%[36m"
+set "GRAY=%ESC%[90m"
+set "YELLOW=%ESC%[33m"
+set "GREEN=%ESC%[32m"
+set "RED=%ESC%[31m"
+set "BRIGHT_RED=%ESC%[91m"
+set "BRIGHT_WHITE=%ESC%[97m"
+set "BOLD_RED=%ESC%[1;31m"
+set "BRIGHT_GREEN=%ESC%[92m"
+set "BRIGHT_BLUE=%ESC%[94m"
+set "BRIGHT_CYAN=%ESC%[96m"
+
 call :LogInit
 
 for /f "tokens=4-5 delims=. " %%i in ('ver') do set "os_ver=%%i.%%j"
@@ -73,37 +94,32 @@ title bardhzzY Tweaks
 :license
 cls
 MODE 100,40
-echo %ESC%[0m
+echo %RESET%
 
 echo.
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34m═══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo  %BLUE%═══════════════════════════════════════════════════════════════════════%RESET%
 echo.
-echo                       %ESC%[37mLICENSE VERIFICATION%ESC%[0m
+echo                       %WHITE%LICENSE VERIFICATION%RESET%
 echo.
-echo               %ESC%[34mEnter your license key to continue.%ESC%[0m
+echo               %BLUE%Enter your license key to continue.%RESET%
 echo.
 set "user_key="
-set /p "user_key=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Enter your License Key: %ESC%[0m"
+set /p "user_key=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Enter your License Key: %RESET%"
 
 if defined user_key set "user_key=%user_key:"=%"
 if defined user_key set "user_key=%user_key: =%"
 
 for %%k in (
-    "1B99-QBRX-5YP7-YB07" "WITN-7N8Z-R8Q1-FRXX" "U3IG-J0E7-LWRO-9X27" "B21U-EY2U-C3J6-9ZTO"
-    "0DC0-JVR3-QNJV-XCLK" "4Z29-1O7A-Z4XA-45QG" "BIS7-L7C3-JJNR-2JWY" "PKVJ-503R-ELHE-42GE"
-    "8PAJ-MDNL-K47J-RS1F" "VVEL-QC56-GQV4-YBG8" "6ZQ2-LEF7-GOGA-OAGG" "N63C-FTQG-ES2K-M2GA"
-    "O3P4-A5S6-D7F8-G9H0" "J1K2-L3M4-N5B6-V7C8" "X9Z0-Q1W2-E3R4-T5Y6" "U7I8-O9P0-A1S2-D3F4"
-    "G5H6-J7K8-L9M0-N1B2" "V3C4-X5Z6-Q7W8-E9R0" "T1Y2-U3I4-O5P6-A7S8" "D9F0-G1H2-J3K4-L5M6"
-    "N7B8-V9C0-X1Z2-Q3W4" "E5R6-T7Y8-U9I0-O1P2" "A3S4-D5F6-G7H8-J9K0" "L1M2-N3B4-V5C6-X7Z8"
-    "Q9W0-E1R2-T5Y6-U7I8" "O7P8-A9S0-D1F2-G3H4" "bardhzzY7"
+    "bardhzzY" "tester12" "A3S4-D5F6-G7H8-J9K0" "L1M2-N3B4-V5C6-X7Z8"
+    "Q9W0-E1R2-T5Y6-U7I8" "O7P8-A9S0-D1F2-G3H4" "1B99-QBRX-5YP7-YB07"
 ) do (
     if /I "%user_key%"=="%%~k" goto valid
 )
@@ -111,43 +127,42 @@ for %%k in (
 :invalid
 cls
 MODE 100,40
-echo %ESC%[0m
+echo %RESET%
 
 echo.
-echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo        %BLUE%══════════════════════════════════════════════════════════════════════%RESET%
 echo.
-echo                       %ESC%[37mLICENSE VERIFICATION%ESC%[0m
+echo                       %WHITE%LICENSE VERIFICATION%RESET%
 echo.
-echo        %ESC%[31m[ERROR]%ESC%[37m Invalid license key.
+echo        %RED%[ERROR]%WHITE% Invalid license key.
 echo.
-echo        %ESC%[37mThe key was not recognized. Please check your key
-echo        and try again.%ESC%[0m
+echo        %WHITE%The key was not recognized. Please check your key
+echo        and try again.%RESET%
 echo.
-echo        %ESC%[90mReturning to license verification...%ESC%[0m
+echo        %GRAY%Returning to license verification...%RESET%
 echo.
-echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo        %BLUE%══════════════════════════════════════════════════════════════════════%RESET%
 echo.
 timeout /t 3 /nobreak >nul
 goto license
 
-
 :valid
 cls
 MODE 100,40
-echo %ESC%[0m
+echo %RESET%
 
 echo.
-echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo        %BLUE%══════════════════════════════════════════════════════════════════════%RESET%
 echo.
-echo                       %ESC%[37mLICENSE VERIFICATION%ESC%[0m
+echo                       %WHITE%LICENSE VERIFICATION%RESET%
 echo.
-echo        %ESC%[32m[  OK ]%ESC%[37m License verified successfully.
+echo        %GREEN%[  OK ]%WHITE% License verified successfully.
 echo.
-echo        %ESC%[37mWelcome to bardhzzY Tweaks.%ESC%[0m
+echo        %WHITE%Welcome to bardhzzY Tweaks.%RESET%
 echo.
-echo        %ESC%[90mStarting the utility...%ESC%[0m
+echo        %GRAY%Starting the utility...%RESET%
 echo.
-echo        %ESC%[34m══════════════════════════════════════════════════════════════════════%ESC%[0m
+echo        %BLUE%══════════════════════════════════════════════════════════════════════%RESET%
 echo.
 timeout /t 2 /nobreak >nul
 goto init
@@ -156,98 +171,112 @@ goto init
 echo.
 echo Downloading Tweaking Tools
 set "UTIL_DIR=C:\bardhzzY Utility Tools"
+set "IMOD_EXE=%UTIL_DIR%\xHCI IMOD Disabler\xHCI IMOD Disabler.exe"
 set "GITHUB_ZIP_URL=https://github.com/bardh1xyz/bardhzzY-Utility-Tools/archive/refs/heads/main.zip"
+set "TOOLS_REFRESH_LOG=%TEMP%\bardhzzY_tools_refresh.log"
+call :DetectToolPaths
 
-if exist "%UTIL_DIR%" goto tools_exist
+if not exist "%UTIL_DIR%" goto tools_refresh
+call :DetectToolPaths
+if exist "%ADVANCEDRUN_EXE%" if exist "%POWERPLAN_STANDARD_FILE%" if exist "%POWERPLAN_IDLE_OFF_FILE%" goto tools_status_common
+call :LogWarn "One or more required tools are missing. Refreshing the tools repository..."
+goto tools_refresh
 
-call :LogInfo "Tools not found. Downloading repository from GitHub..."
-mkdir "%UTIL_DIR%" >nul 2>&1
+:tools_refresh
+call :LogInfo "Downloading or refreshing tools from GitHub..."
+if not exist "%UTIL_DIR%" mkdir "%UTIL_DIR%" >nul 2>&1
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { if (Test-Path $zip) { Remove-Item $zip -Force }; if (Test-Path $ext) { Remove-Item $ext -Recurse -Force }; Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; if (-not $gitRoot) { throw 'Repository archive is empty' }; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force -ErrorAction SilentlyContinue; Remove-Item $ext -Recurse -Force -ErrorAction SilentlyContinue; exit 0 } catch { Write-Output $_.Exception.Message; Remove-Item $zip -Force -ErrorAction SilentlyContinue; Remove-Item $ext -Recurse -Force -ErrorAction SilentlyContinue; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 
-if not errorlevel 1 (
-    if exist "%UTIL_DIR%" (
-        call :LogOK "Tools successfully downloaded and extracted."
-        goto ADVANCEDRUN_SETUP
-    ) else (
-        call :LogErr "Failed to verify directory creation."
-    )
-) else (
-    call :LogErr "Download failed. Download directly from https://github.com/bardh1xyz/bardhzzY-Utility-Tools ^(save to c: drive^) or check network connection."
-)
+if errorlevel 1 goto tools_refresh_failed
+call :DetectToolPaths
+if not exist "%ADVANCEDRUN_EXE%" goto tools_repair_failed
+if not exist "%POWERPLAN_STANDARD_FILE%" goto tools_repair_failed
+if not exist "%POWERPLAN_IDLE_OFF_FILE%" goto tools_repair_failed
+goto tools_status_common
+
+:tools_refresh_failed
+call :LogErr "Tools repository download or refresh failed. Log: %TOOLS_REFRESH_LOG%"
+if exist "%TOOLS_REFRESH_LOG%" type "%TOOLS_REFRESH_LOG%"
 goto ADVANCEDRUN_SETUP
 
-:tools_exist
-if exist "%UTIL_DIR%\AdvancedRun\AdvancedRun.exe" (
-    call :LogOK "bardhzzY Utility Tools verified. Skipping download."
-    goto ADVANCEDRUN_SETUP
-)
+:tools_repair_failed
+call :DetectToolPaths
+call :LogErr "Repository refresh completed, but required files are still missing."
+if not exist "%ADVANCEDRUN_EXE%" call :LogWarn "AdvancedRun expected at: %ADVANCEDRUN_EXE%"
+if not exist "%POWERPLAN_STANDARD_FILE%" call :LogWarn "Standard power plan expected at: %POWERPLAN_STANDARD_FILE%"
+if not exist "%POWERPLAN_IDLE_OFF_FILE%" call :LogWarn "Idle Off power plan expected at: %POWERPLAN_IDLE_OFF_FILE%"
+if exist "%TOOLS_REFRESH_LOG%" type "%TOOLS_REFRESH_LOG%"
+goto ADVANCEDRUN_SETUP
 
-call :LogWarn "Utility Tools folder exists but required AdvancedRun is missing."
-call :LogInfo "Attempting to repair the tools directory from GitHub..."
-
-if exist "%UTIL_DIR%" rd /s /q "%UTIL_DIR%" >nul 2>&1
-mkdir "%UTIL_DIR%" >nul 2>&1
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $zip = \"$env:TEMP\bardhzz_tools.zip\"; $ext = \"$env:TEMP\bardhzz_extract\"; try { Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile $zip -UseBasicParsing; Expand-Archive -Path $zip -DestinationPath $ext -Force; $gitRoot = Get-ChildItem -Path $ext -Directory | Select-Object -First 1; Copy-Item -Path \"$($gitRoot.FullName)\*\" -Destination '%UTIL_DIR%' -Recurse -Force; Remove-Item $zip -Force; Remove-Item $ext -Recurse -Force; exit 0 } catch { exit 1 }" >nul 2>&1
-
-if not errorlevel 1 if exist "%UTIL_DIR%\AdvancedRun\AdvancedRun.exe" (
-    call :LogOK "Utility Tools repaired successfully."
+:tools_status_common
+if exist "%IMOD_EXE%" (
+    call :LogOK "xHCI IMOD Disabler found."
 ) else (
-    call :LogWarn "Utility Tools repair could not be verified. Continuing with Administrator fallback."
+    call :LogWarn "Optional xHCI IMOD Disabler not found. Add it to %UTIL_DIR%\xHCI IMOD Disabler\."
 )
-
 goto ADVANCEDRUN_SETUP
 
 :ADVANCEDRUN_SETUP
-set "ADVANCEDRUN_EXE=C:\bardhzzY Utility Tools\AdvancedRun\AdvancedRun.exe"
+if defined SCRIPT_VERSION_CHECKED goto ADVANCEDRUN_SETUP_VERSION_CHECKED
+call :CheckScriptVersion
+set "SCRIPT_VERSION_CHECKED=1"
+:ADVANCEDRUN_SETUP_VERSION_CHECKED
+call :DetectToolPaths
 set "TI="
 set "TI_AVAILABLE=0"
 
 if not exist "%ADVANCEDRUN_EXE%" goto ADVANCEDRUN_UNAVAILABLE
 
-REM AdvancedRun needs NO setup - just verify it works
+rem Check that AdvancedRun can run a process as TrustedInstaller.
 call :AdvancedRun_Test
-if "%TI_AVAILABLE%"=="1" (
-    echo.
-    echo        %ESC%[32m[OK]%ESC%[37m AdvancedRun TrustedInstaller verified.
-    echo.
-    timeout /t 1 /nobreak >nul
-    goto :main
-)
+if not "%TI_AVAILABLE%"=="1" goto ADVANCEDRUN_TEST_FAILED
 
-goto ADVANCEDRUN_TEST_FAILED
+echo.
+echo        %GREEN%[OK]%WHITE% AdvancedRun /RunAs 8 test passed.%RESET%
+echo        %GRAY%Protected registry and service changes will try AdvancedRun /RunAs 8 first.%RESET%
+echo        %GRAY%Per-user settings still apply to the signed-in account.%RESET%
+echo.
+call :LogInfo "AdvancedRun startup test passed; opening the main menu."
+timeout /t 1 /nobreak >nul
+goto main
 
 :ADVANCEDRUN_TEST_FAILED
 cls
 MODE 100,30
-echo %ESC%[0m
+echo %RESET%
 
 echo.
 echo.
-echo        %ESC%[31m============================================================%ESC%[0m
+echo        %RED%============================================================%RESET%
 echo.
-echo                    %ESC%[1;31mADVANCEDRUN TEST FAILED%ESC%[0m
+echo                    %BOLD_RED%ADVANCEDRUN TEST FAILED%RESET%
 echo.
-echo        %ESC%[31m============================================================%ESC%[0m
-echo.
-echo.
-echo        %ESC%[37mAdvancedRun verification failed.%ESC%[0m
-echo.
-echo        %ESC%[90mPossible causes:%ESC%[0m
-echo        %ESC%[37m  - AdvancedRun.exe is blocked by antivirus%ESC%[0m
-echo        %ESC%[37m  - Insufficient permissions%ESC%[0m
-echo        %ESC%[37m  - File corrupted or wrong architecture%ESC%[0m
+echo        %RED%============================================================%RESET%
 echo.
 echo.
-echo        %ESC%[90mWhat would you like to do?%ESC%[0m
+echo        %WHITE%AdvancedRun could not complete its test command using /RunAs 8.%RESET%
+echo        %GRAY%Exit code: %TI_TEST_RC%%RESET%
+echo        %GRAY%Diagnostic log: %TI_TEST_LOG%%RESET%
 echo.
-echo           %ESC%[36m1%ESC%[37m. %ESC%[32mTry test again%ESC%[0m
-echo           %ESC%[36m2%ESC%[37m. %ESC%[33mContinue with Admin only%ESC%[0m
-echo           %ESC%[36m3%ESC%[37m. %ESC%[31mExit script%ESC%[0m
+echo        %GRAY%Possible causes:%RESET%
+echo        %WHITE%  - AdvancedRun is blocked or an incompatible copy is installed%RESET%
+echo        %WHITE%  - TrustedInstaller service did not start correctly%RESET%
+echo        %WHITE%  - Insufficient permissions or an invalid tool path%RESET%
+if exist "%TI_TEST_LOG%" (
+    echo.
+    echo        %GRAY%AdvancedRun output:%RESET%
+    type "%TI_TEST_LOG%"
+)
+echo.
+echo        %GRAY%What would you like to do?%RESET%
+echo.
+echo           %CYAN%1%WHITE%. %GREEN%Try test again%RESET%
+echo           %CYAN%2%WHITE%. %YELLOW%Continue with Admin only%RESET%
+echo           %CYAN%3%WHITE%. %RED%Exit script%RESET%
 echo.
 echo.
-echo        %ESC%[34m============================================================%ESC%[0m
+echo        %BLUE%============================================================%RESET%
 echo.
 echo.
 set "setup_choice="
@@ -258,7 +287,7 @@ if "%setup_choice%"=="2" goto ADVANCEDRUN_ADMIN_FALLBACK
 if "%setup_choice%"=="3" exit /b
 
 echo.
-echo        %ESC%[31mInvalid choice.%ESC%[0m
+echo        %RED%Invalid choice.%RESET%
 timeout /t 2 /nobreak >nul
 goto ADVANCEDRUN_TEST_FAILED
 
@@ -267,8 +296,8 @@ set "TI="
 set "TI_AVAILABLE=0"
 cls
 echo.
-echo        %ESC%[33m[NOTE]%ESC%[37m Continuing with Administrator privileges only.%ESC%[0m
-echo        %ESC%[90mSome protected files and registry keys may not be modifiable.%ESC%[0m
+echo        %YELLOW%[NOTE]%WHITE% Continuing with Administrator privileges only.%RESET%
+echo        %GRAY%Some protected files and registry keys may not be modifiable.%RESET%
 echo.
 timeout /t 3 /nobreak >nul
 goto :main
@@ -278,118 +307,115 @@ set "TI="
 set "TI_AVAILABLE=0"
 cls
 echo.
-echo        %ESC%[33m[NOTE]%ESC%[37m AdvancedRun not found in tools folder.%ESC%[0m
-echo        %ESC%[90mLocation: %ADVANCEDRUN_EXE%%ESC%[0m
-echo        %ESC%[90mContinuing with Administrator privileges only.%ESC%[0m
+echo        %YELLOW%[NOTE]%WHITE% AdvancedRun not found in tools folder.%RESET%
+echo        %GRAY%Location: %ADVANCEDRUN_EXE%%RESET%
+echo        %GRAY%Continuing with Administrator privileges only.%RESET%
 echo.
 timeout /t 3 /nobreak >nul
 goto :main
 
-REM ================================================================
-REM Test function for AdvancedRun
-REM ================================================================
+rem AdvancedRun test.
 :AdvancedRun_Test
-set "TI_TEST_FILE=C:\Windows\Temp\bardhzzY_ti_test.txt"
+set "TI_TEST_DIR=%SystemRoot%\Temp"
+set "TI_TEST_FILE=%SystemRoot%\Temp\bardhzzY_ti_test.txt"
+set "TI_TEST_LOG=%TEMP%\bardhzzY_advancedrun_test.log"
+set "TI_TEST_RC=not-run"
+set "TI_AVAILABLE=0"
+set "TI="
 
-REM Pre-start the TrustedInstaller service. It is demand-start by default.
-REM With UAC fully disabled (EnableLUA=0) on Win11 24H2, TrustedInstaller.exe
-REM may not be running, and AdvancedRun /RunAs 8 needs to grab the token from
-REM the live process. Trigger it explicitly here.
+if not exist "%TI_TEST_DIR%" mkdir "%TI_TEST_DIR%" >nul 2>&1
+if not exist "%TI_TEST_DIR%" goto AdvancedRun_Test_Fail
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+
+rem TrustedInstaller is demand-started on Windows.
 sc query TrustedInstaller 2>nul | findstr /I "RUNNING" >nul 2>&1
 if errorlevel 1 (
     sc start TrustedInstaller >nul 2>&1
     timeout /t 2 /nobreak >nul
 )
 
-if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+call :AdvancedRun_TestOnce
+if "%TI_AVAILABLE%"=="1" goto AdvancedRun_Test_Success
 
-REM Attempt 1
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\bardhzzY_ti_test.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
-if exist "%TI_TEST_FILE%" (
-    findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
-    if not errorlevel 1 (
-        del /q "%TI_TEST_FILE%" >nul 2>&1
-        set "TI_AVAILABLE=1"
-        set "TI=1"
-        goto :eof
-    )
-)
-
-REM Attempt 2 - retry with delay (TrustedInstaller may need time to init)
-if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 timeout /t 2 /nobreak >nul
 sc start TrustedInstaller >nul 2>&1
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\bardhzzY_ti_test.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
-if exist "%TI_TEST_FILE%" (
-    findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
-    if not errorlevel 1 (
-        del /q "%TI_TEST_FILE%" >nul 2>&1
-        set "TI_AVAILABLE=1"
-        set "TI=1"
-        goto :eof
-    )
-)
+call :AdvancedRun_TestOnce
+if "%TI_AVAILABLE%"=="1" goto AdvancedRun_Test_Success
 
-REM Attempt 3 - final retry with longer delay
-if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
 timeout /t 3 /nobreak >nul
 sc start TrustedInstaller >nul 2>&1
-"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>C:\Windows\Temp\bardhzzY_ti_test.txt" /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
-if exist "%TI_TEST_FILE%" (
-    findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
-    if not errorlevel 1 (
-        del /q "%TI_TEST_FILE%" >nul 2>&1
-        set "TI_AVAILABLE=1"
-        set "TI=1"
-        goto :eof
-    )
-)
+call :AdvancedRun_TestOnce
+if "%TI_AVAILABLE%"=="1" goto AdvancedRun_Test_Success
+goto AdvancedRun_Test_Fail
 
+:AdvancedRun_TestOnce
 if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\cmd.exe" /CommandLine "/c echo TI_OK>%TI_TEST_FILE%" /RunAs 8 /WaitProcess 1 /Run >"%TI_TEST_LOG%" 2>&1
+set "TI_TEST_RC=%errorlevel%"
+if not exist "%TI_TEST_FILE%" exit /b 1
+findstr /C:"TI_OK" "%TI_TEST_FILE%" >nul 2>&1
+if errorlevel 1 exit /b 1
+set "TI_AVAILABLE=1"
+set "TI=1"
+exit /b 0
+
+:AdvancedRun_Test_Success
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+call :LogInfo "AdvancedRun test command passed using /RunAs 8. Protected operations will still be checked individually."
+exit /b 0
+
+:AdvancedRun_Test_Fail
 set "TI="
 set "TI_AVAILABLE=0"
-goto :eof
+call :LogWarn "AdvancedRun did not create the expected test marker using /RunAs 8 (exit code %TI_TEST_RC%)."
+call :LogWarn "Diagnostic log: %TI_TEST_LOG%"
+if exist "%TI_TEST_FILE%" del /q "%TI_TEST_FILE%" >nul 2>&1
+exit /b 1
 
 :main
-title bardhzzY Tweaks
-
-for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "ESC=%%b"
+title bardhzzY Tweaks - dsc.gg/bardhzzy
+call :LogInfo "Main menu entered."
 
 MODE 100,40
-echo %ESC%[0m
+echo %RESET%
 cls
 
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╗██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mSYSTEM TWEAKS                  %ESC%[0m %ESC%[34mNETWORK ^& LATENCY%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m 1%ESC%[37m] Windows Tweaks            %ESC%[37m [%ESC%[36m 6%ESC%[37m] Network Tweaks
-echo  %ESC%[37m [%ESC%[36m 2%ESC%[37m] GPU Tweaks                %ESC%[37m [%ESC%[36m 7%ESC%[37m] Storage Tweaks
-echo  %ESC%[37m [%ESC%[36m 3%ESC%[37m] CPU Tweaks                %ESC%[37m [%ESC%[36m 8%ESC%[37m] Input Lag Tweaks
-echo  %ESC%[37m [%ESC%[36m 4%ESC%[37m] RAM Tweaks                %ESC%[37m [%ESC%[36m 9%ESC%[37m] KBM Tweaks
-echo  %ESC%[37m [%ESC%[36m 5%ESC%[37m] Power Tweaks              %ESC%[37m [%ESC%[36m10%ESC%[37m] Timer Resolution
+echo  %BLUE%SYSTEM TWEAKS                  %RESET% %BLUE%NETWORK ^& LATENCY%RESET%
+echo  %WHITE% [%CYAN% 1%WHITE%] Windows Tweaks            %WHITE% [%CYAN% 6%WHITE%] Network Tweaks
+echo  %WHITE% [%CYAN% 2%WHITE%] GPU Tweaks                %WHITE% [%CYAN% 7%WHITE%] Storage Tweaks
+echo  %WHITE% [%CYAN% 3%WHITE%] CPU Tweaks                %WHITE% [%CYAN% 8%WHITE%] Input Lag Tweaks
+echo  %WHITE% [%CYAN% 4%WHITE%] RAM Tweaks                %WHITE% [%CYAN% 9%WHITE%] KBM Tweaks
+echo  %WHITE% [%CYAN% 5%WHITE%] Power Tweaks              %WHITE% [%CYAN%10%WHITE%] Timer Resolution
 echo.
-echo  %ESC%[34mGAMING ^& CLEANUP                %ESC%[34mSECURITY ^& FIXES
-echo  %ESC%[37m [%ESC%[36m11%ESC%[37m] Fortnite Optimizer        %ESC%[37m [%ESC%[36m14%ESC%[37m] Disable Defender
-echo  %ESC%[37m [%ESC%[36m12%ESC%[37m] Service Reduction         %ESC%[37m [%ESC%[36m15%ESC%[37m] Re-enable Defender
-echo  %ESC%[37m [%ESC%[36m13%ESC%[37m] Device Manager Tweak      %ESC%[37m [%ESC%[36m16%ESC%[37m] Fixes
+echo  %BLUE%GAMING ^& CLEANUP                %BLUE%SECURITY ^& FIXES
+echo  %WHITE% [%CYAN%11%WHITE%] Fortnite Optimizer        %WHITE% [%CYAN%14%WHITE%] Disable Defender
+echo  %WHITE% [%CYAN%12%WHITE%] Service Reduction         %WHITE% [%CYAN%15%WHITE%] Re-enable Defender
+echo  %WHITE% [%CYAN%13%WHITE%] Device Manager Tweak      %WHITE% [%CYAN%16%WHITE%] xHCI IMOD Disabler
+echo                                  %WHITE% [%CYAN%17%WHITE%] Fixes
 echo.
-echo  %ESC%[34mSAFETY ^& UTILITIES%ESC%[0m             %ESC%[0m %ESC%[34mSYSTEM ^& LOGS%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m17%ESC%[37m] Restore Point             %ESC%[37m [%ESC%[36m20%ESC%[37m] View Log
-echo  %ESC%[37m [%ESC%[36m18%ESC%[37m] Registry Backup           %ESC%[37m [%ESC%[36m21%ESC%[37m] View Errors
-echo  %ESC%[37m [%ESC%[36m19%ESC%[37m] Revert Tweaks             %ESC%[37m [%ESC%[36m22%ESC%[37m] Summary
-echo                                  %ESC%[37m [%ESC%[36m23%ESC%[37m] Restart PC
-echo  %ESC%[37m [%ESC%[36m D%ESC%[37m] Discord                   %ESC%[37m [%ESC%[36m24%ESC%[37m] Quit
+echo  %BLUE%SAFETY ^& UTILITIES%RESET%             %RESET% %BLUE%SYSTEM ^& LOGS%RESET%
+echo  %WHITE% [%CYAN%18%WHITE%] Restore Point             %WHITE% [%CYAN%21%WHITE%] View Log
+echo  %WHITE% [%CYAN%19%WHITE%] Registry Backup           %WHITE% [%CYAN%22%WHITE%] View Errors
+echo  %WHITE% [%CYAN%20%WHITE%] Revert Tweaks             %WHITE% [%CYAN%23%WHITE%] Summary
+echo  %WHITE% [%CYAN% D%WHITE%] Discord                   %WHITE% [%CYAN%24%WHITE%] Restart PC
+echo                                  %WHITE% [%CYAN%25%WHITE%] Quit
 echo.
-echo  %ESC%[90mCopyright © 2026 bardhzzY Tweaks. All rights reserved.%ESC%[0m
+echo  %GRAY%Copyright © 2026 bardhzzY Tweaks. All rights reserved.%RESET%
+if /i "%SCRIPT_VERSION_STATUS%"=="UPDATE" echo  %YELLOW%Update available: %SCRIPT_LATEST_VERSION%%RESET%
+if /i "%SCRIPT_VERSION_STATUS%"=="CURRENT" echo  %BRIGHT_GREEN%%SCRIPT_VERSION% - up to date%RESET%
+if /i "%SCRIPT_VERSION_STATUS%"=="AHEAD" echo  %GRAY%%SCRIPT_VERSION% - newer than marker%RESET%
+if /i "%SCRIPT_VERSION_STATUS%"=="UNAVAILABLE" echo  %GRAY%%SCRIPT_VERSION% - offline%RESET%
 echo.
 set "input="
-set /p "input=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "input=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
 if not defined input goto main
 set "input=%input:"=%"
@@ -414,25 +440,26 @@ if /i "%input%"=="12" goto services
 if /i "%input%"=="13" goto devmgmt
 if /i "%input%"=="14" goto defender
 if /i "%input%"=="15" goto defender_revert
-if /i "%input%"=="16" goto fixes
-if /i "%input%"=="17" goto srp
-if /i "%input%"=="18" goto backup
-if /i "%input%"=="19" goto revert
-if /i "%input%"=="20" (
+if /i "%input%"=="16" goto imod_disabler
+if /i "%input%"=="17" goto fixes
+if /i "%input%"=="18" goto srp
+if /i "%input%"=="19" goto backup
+if /i "%input%"=="20" goto revert
+if /i "%input%"=="21" (
     call :LogView
     goto main
 )
-if /i "%input%"=="21" (
+if /i "%input%"=="22" (
     call :LogViewErrors
     goto main
 )
-if /i "%input%"=="22" (
+if /i "%input%"=="23" (
     call :LogSummary
     pause
     goto main
 )
-if /i "%input%"=="23" goto restartpc
-if /i "%input%"=="24" (
+if /i "%input%"=="24" goto restartpc
+if /i "%input%"=="25" (
     call :LogSummary
     echo.
     echo Thank you for using bardhzzY Tweaks!
@@ -441,7 +468,7 @@ if /i "%input%"=="24" (
     exit /b
 )
 if /i "%input%"=="d" (
-    start https://discord.gg/uqD3nbuuNV
+    start https://dsc.gg/bardhzzy
     goto main
 )
 
@@ -454,7 +481,7 @@ goto main
 call :LogSection "Windows Tweaks"
 call :LogSection "Pre-flight: UCPD / Smart App Control / Teredo / Autologger"
 
-:: UCPD disable - Win11 24H2+ only (build >= 26100)
+rem UCPD
 setlocal EnableDelayedExpansion
 if "!os_ver!"=="Win11" (
     if defined win_build (
@@ -481,18 +508,16 @@ if "!os_ver!"=="Win11" (
 )
 endlocal
 
-:: Smart App Control disable (Win11 22H2+) - blocks unsigned apps otherwise
+rem Smart App Control
 call :LogInfo "Disabling Smart App Control (Win11 22H2+)..."
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy" /v "VerifiedAndReputablePolicyState" /t REG_DWORD /d 0 /f
 
-:: Teredo disable (IPv6 tunneling - not needed on most desktops)
+rem Teredo
 call :LogInfo "Disabling Teredo tunneling..."
 netsh interface teredo set state disabled >nul 2>&1
 if not errorlevel 1 (call :LogOK "netsh teredo disabled") else (call :LogWarn "netsh teredo disabled (already off or N/A)")
 
-:: Aggressive Autologger profile: disable non-essential ETW autologgers for performance.
-:: Keep the core Windows EventLog sessions plus Circular Kernel Context Logger so
-:: Event Viewer, security auditing, and useful crash context remain available.
+rem Disable selected autologgers; keep core Event Log sessions.
 call :LogInfo "Applying aggressive Autologger performance profile..."
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $root='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WMI\Autologger'; $keep=@('Circular Kernel Context Logger','EventLog-Application','EventLog-Security','EventLog-System'); $disabled=0; $kept=0; $failed=0; try { $items=Get-ChildItem -Path $root -ErrorAction Stop; foreach($k in $items){ if($keep -contains $k.PSChildName){ $kept++; continue }; try { New-ItemProperty -Path $k.PSPath -Name 'Start' -PropertyType DWord -Value 0 -Force -ErrorAction Stop | Out-Null; $disabled++ } catch { $failed++ } }; Write-Output ('RESULT|'+$disabled+'|'+$kept+'|'+$failed); exit 0 } catch { Write-Output ('RESULT|0|0|1'); exit 1 }" > "%TEMP%\bardhzzY_autologger_result.txt" 2>nul
 set "AUTOLOGGER_RC=%errorlevel%"
@@ -1026,26 +1051,24 @@ del /q /f "%OneDrive%\Desktop\Microsoft Edge.lnk" >nul 2>&1
 del /q /f "%APPDATA%\Microsoft\Internet Explorer\Quick Launch\Microsoft Edge.lnk" >nul 2>&1
 del /q /f "%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\Microsoft Edge.lnk" >nul 2>&1
 del /q /f "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Accessories\Microsoft Edge.lnk" >nul 2>&1
-REM Kill the Edge shortcut re-creation stub (Edge leaves a stub .lnk that
-REM Windows re-resolves on logon). Wipe stub + cached icon too.
+rem Remove the Edge shortcut stub and cached icon.
 del /q /f "%LOCALAPPDATA%\Microsoft\Edge\Application\*Microsoft Edge*.lnk" >nul 2>&1
 rd /s /q "%LOCALAPPDATA%\Microsoft\Windows\INetCache\Microsoft Edge" >nul 2>&1
 rd /s /q "%LOCALAPPDATA%\Microsoft\Edge\Bin" >nul 2>&1
-REM Block Edge from re-pinning itself via the AppX shortcut cache
+rem Block Edge shortcut recreation.
 if exist "%LOCALAPPDATA%\Microsoft\Windows\Caches" attrib +r "%LOCALAPPDATA%\Microsoft\Windows\Caches\*Edge*" >nul 2>&1
 
-call :LogOK "Microsoft Edge and WebView2 completely eradicated!"
+call :LogOK "Edge and WebView2 cleanup finished."
 
 call :LogInfo "Disabling User Account Control (UAC) completely..."
-:: [USER REQUEST] Restore the original aggressive UAC configuration from the supplied script.
-:: EnableLUA=0 disables the UAC architecture rather than merely suppressing prompts.
+rem Disable UAC (restart required).
+
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableLUA" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorAdmin" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "ConsentPromptBehaviorUser" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableInstallerDetection" /t REG_DWORD /d "0" /f
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v "EnableVirtualization" /t REG_DWORD /d "1" /f
 call :LogWarn "UAC fully disabled (EnableLUA=0). A restart is required for this change to take effect."
-call :LogInfo "NOTE: AdvancedRun TrustedInstaller test now pre-starts the TrustedInstaller service with retry logic."
 
 call :LogInfo "Applying registry optimizations..."
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization" /v "NoLockScreen" /t REG_DWORD /d 1 /f
@@ -1355,13 +1378,13 @@ call :RegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyC
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "DisallowShaking" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "ShowSuperHidden" /t REG_DWORD /d 1 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband" /v "NumThumbnails" /t REG_DWORD /d 0 /f
-:: Disable "Welcome Experience" page after updates and "Get even more out of Windows" prompt
+rem Disable post-update welcome prompts.
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "SubscribedContent-310093Enabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement" /v "ScoobeSystemSettingEnabled" /t REG_DWORD /d 0 /f
 call :LogInfo "Disabling Meet Now and Teams startup..."
 call :RegLog delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "com.squirrel.Teams.Teams" /f
 
-call :LogInfo "Windows Defender handling moved to menu option 17 (Disable Defender)."
+call :LogInfo "Windows Defender handling moved to menu option 14 (Disable Defender)."
 call :LogInfo "Disabling SMBv1 (security)..."
 powershell -NoProfile -Command "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart -ErrorAction SilentlyContinue" >nul 2>&1
 if not errorlevel 1 (call :LogOK "Disable SMB1Protocol") else (call :LogWarn "Disable SMB1Protocol")
@@ -1416,7 +1439,6 @@ call :RegLog add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanc
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\OneDrive" /v "DisableFileSyncNGSC" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "SidebarEnabled" /t REG_DWORD /d 0 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "LongPathsEnabled" /t REG_DWORD /d 1 /f
-
 
 setlocal enabledelayedexpansion
 
@@ -1501,6 +1523,30 @@ if not errorlevel 1 (call :LogOK "Exclude Game Extensions") else (call :LogErr "
 powershell -NoProfile -Command "$paths = @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture'); foreach ($p in $paths) { if (Test-Path $p) { Get-ChildItem $p | ForEach-Object { $fx = Join-Path $_.PSPath 'FxProperties'; if (Test-Path $fx) { Set-ItemProperty -Path $fx -Name '{1da5d803-d492-4edd-8c23-e0c0ffee7f0e},5' -Value 1 -Type DWord -ErrorAction SilentlyContinue } } } }" >nul 2>&1
 if not errorlevel 1 (call :LogOK "disable Audio Enhancements") else (call :LogErr "disable Audio Enhancements")
 
+rem Set the Arrow and Crosshair cursors for the current user.
+
+call :LogInfo "Setting mouse pointer to cross_r.cur..."
+if exist "%SystemRoot%\Cursors\cross_r.cur" (
+    reg add "HKCU\Control Panel\Cursors" /v "Arrow" /t REG_EXPAND_SZ /d "%SystemRoot%\Cursors\cross_r.cur" /f >nul 2>&1
+    if errorlevel 1 (
+        call :LogErr "Failed to set the default Arrow cursor to cross_r.cur."
+    ) else (
+        reg add "HKCU\Control Panel\Cursors" /v "Crosshair" /t REG_EXPAND_SZ /d "%SystemRoot%\Cursors\cross_r.cur" /f >nul 2>&1
+        if errorlevel 1 (
+            call :LogErr "Arrow cursor changed, but Crosshair cursor mapping failed."
+        ) else (
+            powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $src='using System; using System.Runtime.InteropServices; public static class CursorRefresh { [DllImport(' + [char]34 + 'user32.dll' + [char]34 + ', SetLastError=true)] public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, uint fWinIni); }'; Add-Type -TypeDefinition $src; if (-not [CursorRefresh]::SystemParametersInfo(0x0057, 0, [IntPtr]::Zero, 3)) { exit 1 }; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
+            if errorlevel 1 (
+                call :LogWarn "Cursor paths saved, but Windows could not refresh them immediately; sign out or restart if needed."
+            ) else (
+                call :LogOK "Default Arrow and Crosshair cursor mappings set to cross_r.cur."
+            )
+        )
+    )
+) else (
+    call :LogWarn "cross_r.cur was not found in %SystemRoot%\Cursors; cursor mapping skipped."
+)
+
 call :LogInfo "Windows Tweaks section complete."
 timeout /t 1 /nobreak > NUL
 pause
@@ -1508,25 +1554,25 @@ goto main
 
 :gpu
 cls
-echo %ESC%[0m
+echo %RESET%
 
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mSELECT GPU MANUFACTURER%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Nvidia          %ESC%[37m [%ESC%[36m2%ESC%[37m] AMD             %ESC%[37m [%ESC%[36m3%ESC%[37m] Intel
+echo  %BLUE%SELECT GPU MANUFACTURER%RESET%
+echo  %WHITE% [%CYAN%1%WHITE%] Nvidia          %WHITE% [%CYAN%2%WHITE%] AMD             %WHITE% [%CYAN%3%WHITE%] Intel
 echo.
-echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Exit to Main Menu
+echo  %WHITE% [%CYAN%4%WHITE%] Exit to Main Menu
 echo.
 set "input="
-set /p "input=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "input=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
-:: Sanitize input to prevent "is not recognized" errors
+rem Validate user input.
 if not defined input goto gpu
 set "input=%input:"=%"
 set "input=%input:&=%"
@@ -1597,7 +1643,7 @@ for %%i in (0000 0001 0002 0003 0004 0005) do (
 
 call :LogInfo "Applying NVIDIA RM* depth tweaks (engine gatings, GC6, runtime PM, LRC, latency tolerance)..."
 
-:: All RM* keys applied to all 6 GPU subkey slots. Desktop-focused.
+rem NVIDIA tweaks.
 for %%i in (0000 0001 0002 0003 0004 0005) do (
     call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RmDisableHwFaultBuffer" /t REG_DWORD /d 1 /f
     call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\%%i" /v "RMDisablePerIntrDPCQueueing" /t REG_DWORD /d 1 /f
@@ -1763,7 +1809,7 @@ call :LogInfo "Disabling Multiplane Overlay (MPO)..."
 call :RegLog delete "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestType" /f >nul 2>&1
 call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "DisableOverlays" /t REG_DWORD /d "1" /f
 
-:: --- HDCP Tweaks (Bugfixed to use 'delims=') ---
+rem HDCP tweaks.
 for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}" /f "00*" /k ^| findstr "000"') do (
     set "RL_DYN_KEY=%%a"
     call :DynRegLog /v "RmHdcpKeybackDisable" /t REG_DWORD /d 1 /f
@@ -1850,7 +1896,7 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
 
         call :LogInfo "Applying AMD depth tweaks (clock gating, power gating, ASPM, sleep) to: %%a"
 
-        :: Performance mode + sleep disables
+        rem Performance mode + sleep disables
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "PP_Force3DPerformanceMode" /t REG_DWORD /d 1 /f
         set "RL_DYN_KEY=%%a"
@@ -1866,11 +1912,11 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DisableDrmLightSleep" /t REG_DWORD /d 1 /f
 
-        :: Radeon Boost off
+        rem Radeon Boost off
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "KMD_RadeonBoostEnabled" /t REG_DWORD /d 0 /f
 
-        :: Clock gating keys
+        rem Clock gating keys
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DisableGfx3DCGLS" /t REG_DWORD /d 1 /f
         set "RL_DYN_KEY=%%a"
@@ -1926,7 +1972,7 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DisableAllClockGating" /t REG_DWORD /d 1 /f
 
-        :: Power gating keys
+        rem Power gating keys
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DisableGfxPGCondClearStateWA" /t REG_DWORD /d 1 /f
         set "RL_DYN_KEY=%%a"
@@ -1962,7 +2008,7 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DisableXdmaSclkGating" /t REG_DWORD /d 1 /f
 
-        :: Powerdown + ASPM
+        rem Powerdown + ASPM
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DalPSRSkipCRTCPowerDown" /t REG_DWORD /d 0 /f
         set "RL_DYN_KEY=%%a"
@@ -1984,7 +2030,7 @@ for /f "delims=" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "AspmL1Timeout" /t REG_DWORD /d 0 /f
 
-        :: Misc disable
+        rem Misc disable
         set "RL_DYN_KEY=%%a"
         call :DynRegLog /v "DisableClkReqSupport" /t REG_DWORD /d 1 /f
         set "RL_DYN_KEY=%%a"
@@ -2034,8 +2080,7 @@ call :RegLog add "HKLM\System\CurrentControlSet\Control\Class\{4d36e968-e325-11c
 call :RegLog add "HKLM\Software\Intel\GMM" /v "DedicatedSegmentSize" /t REG_DWORD /d "512" /f
 
 call :LogInfo "Setting interrupt policies for Intel GPU..."
-:: Intel GPU MSI: keep the whole PNP ID inside PowerShell so '&' can never be
-:: interpreted by CMD as a command separator.
+rem Intel GPU MSI tweaks.
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $gpus=Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | Where-Object { $_.PNPDeviceID -like '*VEN_8086*' }; $count=0; foreach($g in $gpus){ $p='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\'+$g.PNPDeviceID+'\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties'; if(Test-Path $p){ try { New-ItemProperty -Path $p -Name 'MSISupported' -PropertyType DWord -Value 1 -Force -ErrorAction Stop | Out-Null; $count++ } catch {} } }; Write-Output $count" > "%TEMP%\bardhzz_intel_msi_count.txt" 2>nul
 set "INTEL_MSI_COUNT=0"
 for /f "delims=" %%A in ('type "%TEMP%\bardhzz_intel_msi_count.txt" 2^>nul') do set "INTEL_MSI_COUNT=%%A"
@@ -2080,9 +2125,7 @@ for %%S in (Ndu 1394ohci fdc flpydisk sfloppy HidBth HidIr) do (
 )
 
 call :LogInfo "Applying Device Priority tweaks..."
-:: DevicePriority: use PowerShell/registry provider here because PCI hardware IDs
-:: contain '&' (for example VEN_xxxx&DEV_CAFE&SUBSYS_...), and CALL re-parses '&'
-:: as a command separator in batch files.
+rem PCI device affinity.
 set "CPU_AFFINITY_RC=0"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $base='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\PCI'; $keys=Get-ChildItem -Path $base -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -and $_.Name -eq 'Affinity Policy' }; $count=0; foreach($k in $keys){ try { New-ItemProperty -Path $k.PSPath -Name 'DevicePriority' -PropertyType DWord -Value 3 -Force -ErrorAction Stop | Out-Null; $count++ } catch {} }; Write-Output $count" > "%TEMP%\bardhzz_cpu_affinity_count.txt" 2>nul
 set "CPU_AFFINITY_COUNT=0"
@@ -2188,27 +2231,27 @@ goto main
     
 :ram
 cls
-echo %ESC%[0m
+echo %RESET%
 
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╝███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╝███████║██████╔╝██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mSELECT RAM AMOUNT%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m 1%ESC%[37m] 2 GB               %ESC%[37m [%ESC%[36m 4%ESC%[37m] 6 GB               %ESC%[37m [%ESC%[36m 7%ESC%[37m] 24 GB
-echo  %ESC%[37m [%ESC%[36m 2%ESC%[37m] 3 GB               %ESC%[37m [%ESC%[36m 5%ESC%[37m] 8 GB               %ESC%[37m [%ESC%[36m 8%ESC%[37m] 32 GB
-echo  %ESC%[37m [%ESC%[36m 3%ESC%[37m] 4 GB               %ESC%[37m [%ESC%[36m 6%ESC%[37m] 16 GB              %ESC%[37m [%ESC%[36m 9%ESC%[37m] 64 GB
+echo  %BLUE%SELECT RAM AMOUNT%RESET%
+echo  %WHITE% [%CYAN% 1%WHITE%] 2 GB               %WHITE% [%CYAN% 4%WHITE%] 6 GB               %WHITE% [%CYAN% 7%WHITE%] 24 GB
+echo  %WHITE% [%CYAN% 2%WHITE%] 3 GB               %WHITE% [%CYAN% 5%WHITE%] 8 GB               %WHITE% [%CYAN% 8%WHITE%] 32 GB
+echo  %WHITE% [%CYAN% 3%WHITE%] 4 GB               %WHITE% [%CYAN% 6%WHITE%] 16 GB              %WHITE% [%CYAN% 9%WHITE%] 64 GB
 echo.
-echo  %ESC%[37m [%ESC%[36m10%ESC%[37m] Exit to Main Menu
+echo  %WHITE% [%CYAN%10%WHITE%] Exit to Main Menu
 echo.
 set "input="
-set /p "input=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "input=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
-:: Sanitize input to prevent "is not recognized" errors
+rem Validate user input.
 if not defined input goto ram
 set "input=%input:"=%"
 set "input=%input:&=%"
@@ -2296,14 +2339,14 @@ goto main
 call :LogSection "RAM Tweaks (16GB)"
 echo You selected 16 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "16777216" /f
-powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
@@ -2320,15 +2363,15 @@ goto main
 call :LogSection "RAM Tweaks (24GB)"
 echo You selected 24 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "25165824" /f
-powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
@@ -2344,15 +2387,15 @@ goto main
 call :LogSection "RAM Tweaks (32GB)"
 echo You selected 32 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "33554432" /f
-powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
@@ -2368,15 +2411,15 @@ goto main
 call :LogSection "RAM Tweaks (64GB)"
 echo You selected 64 GB RAM Tweak!
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IOPageLockLimit" /t REG_DWORD /d "67108864" /f
-powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch") else (call :LogErr "Disable-MMAgent -ApplicationLaunchPrefetching -ApplicationPreLaunch")
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d 1 /f
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagedPoolSize" /t REG_DWORD /d 0 /f
 echo Disabling Memory Compression
-powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -MemoryCompression -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -MemoryCompression") else (call :LogErr "Disable-MMAgent -MemoryCompression")
 echo Disabling Page Combining
-powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "try { Disable-MMAgent -PageCombining -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if not errorlevel 1 (call :LogOK "Disable-MMAgent -PageCombining") else (call :LogErr "Disable-MMAgent -PageCombining")
 echo Disabling Large System Cache
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "LargeSystemCache" /t REG_DWORD /d 0 /f
@@ -2387,7 +2430,6 @@ call :LogOK "64GB RAM Tweaks applied successfully!"
 timeout /t 1 /nobreak > NUL
 pause
 goto main
-
 
 :services
 call :LogSection "Service Reduction"
@@ -2492,7 +2534,6 @@ call :TIScLog config DsSvc start= disabled
 
 call :TIScLog config diagsvc start= disabled
 call :TIScLog config DialogBlockingService start= disabled
-
 
 call :TIScLog config AppVClient start= disabled
 call :TIScLog config MsKeyboardFilter start= disabled
@@ -2852,7 +2893,7 @@ for %%S in (
     call :TIScLog config "%%S" start= disabled
 )
 
-REM [FINAL FIX] Display names are not SCM service-key names. Real Intel short names are handled above.
+rem Intel service settings.
 call :LogSkip "Intel display-name service-key block skipped (real short names handled above)."
 
 call :LogInfo "Disabling Browser Background Updater Services..."
@@ -3085,7 +3126,7 @@ call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v "A
 call :RegLog add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "AllowRecall" /t REG_DWORD /d 0 /f
 call :LogOK "AI Features Disabled!"
 
-call :LogInfo "Cleaning Temporary Files (Flawless Execution)..."
+call :LogInfo "Cleaning temporary files..."
 
 for /d %%D in ("%temp%\*") do (
     if /i not "%%~nxD"=="bardhzzY_Logs" (
@@ -3117,7 +3158,7 @@ call :LogInfo "Clearing Windows Event Logs..."
 for /f "tokens=*" %%G in ('wevtutil el') do (wevtutil cl "%%G" >nul 2>&1)
 
 call :LogInfo "Cleaning Discord + Spotify cache (frees disk space)..."
-:: Discord Cache + Code Cache + GPU Cache
+rem Discord cache.
 for /d %%D in ("%LOCALAPPDATA%\Discord\app-*") do (
     if exist "%%D\Cache" call :TIRun cmd.exe /c rd /s /q "%%D\Cache" >nul 2>&1
     if exist "%%D\Code Cache" call :TIRun cmd.exe /c rd /s /q "%%D\Code Cache" >nul 2>&1
@@ -3125,7 +3166,7 @@ for /d %%D in ("%LOCALAPPDATA%\Discord\app-*") do (
 )
 call :LogOK "Discord cache cleared."
 
-:: Spotify cache
+rem Spotify cache.
 if exist "%LOCALAPPDATA%\Spotify\Data" (
     call :TIRun cmd.exe /c rd /s /q "%LOCALAPPDATA%\Spotify\Data" >nul 2>&1
     if not exist "%LOCALAPPDATA%\Spotify\Data" (call :LogOK "Spotify cache cleared.") else (call :LogErr "Spotify cache clear failed.")
@@ -3201,7 +3242,7 @@ net start FontCache >nul 2>&1
 del /s /f /q "C:\ProgramData\Microsoft\Windows Defender\Scans\History\Store\*" >nul 2>&1
 
 call :LogInfo "Running DISM Component Cleanup..."
-:: FIX: Removed /resetbase to prevent crashing, added /NoRestart
+rem Component cleanup.
 dism /online /cleanup-image /startcomponentcleanup /NoRestart >nul 2>&1
 if not errorlevel 1 (call :LogOK "DISM Component Cleanup") else (call :LogWarn "DISM Component Cleanup (Skipped or failed)")
 
@@ -3392,15 +3433,13 @@ if not errorlevel 1 (call :LogOK "Enable-NetAdapterRss") else (call :LogErr "Ena
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "NumTcbTablePartitions" /t REG_DWORD /d 16 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxUserPort" /t REG_DWORD /d 65534 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpTimedWaitDelay" /t REG_DWORD /d 30 /f
-REM [FINAL FIX - NIC] Fragile global/wildcard adapter setters removed. The per-NIC block below
-REM applies the same requested properties with -AllProperties, valid-value checks and -NoRestart.
+rem Network adapter tweaks.
 
 ipconfig /flushdns >nul 2>&1
 if not errorlevel 1 (call :LogOK "ipconfig /flushdns") else (call :LogErr "ipconfig /flushdns")
 
-:: Per-NIC Adapter Tuning
-:: Each property is discovered on the adapter first. Unsupported/vendor-specific
-:: properties are skipped instead of throwing, so one bad property cannot abort the batch.
+rem Per-adapter settings.
+rem Unsupported adapter properties are skipped.
 call :LogInfo "Applying Per-NIC Adapter Tuning (supported properties only)..."
 set "NIC_PS=%TEMP%\bardhzz_nic_tune.ps1"
 set "NIC_LOG=%TEMP%\bardhzz_nic.log"
@@ -3421,10 +3460,9 @@ if errorlevel 1 (
 )
 del /q "%NIC_PS%" "%NIC_LOG%" >nul 2>&1
 
-:: Full Network Cleanup
+rem Network cleanup.
 call :LogInfo "Performing non-disruptive Network Cleanup..."
-:: Do not force DHCP /release + /renew here. In VMs and some enterprise NICs it can
-:: temporarily remove the only interface and make the batch look frozen.
+rem Avoid DHCP release/renew so the active interface stays up.
 call :LogSkip "ipconfig /release + /renew skipped (non-disruptive mode)."
 arp -d * >nul 2>&1
 if not errorlevel 1 (call :LogOK "arp -d *") else (call :LogWarn "arp -d *")
@@ -3454,10 +3492,7 @@ fsutil behavior set Disabledeletenotify 0 >nul 2>&1
 if not errorlevel 1 (call :LogOK "fsutil Disabledeletenotify 0") else (call :LogErr "fsutil Disabledeletenotify 0")
 fsutil behavior set encryptpagingfile 0 >nul 2>&1
 if not errorlevel 1 (call :LogOK "fsutil encryptpagingfile 0") else (call :LogErr "fsutil encryptpagingfile 0")
-
-:: ------------------------------------------------------------
-:: Storage MSI / MSI-X
-:: ------------------------------------------------------------
+rem Storage MSI / MSI-X
 call :LogInfo "Enabling MSI Mode for Active Storage Controllers..."
 setlocal EnableExtensions EnableDelayedExpansion
 
@@ -3520,7 +3555,6 @@ call :SchLog /run /tn "Microsoft\Windows\DiskCleanup\SilentCleanup"
 
 call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SwapfileControl" /t REG_DWORD /d 0 /f
 call :LogOK "All Storage Tweaks applied successfully!"
-endlocal
 timeout /t 1 /nobreak > NUL
 pause
 goto main
@@ -3642,19 +3676,19 @@ goto main
 :devmgmt
 call :LogSection "Device Manager Tweaks"
 cls
-echo %ESC%[0m
+echo %RESET%
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[91m[!] bardhzzY Tweaks - Aggressive Warning%ESC%[0m
+echo  %BRIGHT_RED%[!] bardhzzY Tweaks - Aggressive Warning%RESET%
 echo ======================================================
 echo.
-echo  %ESC%[91m[!]%ESC%[0m The following tweaks will disable 48 hardware devices:
+echo  %BRIGHT_RED%[!]%RESET% The following tweaks will disable 48 hardware devices:
 echo      - HPET, System Timer, DMA Controller, Numeric Data Processor
 echo      - Composite Bus, Microsoft GS Wavetable Synth, Programmable PIC
 echo      - ACPI Processor Aggregator, Thermal Zone, Wake Alarm
@@ -3666,7 +3700,7 @@ echo      - Print to PDF, Radio Device, RRAS, Virtual Drive, WMI for ACPI
 echo      - NDIS Virtual, NVIDIA HD Audio, RDP Redirector, Root Print Queue
 echo      - UMBus Root, all 7 WAN Miniports (IKEv2/IP/IPv6/L2TP/NetMon/PPPOE/PPTP/SSTP)
 echo.
-echo  %ESC%[91m[!] RISKS:%ESC%[0m
+echo  %BRIGHT_RED%[!] RISKS:%RESET%
 echo      Disabling HPET/Timers is highly debated - may fix stutters
 echo      OR cause freezes, DPC watchdog violations, audio issues.
 echo      Intel ME / AMD PSP disable may cause boot issues on some systems.
@@ -3674,11 +3708,11 @@ echo      WAN Miniport disable breaks VPN clients (OpenVPN, Cisco AnyConnect).
 echo      Bluetooth enumerators break Bluetooth audio/HID devices.
 echo      Disabling NVIDIA HD Audio breaks HDMI audio output.
 echo.
-echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Continue (I understand the risks)
-echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Go Back to Main Menu
+echo  %WHITE% [%CYAN%1%WHITE%] Continue (I understand the risks)
+echo  %WHITE% [%CYAN%2%WHITE%] Go Back to Main Menu
 echo.
 set "pnp_choice="
-set /p "pnp_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "pnp_choice=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
 if not defined pnp_choice goto devmgmt
 set "pnp_choice=%pnp_choice:"=%"
@@ -3698,10 +3732,10 @@ echo.
 echo [+] Scanning for active system devices...
 call :LogInfo "Preparing Device Manager PnP Tweaks..."
 
-:: Flawless PowerShell execution: No pipes to confuse CMD, handles multiple instances, forces UTF-8 output
+rem Disable selected PnP devices and log results.
 powershell -NoProfile -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $devices = @('High Precision Event Timer', 'System Timer', 'Direct memory access controller', 'Numeric Data Processor', 'Composite Bus Enumerator', 'Microsoft GS Wavetable Synth', 'ACPI Processor Aggregator', 'ACPI Thermal Zone', 'ACPI Wake Alarm', 'AMD Controller Emulation', 'AMD Crash Defender', 'AMD PSP', 'Bluetooth Device (Personal Area Network)', 'Bluetooth Device (RFCOMM Protocol TDI)', 'Intel(R) Management Engine Interface', 'Intel(R) Dynamic Application Loader Host Interface', 'Intel(R) Management Engine WMI Provider', 'Intel(R) Platform Monitoring Technology Device', 'Intel(R) SMBus - 7AA3', 'Intel(R) SPI (Flash) Controller - 7AA4', 'Microsoft Bluetooth Enumerator', 'Microsoft Bluetooth LE Enumerator', 'Microsoft Device Association Root Enumerator', 'Microsoft Hyper-V Virtualization Infrastructure Driver', 'Microsoft Hypervisor Service', 'Microsoft Kernel Debug Network Adapter', 'Microsoft Print to PDF', 'Microsoft Radio Device Enumeration Bus', 'Microsoft RRAS Root Enumerator', 'Microsoft Virtual Drive Enumerator', 'Microsoft Windows Management Interface for ACPI', 'NDIS Virtual Network Adapter Enumerator', 'NVIDIA High Definition Audio', 'Programmable interrupt controller', 'Remote Desktop Device Redirector Bus', 'Resource Hub proxy device', 'Root Print Queue', 'UMBus Root Bus Enumerator', 'WAN Miniport (IKEv2)', 'WAN Miniport (IP)', 'WAN Miniport (IPv6)', 'WAN Miniport (L2TP)', 'WAN Miniport (Network Monitor)', 'WAN Miniport (PPPOE)', 'WAN Miniport (PPTP)', 'WAN Miniport (SSTP)'); $found=0; foreach ($d in $devices) { $devs = Get-PnpDevice -FriendlyName $d -ErrorAction SilentlyContinue; foreach ($dev in $devs) { if ($dev.Status -eq 'OK') { try { Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop; Write-Output ('OK:' + $d); $found=1 } catch { Write-Output ('FAIL:' + $d); $found=1 } } } }; if ($found -eq 0) { Write-Output 'WARN:No active target devices were found.' }" > "%TEMP%\bardhzz_pnp_log.txt"
 
-:: Parse the results flawlessly
+rem Parse PnP results.
 set "pnp_processed=0"
 for /f "tokens=1,* delims=:" %%A in ('type "%TEMP%\bardhzz_pnp_log.txt" 2^>nul') do (
     set "pnp_processed=1"
@@ -3723,218 +3757,151 @@ goto main
 
 :pwr
 setlocal EnableExtensions EnableDelayedExpansion
-call :LogSection "Power Tweaks"
-echo [++] Activating Ultimate Performance Power Plan...
-set "ULTIMATE_GUID="
-for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do if not defined ULTIMATE_GUID set "ULTIMATE_GUID=%%a"
-if defined ULTIMATE_GUID (
-    powercfg -setactive !ULTIMATE_GUID! >nul 2>&1
-    if not errorlevel 1 (call :LogOK "Ultimate Performance power plan activated.") else (call :LogWarn "Ultimate Performance plan exists but could not be activated.")
+call :LogSection "Power Plan"
+call :DetectToolPaths
+set "PWR_NORMAL_FILE=!POWERPLAN_DIR!\bardhzzY powerplan.pow"
+set "PWR_IDLE_FILE=!POWERPLAN_DIR!\bardhzzY powerplan idle off.pow"
+
+goto pwr_menu
+
+:pwr_menu
+cls
+echo.
+echo  %BLUE%╔══════════════════════════════════════════════════════════════════════╗%RESET%
+echo  %BLUE%║%CYAN%                          POWER PLAN SELECTOR                         %BLUE%║%RESET%
+echo  %BLUE%╚══════════════════════════════════════════════════════════════════════╝%RESET%
+echo.
+echo  %WHITE%Choose the plan you want to import and activate.%RESET%
+echo  %GRAY%The active scheme will be checked after activation.%RESET%
+echo.
+echo  %BLUE%┌──────────────────────────────────────────────────────────────────────┐%RESET%
+echo  %BLUE%│%RESET%  %GREEN%[1]%RESET%  %WHITE%STANDARD%RESET%
+echo  %BLUE%│%RESET%      %GRAY%bardhzzY powerplan.pow%RESET%
+if exist "!PWR_NORMAL_FILE!" (
+    echo  %BLUE%│%RESET%      %GREEN%Status: file found%RESET%
 ) else (
-    powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 >nul 2>&1
-    if not errorlevel 1 (
-        for /f "tokens=4" %%a in ('powercfg -list ^| findstr /i "Ultimate Performance"') do if not defined ULTIMATE_GUID set "ULTIMATE_GUID=%%a"
-        if defined ULTIMATE_GUID (powercfg -setactive !ULTIMATE_GUID! >nul 2>&1 & if not errorlevel 1 (call :LogOK "Ultimate Performance power plan created and activated.") else (call :LogWarn "Ultimate Performance plan was created but activation failed.")) else (call :LogWarn "Ultimate Performance plan could not be located after creation attempt.")
-    ) else (call :LogWarn "Ultimate Performance plan already exists but was not discoverable by name, or creation is unsupported on this system.")
+    echo  %BLUE%│%RESET%      %RED%Status: file missing%RESET%
 )
-powercfg /hibernate off >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg hibernate off") else (call :LogErr "powercfg hibernate off")
-
-call :LogInfo "Configuring Core parking..."
-call :LogInfo "Applying Core Unparking Registry Keys..."
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Power\PowerSettings\54533251-82be-4824-96c1-47b60b740d00\0cc5b647-c1df-4637-891a-dec35c318583" /v "Attributes" /t REG_DWORD /d 0 /f
-if not errorlevel 1 (call :LogOK "reg CPMINCORES 0") else (call :LogErr "reg CPMINCORES 0")
-call :RegLog add "HKLM\System\CurrentControlSet\Control\Power\PowerSettings\54533251-82be-4824-96c1-47b60b740d00\0cc5b647-c1df-4637-891a-dec35c318583" /v "ValueMax" /t REG_DWORD /d 100 /f
-if not errorlevel 1 (call :LogOK "reg CPMAXCORES 100") else (call :LogErr "reg CPMAXCORES 100")
-powercfg -setacvalueindex scheme_current sub_processor CPMINCORES 100 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg CPMINCORES 100") else (call :LogErr "powercfg CPMINCORES 100")
-powercfg -setacvalueindex scheme_current sub_processor CPMAXCORES 100 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
-powercfg /setacvalueindex SCHEME_CURRENT SUB_PCIEXPRESS ASPM 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg ASPM 0") else (call :LogErr "powercfg ASPM 0")
-powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP RTCWAKE 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg disablewaketimersac") else (call :LogErr "disablewaketimersac")
-powercfg /setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg 48e6b7a6 0") else (call :LogSkip "powercfg 48e6b7a6 0 (setting not exposed by this power plan/hardware)")
-powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR SYSCOOLPOL 1 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg SYSCOOLPOL 1") else (call :LogSkip "powercfg SYSCOOLPOL 1 (setting not exposed by this power plan/hardware)")
-powercfg /setacvalueindex SCHEME_CURRENT SUB_DISK DISKIDLE 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg DISKIDLE 0") else (call :LogSkip "powercfg DISKIDLE 0 (setting not exposed by this power plan/hardware)")
-powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP UnattendSleepTimeout 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg unattendsleeptimeout") else (call :LogSkip "powercfg unattendsleeptimeout (setting not exposed by this power plan/hardware)")
-powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg VIDEOIDLE 0") else (call :LogSkip "powercfg VIDEOIDLE 0 (setting not exposed by this power plan/hardware)")
-powercfg -setactive scheme_current >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg setactive scheme_current") else (call :LogErr "powercfg setactive scheme_current")
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$base='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB'; $count=0; Get-ChildItem -Path $base -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -and (Get-ItemProperty -Path $_.PSPath -Name 'AllowIdleIrpInD3' -ErrorAction SilentlyContinue) } | ForEach-Object { try { Set-ItemProperty -Path $_.PSPath -Name 'AllowIdleIrpInD3' -Type DWord -Value 0 -ErrorAction Stop; $count++ } catch {} }; Write-Output $count" > "%TEMP%\bardhzz_usb_idle_count.txt" 2>nul
-set "USB_IDLE_COUNT=0"
-for /f "delims=" %%A in ('type "%TEMP%\bardhzz_usb_idle_count.txt" 2^>nul') do set "USB_IDLE_COUNT=%%A"
-del /q "%TEMP%\bardhzz_usb_idle_count.txt" >nul 2>&1
-if "%USB_IDLE_COUNT%"=="0" (call :LogSkip "USB AllowIdleIrpInD3: no existing values were modified.") else (set "LOG_MSG=USB AllowIdleIrpInD3 disabled on %USB_IDLE_COUNT% device(s)." & call :LogOK)
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\HidUsb\Parameters" /v "SelectiveSuspendEnabled" /t REG_DWORD /d 0 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\usbhub\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v "DisableSelectiveSuspend" /t REG_DWORD /d 1 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings\501a4d13-42af-4429-9fd1-a8218c268e20\ee12f906-d277-404b-b6da-e5fa1a576df5" /v "Attributes" /t REG_DWORD /d 2 /f
-powercfg -setacvalueindex scheme_current 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg ee12f906 0") else (call :LogSkip "powercfg ee12f906 0 (setting not exposed by this power plan/hardware)")
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$base='Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB'; $e=0; $s=0; Get-ChildItem -Path $base -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -and $_.PSChildName -eq 'Device Parameters' } | ForEach-Object { try { if(Get-ItemProperty -Path $_.PSPath -Name 'EnhancedPowerManagementEnabled' -ErrorAction SilentlyContinue){ Set-ItemProperty -Path $_.PSPath -Name 'EnhancedPowerManagementEnabled' -Type DWord -Value 0 -ErrorAction Stop; $e++ } } catch {}; try { if(Get-ItemProperty -Path $_.PSPath -Name 'SelectiveSuspendEnabled' -ErrorAction SilentlyContinue){ Set-ItemProperty -Path $_.PSPath -Name 'SelectiveSuspendEnabled' -Type DWord -Value 0 -ErrorAction Stop; $s++ } } catch {} }; Write-Output ($e.ToString()+','+$s.ToString())" > "%TEMP%\bardhzz_usb_power_counts.txt" 2>nul
-set "USB_EPM_COUNT=0"
-set "USB_SUSPEND_COUNT=0"
-for /f "tokens=1,2 delims=," %%A in ('type "%TEMP%\bardhzz_usb_power_counts.txt" 2^>nul') do (set "USB_EPM_COUNT=%%A" & set "USB_SUSPEND_COUNT=%%B")
-del /q "%TEMP%\bardhzz_usb_power_counts.txt" >nul 2>&1
-set "LOG_MSG=USB EnhancedPowerManagementEnabled modified on %USB_EPM_COUNT% device(s)."
-call :LogOK
-set "LOG_MSG=USB SelectiveSuspendEnabled modified on %USB_SUSPEND_COUNT% device(s)."
-call :LogOK
-
-call :LogInfo "Disabling Power Throttling"
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Executive" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\ModernSleep" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "CoalescingTimerInterval" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "PlatformAoAcOverride" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "EventProcessorEnabled" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" /v "PowerThrottlingOff" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "DeepIoCoalescingEnabled" /t REG_DWORD /d 0 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Power" /v "EnergyEstimationEnabled" /t REG_DWORD /d 0 /f
-
-call :LogInfo "Optimizing System Timers and Disabling Throttling..."
-call :LogInfo "Applying Aggressive System Timer Tweaks..."
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "PlatformTimer" /t REG_DWORD /d 1 /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "TimerSetCoalesce" /t REG_DWORD /d 0 /f
-:: Forces MMCSS to prioritize gaming threads unconditionally
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "LazyModeTimeout" /t REG_DWORD /d 100 /f
-
-call :LogInfo "Setting MMCSS"
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "NoLazyMode" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "AlwaysOn" /t REG_DWORD /d "1" /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Priority" /t REG_DWORD /d "6" /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "SFIO Priority" /t REG_SZ /d "High" /f
-call :RegLog add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" /v "Latency Sensitive" /t REG_SZ /d "True" /f
-call :RegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power" /v "HiberbootEnabled" /t REG_DWORD /d 0 /f
-
-call :LogInfo "Setting Resource Policy Store Values"
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\HardCap0" /v "CapPercentage" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\HardCap0" /v "SchedulingType" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\Paused" /v "CapPercentage" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\Paused" /v "SchedulingType" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\SoftCapFull" /v "CapPercentage" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\SoftCapFull" /v "SchedulingType" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\SoftCapLow" /v "CapPercentage" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\CPU\SoftCapLow" /v "SchedulingType" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\BackgroundDefault" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\Frozen" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\FrozenDNCS" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\FrozenDNK" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\FrozenPPLE" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\Paused" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\PausedDNK" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\Pausing" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\PrelaunchForeground" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Flags\ThrottleGPUInterference" /v "IsLowPriority" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Critical" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Critical" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\CriticalNoUi" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\CriticalNoUi" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\EmptyHostPPLE" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\EmptyHostPPLE" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\High" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\High" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Low" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Low" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Lowest" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Lowest" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Medium" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\Medium" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\MediumHigh" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\MediumHigh" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\StartHost" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\StartHost" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\VeryHigh" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\VeryHigh" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\VeryLow" /v "BasePriority" /t REG_DWORD /d "82" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Importance\VeryLow" /v "OverTargetPriority" /t REG_DWORD /d "50" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\IO\NoCap" /v "IOBandwidth" /t REG_DWORD /d "0" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Memory\NoCap" /v "CommitLimit" /t REG_DWORD /d "4294967295" /f
-call :RegLog add "HKLM\SYSTEM\ResourcePolicyStore\ResourceSets\Policies\Memory\NoCap" /v "CommitTarget" /t REG_DWORD /d "4294967295" /f
-
-call :LogInfo "Applying bcdedit and powercfg settings..."
-bcdedit /set disabledynamictick Yes >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit disabledynamictick Yes") else (call :LogErr "bcdedit disabledynamictick Yes")
-bcdedit /deletevalue {current} useplatformclock >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit deletevalue useplatformclock") else (call :LogWarn "bcdedit deletevalue useplatformclock")
-bcdedit /deletevalue useplatformtick >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit deletevalue useplatformtick") else (call :LogWarn "bcdedit deletevalue useplatformtick")
-bcdedit /set quietboot yes >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit quietboot yes") else (call :LogErr "bcdedit quietboot yes")
-bcdedit /set bootuxdisabled yes >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit bootuxdisabled yes") else (call :LogErr "bcdedit bootuxdisabled yes")
-bcdedit /timeout 3 >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit timeout 3") else (call :LogErr "bcdedit timeout 3")
-bcdedit /set bootstatuspolicy ignoreallfailures >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit bootstatuspolicy ignoreallfailures") else (call :LogErr "bcdedit bootstatuspolicy ignoreallfailures")
-bcdedit /set {current} bootmenupolicy Standard >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit bootmenupolicy Standard") else (call :LogErr "bcdedit bootmenupolicy Standard")
-bcdedit /set x2apicpolicy Enable >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit x2apicpolicy Enable") else (call :LogErr "bcdedit x2apicpolicy Enable")
-bcdedit /set numaoptimize 1 >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit numaoptimize 1") else (call :LogErr "bcdedit numaoptimize 1")
-bcdedit /set bootlog No >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit bootlog No") else (call :LogErr "bcdedit bootlog No")
-bcdedit /set configaccesspolicy Default >nul 2>&1
-if not errorlevel 1 (call :LogOK "bcdedit configaccesspolicy Default") else (call :LogErr "bcdedit configaccesspolicy Default")
-powercfg -h off >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg -h off") else (call :LogErr "powercfg -h off")
-powercfg -change -disk-timeout-ac 0 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg -change -disk-timeout-ac 0") else (call :LogErr "powercfg -change -disk-timeout-ac 0")
-powercfg /setacvalueindex scheme_current sub_processor CPMAXCORES 100 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg CPMAXCORES 100") else (call :LogErr "powercfg CPMAXCORES 100")
-powercfg /setacvalueindex scheme_current sub_processor PERFBOOSTMODE 2 >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg PERFBOOSTMODE 2") else (call :LogErr "powercfg PERFBOOSTMODE 2")
-powercfg -setactive SCHEME_CURRENT >nul 2>&1
-if not errorlevel 1 (call :LogOK "powercfg -setactive SCHEME_CURRENT") else (call :LogErr "powercfg -setactive SCHEME_CURRENT")
-call :LogInfo "Disabling High Precision Event Timer device..."
-
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference='Stop';" ^
-    "$devs = @(Get-PnpDevice -ErrorAction Stop | Where-Object { $_.FriendlyName -eq 'High Precision Event Timer' -or $_.InstanceId -match '^ACPI\\PNP0103' });" ^
-    "if ($devs.Count -eq 0) { exit 2 };" ^
-    "$failed = $false;" ^
-    "foreach ($dev in $devs) {" ^
-        "try {" ^
-            "Disable-PnpDevice -InstanceId $dev.InstanceId -Confirm:$false -ErrorAction Stop;" ^
-            "$check = Get-PnpDevice -InstanceId $dev.InstanceId -ErrorAction Stop;" ^
-            "if ($check.Problem -ne 22) { $failed = $true }" ^
-        "} catch { $failed = $true }" ^
-    "};" ^
-    "if ($failed) { exit 1 } else { exit 0 }"
-
-set "HPET_RC=%errorlevel%"
-
-if "%HPET_RC%"=="0" (
-    call :LogOK "High Precision Event Timer device disabled and verified (Code 22)."
-) else if "%HPET_RC%"=="2" (
-    call :LogSkip "High Precision Event Timer device not present on this system."
+echo  %BLUE%├──────────────────────────────────────────────────────────────────────┤%RESET%
+echo  %BLUE%│%RESET%  %GREEN%[2]%RESET%  %WHITE%IDLE OFF%RESET%
+echo  %BLUE%│%RESET%      %GRAY%bardhzzY powerplan idle off.pow%RESET%
+if exist "!PWR_IDLE_FILE!" (
+    echo  %BLUE%│%RESET%      %GREEN%Status: file found%RESET%
 ) else (
-    call :LogErr "High Precision Event Timer device could not be disabled or verification failed."
+    echo  %BLUE%│%RESET%      %RED%Status: file missing%RESET%
+)
+echo  %BLUE%└──────────────────────────────────────────────────────────────────────┘%RESET%
+echo.
+echo  %WHITE%[3]%RESET%  Back to main menu
+echo.
+set "PWR_CHOICE="
+set /p "PWR_CHOICE=%BLUE%[%WHITE%?%BLUE%]%WHITE% Select an option: %RESET%"
+set "PWR_CHOICE=!PWR_CHOICE:"=!"
+set "PWR_CHOICE=!PWR_CHOICE: =!"
+if not defined PWR_CHOICE goto pwr_menu
+if /i "!PWR_CHOICE!"=="1" goto pwr_select_standard
+if /i "!PWR_CHOICE!"=="2" goto pwr_select_idle
+if /i "!PWR_CHOICE!"=="3" goto pwr_back
+call :LogWarn "Invalid power plan choice. Please select 1, 2, or 3."
+timeout /t 1 /nobreak >nul
+goto pwr_menu
+
+:pwr_select_standard
+set "PWR_FILE=!PWR_NORMAL_FILE!"
+set "PWR_PLAN_LABEL=bardhzzY powerplan"
+set "PWR_GUID_FILE=!POWERPLAN_DIR!\bardhzzY powerplan.guid"
+goto pwr_plan_selected
+
+:pwr_select_idle
+set "PWR_FILE=!PWR_IDLE_FILE!"
+set "PWR_PLAN_LABEL=bardhzzY powerplan idle off"
+set "PWR_GUID_FILE=!POWERPLAN_DIR!\bardhzzY powerplan idle off.guid"
+goto pwr_plan_selected
+
+:pwr_plan_selected
+if not exist "!PWR_FILE!" goto pwr_file_missing
+call :LogInfo "Selected power plan: !PWR_PLAN_LABEL!"
+set "PWR_GUID="
+set "PWR_OLD_GUID="
+
+rem Find the previous copy of this plan, if one was imported earlier.
+if exist "!PWR_GUID_FILE!" (
+    for /f "usebackq delims=" %%G in ("!PWR_GUID_FILE!") do if not defined PWR_OLD_GUID set "PWR_OLD_GUID=%%G"
+    if defined PWR_OLD_GUID (
+        powercfg /list | findstr /i /l "!PWR_OLD_GUID!" >nul 2>&1
+        if errorlevel 1 set "PWR_OLD_GUID="
+    )
+)
+if not defined PWR_OLD_GUID (
+    for /f "tokens=4" %%G in ('powercfg /list ^| findstr /i /c:"(!PWR_PLAN_LABEL!)"') do if not defined PWR_OLD_GUID set "PWR_OLD_GUID=%%~G"
 )
 
-call :LogOK "Power tweaks applied successfully!"
-endlocal
-timeout /t 1 /nobreak > NUL
+for /f "delims=" %%G in ('powershell -NoProfile -Command "[guid]::NewGuid().Guid" 2^>nul') do set "PWR_GUID=%%G"
+if not defined PWR_GUID goto pwr_guid_failed
+
+call :LogInfo "Importing !PWR_PLAN_LABEL! from !PWR_FILE!..."
+powercfg /import "!PWR_FILE!" !PWR_GUID! >nul 2>&1
+if errorlevel 1 goto pwr_import_failed
+
+powercfg /list | findstr /i /l "!PWR_GUID!" >nul 2>&1
+if errorlevel 1 goto pwr_verify_failed
+
+call :LogInfo "Activating !PWR_PLAN_LABEL!..."
+powercfg /setactive !PWR_GUID! >nul 2>&1
+if errorlevel 1 goto pwr_activate_failed
+powercfg /getactivescheme | findstr /i /l "!PWR_GUID!" >nul 2>&1
+if errorlevel 1 goto pwr_activate_failed
+
+>"!PWR_GUID_FILE!" echo !PWR_GUID!
+if defined PWR_OLD_GUID if /i not "!PWR_OLD_GUID!"=="!PWR_GUID!" (
+    powercfg /delete !PWR_OLD_GUID! >nul 2>&1
+    if errorlevel 1 (
+        call :LogWarn "New plan is active, but the previous imported copy could not be removed."
+    ) else (
+        call :LogInfo "Removed the previous imported copy of this plan."
+    )
+)
+call :LogOK "!PWR_PLAN_LABEL! is active."
+goto pwr_done
+
+:pwr_file_missing
+call :LogErr "The selected power plan file was not found."
+call :LogInfo "Expected file: !PWR_FILE!"
+goto pwr_done
+
+:pwr_guid_failed
+call :LogErr "Could not generate a GUID for the power plan."
+goto pwr_done
+
+:pwr_import_failed
+call :LogErr "Powercfg could not import the selected plan. Verify that the .pow file is a valid powercfg export."
+goto pwr_done
+
+:pwr_verify_failed
+powercfg /delete !PWR_GUID! >nul 2>&1
+call :LogErr "Powercfg reported an import, but the new plan could not be verified."
+goto pwr_done
+
+:pwr_activate_failed
+powercfg /delete !PWR_GUID! >nul 2>&1
+call :LogErr "Windows could not activate the newly imported plan. The previous copy was left in place."
+goto pwr_done
+
+:pwr_done
+echo.
 pause
+endlocal
+goto main
+
+:pwr_back
+endlocal
 goto main
 
 :srp
 call :LogSection "System Restore Point"
 cls
 chcp 65001 >nul 2>&1
-echo %ESC%[0m
+echo %RESET%
 title bardhzzY Tweaks - Creating Restore Point
 
 echo =============================================
@@ -3956,7 +3923,7 @@ del /q "%PS_SCRIPT%" >nul 2>&1
 
 cls
 chcp 65001 >nul 2>&1
-echo %ESC%[0m
+echo %RESET%
 
 if %SRP_STATUS% equ 0 (
     call :LogOK "Restore point created successfully! (bardhzzY_Tweak_Restore)"
@@ -3988,45 +3955,45 @@ call :LogSection "Registry Backup"
 cls
 MODE 92,42
 chcp 65001 >nul 2>&1
-echo %ESC%[0m
-color 0F
+echo %RESET%
+color %CONSOLE_DEFAULT%
 title bardhzzY Tweaks - Registry Backup
 
 echo.
-echo  %ESC%[34m========================================================================%ESC%[0m
+echo  %BLUE%========================================================================%RESET%
 echo.
-echo                   %ESC%[33mREGISTRY BACKUP UTILITY%ESC%[0m
+echo                   %YELLOW%REGISTRY BACKUP UTILITY%RESET%
 echo.
-echo  %ESC%[34m========================================================================%ESC%[0m
+echo  %BLUE%========================================================================%RESET%
 echo.
-echo        %ESC%[37mCreate a full snapshot of your system registry before%ESC%[0m
-echo        %ESC%[37mapplying destructive tweaks. Always have a rollback path.%ESC%[0m
+echo        %WHITE%Create a full snapshot of your system registry before%RESET%
+echo        %WHITE%applying destructive tweaks. Always have a rollback path.%RESET%
 echo.
-echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
+echo  %BLUE%------------------------------------------------------------------------%RESET%
 echo.
 
 set "BACKUP_DIR=%ProgramData%\bardhzzY\Backup"
 
 if exist "%BACKUP_DIR%\HKLM_SYSTEM.reg" (
-    echo        %ESC%[33m[!]%ESC%[37m A registry backup already exists at:%ESC%[0m
-    echo        %ESC%[90m    %BACKUP_DIR%%ESC%[0m
-    echo        %ESC%[37mCreating a new backup will overwrite the old one.%ESC%[0m
+    echo        %YELLOW%[!]%WHITE% A registry backup already exists at:%RESET%
+    echo        %GRAY%    %BACKUP_DIR%%RESET%
+    echo        %WHITE%Creating a new backup will overwrite the old one.%RESET%
     echo.
     choice /c YN /n /m "       Overwrite existing backup? [Y/N]: "
     if errorlevel 2 goto main
     echo.
 )
 
-echo        %ESC%[36m[%ESC%[37m i %ESC%[36m]%ESC%[37m Creating Safety Backup of System Registry...%ESC%[0m
-echo        %ESC%[90m    This may take up to 30 seconds. Do not close this window.%ESC%[0m
+echo        %CYAN%[%WHITE% i %CYAN%]%WHITE% Creating Safety Backup of System Registry...%RESET%
+echo        %GRAY%    This may take up to 30 seconds. Do not close this window.%RESET%
 echo.
 
 if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%" >nul 2>&1
 
 if not exist "%BACKUP_DIR%" (
     call :LogErr "Could not create backup directory."
-    echo        %ESC%[31m[X]%ESC%[37m ERROR: Could not create:%ESC%[0m
-    echo        %ESC%[90m    %BACKUP_DIR%%ESC%[0m
+    echo        %RED%[X]%WHITE% ERROR: Could not create:%RESET%
+    echo        %GRAY%    %BACKUP_DIR%%RESET%
     echo.
     pause
     goto main
@@ -4036,103 +4003,100 @@ set "BACKUP_OK=1"
 set "BK_TOTAL=6"
 set "BK_DONE=0"
 
-echo        %ESC%[36m[1/6]%ESC%[37m Exporting HKLM\SYSTEM...%ESC%[0m
+echo        %CYAN%[1/6]%WHITE% Exporting HKLM\SYSTEM...%RESET%
 reg export "HKLM\SYSTEM" "%BACKUP_DIR%\HKLM_SYSTEM.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SYSTEM failed."
-    echo        %ESC%[31m    [X]%ESC%[37m HKLM_SYSTEM backup FAILED%ESC%[0m
+    echo        %RED%    [X]%WHITE% HKLM_SYSTEM backup FAILED%RESET%
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKLM_SYSTEM"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SYSTEM backup created%ESC%[0m
+    echo        %GREEN%    [OK]%WHITE% HKLM_SYSTEM backup created%RESET%
 )
 
-echo        %ESC%[36m[2/6]%ESC%[37m Exporting HKLM\SOFTWARE...%ESC%[0m
+echo        %CYAN%[2/6]%WHITE% Exporting HKLM\SOFTWARE...%RESET%
 reg export "HKLM\SOFTWARE" "%BACKUP_DIR%\HKLM_SOFTWARE.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKLM_SOFTWARE failed."
-    echo        %ESC%[31m    [X]%ESC%[37m HKLM_SOFTWARE backup FAILED%ESC%[0m
+    echo        %RED%    [X]%WHITE% HKLM_SOFTWARE backup FAILED%RESET%
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKLM_SOFTWARE"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKLM_SOFTWARE backup created%ESC%[0m
+    echo        %GREEN%    [OK]%WHITE% HKLM_SOFTWARE backup created%RESET%
 )
 
-echo        %ESC%[36m[3/6]%ESC%[37m Exporting HKCU\Software...%ESC%[0m
+echo        %CYAN%[3/6]%WHITE% Exporting HKCU\Software...%RESET%
 reg export "HKCU\Software" "%BACKUP_DIR%\HKCU_Software.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_Software failed."
-    echo        %ESC%[31m    [X]%ESC%[37m HKCU_Software backup FAILED%ESC%[0m
+    echo        %RED%    [X]%WHITE% HKCU_Software backup FAILED%RESET%
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCU_Software"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_Software backup created%ESC%[0m
+    echo        %GREEN%    [OK]%WHITE% HKCU_Software backup created%RESET%
 )
 
-echo        %ESC%[36m[4/6]%ESC%[37m Exporting HKCU\Control Panel...%ESC%[0m
+echo        %CYAN%[4/6]%WHITE% Exporting HKCU\Control Panel...%RESET%
 reg export "HKCU\Control Panel" "%BACKUP_DIR%\HKCU_CPanel.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCU_CPanel failed."
-    echo        %ESC%[31m    [X]%ESC%[37m HKCU_CPanel backup FAILED%ESC%[0m
+    echo        %RED%    [X]%WHITE% HKCU_CPanel backup FAILED%RESET%
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCU_CPanel"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
+    echo        %GREEN%    [OK]%WHITE% HKCU_CPanel backup created%RESET%
 )
 
-echo        %ESC%[36m[5/6]%ESC%[37m Exporting HKCR (HKEY_CLASSES_ROOT)...%ESC%[0m
+echo        %CYAN%[5/6]%WHITE% Exporting HKCR (HKEY_CLASSES_ROOT)...%RESET%
 reg export "HKCR" "%BACKUP_DIR%\HKCR.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKCR failed."
-    echo        %ESC%[31m    [X]%ESC%[37m HKCR backup FAILED%ESC%[0m
+    echo        %RED%    [X]%WHITE% HKCR backup FAILED%RESET%
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKCR"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKCR backup created%ESC%[0m
+    echo        %GREEN%    [OK]%WHITE% HKCR backup created%RESET%
 )
 
-echo        %ESC%[36m[6/6]%ESC%[37m Exporting HKU (HKEY_USERS)...%ESC%[0m
+echo        %CYAN%[6/6]%WHITE% Exporting HKU (HKEY_USERS)...%RESET%
 reg export "HKU" "%BACKUP_DIR%\HKU.reg" /y >nul 2>&1
 if errorlevel 1 (
     call :LogErr "Export HKU failed."
-    echo        %ESC%[31m    [X]%ESC%[37m HKU backup FAILED%ESC%[0m
+    echo        %RED%    [X]%WHITE% HKU backup FAILED%RESET%
     set "BACKUP_OK=0"
 ) else (
     call :LogOK "Export HKU"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKU backup created%ESC%[0m
-)    call :LogOK "Export HKCU_CPanel"
-    echo        %ESC%[32m    [OK]%ESC%[37m HKCU_CPanel backup created%ESC%[0m
+    echo        %GREEN%    [OK]%WHITE% HKU backup created%RESET%
 )
 
 echo.
-echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
+echo  %BLUE%------------------------------------------------------------------------%RESET%
 echo.
 
 if "%BACKUP_OK%"=="1" (
     call :LogOK "Complete registry backup verified."
-    echo        %ESC%[32m[OK]%ESC%[37m COMPLETE REGISTRY BACKUP VERIFIED%ESC%[0m
-    echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
+    echo        %GREEN%[OK]%WHITE% COMPLETE REGISTRY BACKUP VERIFIED%RESET%
+    echo  %BLUE%------------------------------------------------------------------------%RESET%
     echo.
-    echo        %ESC%[37mBackup location:%ESC%[0m
-    echo        %ESC%[36m%BACKUP_DIR%%ESC%[0m
+    echo        %WHITE%Backup location:%RESET%
+    echo        %CYAN%%BACKUP_DIR%%RESET%
     echo.
-    echo        %ESC%[32mYou can now safely use the Revert Tweaks option.%ESC%[0m
+    echo        %GREEN%You can now safely use the Revert Tweaks option.%RESET%
 ) else (
     call :LogErr "Registry backup is incomplete."
-    echo        %ESC%[31m[X]%ESC%[37m REGISTRY BACKUP FAILED / INCOMPLETE%ESC%[0m
-    echo  %ESC%[34m------------------------------------------------------------------------%ESC%[0m
+    echo        %RED%[X]%WHITE% REGISTRY BACKUP FAILED / INCOMPLETE%RESET%
+    echo  %BLUE%------------------------------------------------------------------------%RESET%
     echo.
-    echo        %ESC%[33mOne or more registry exports failed.%ESC%[0m
-    echo        %ESC%[31mDO NOT use Revert Tweaks until a complete backup exists.%ESC%[0m
+    echo        %YELLOW%One or more registry exports failed.%RESET%
+    echo        %RED%DO NOT use Revert Tweaks until a complete backup exists.%RESET%
 )
 
 echo.
-echo  %ESC%[34m========================================================================%ESC%[0m
+echo  %BLUE%========================================================================%RESET%
 echo.
-echo        %ESC%[90mPress any key to return to the main menu...%ESC%[0m
+echo        %GRAY%Press any key to return to the main menu...%RESET%
 pause >nul
 goto main
-
 
 :timerres
 setlocal EnableDelayedExpansion
@@ -4140,106 +4104,126 @@ call :LogSection "Timer Resolution"
 cls
 echo.
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mLATENCY ^& TIMER RESOLUTION TOOLS%ESC%[0m
+echo  %BLUE%LATENCY ^& TIMER RESOLUTION TOOLS%RESET%
 echo.
 
 call :LogInfo "Enabling support for global timer resolution requests..."
-call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d 1 /f
-if not errorlevel 1 (
-    call :LogOK "GlobalTimerResolutionRequests enabled."
-) else (
+
+rem Timer startup registry helper.
+call :TimerRegLog add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d 1 /f
+if errorlevel 1 (
     call :LogErr "Failed to enable GlobalTimerResolutionRequests."
+) else (
+    call :LogOK "GlobalTimerResolutionRequests enabled."
 )
 
 set "TIMER_DIR=C:\bardhzzY Utility Tools\Timer Resolution"
 set "TIMER_EXE=%TIMER_DIR%\SetTimerResolution.exe"
 set "MEASURE_EXE=%TIMER_DIR%\MeasureSleep.exe"
-set "REPO_ZIP=%TEMP%\elifian_timer.zip"
-set "EXTRACT_DIR=%TEMP%\elifian_timer_extracted"
+if not exist "%TIMER_DIR%" mkdir "%TIMER_DIR%" >nul 2>&1
+set "REPO_ZIP=%TEMP%\bardhzzY_timer_tools.zip"
+set "EXTRACT_DIR=%TEMP%\bardhzzY_timer_tools_extract"
+set "TIMER_DOWNLOAD_LOG=%TEMP%\bardhzzY_timer_download.log"
+set "TIMER_SOURCE=Existing local copy"
 
-if exist "%TIMER_EXE%" (
-    for %%I in ("%TIMER_EXE%") do if %%~zI LSS 10240 del /q "%TIMER_EXE%" >nul 2>&1
-)
+if exist "%TIMER_DOWNLOAD_LOG%" del /q "%TIMER_DOWNLOAD_LOG%" >nul 2>&1
 
-if not exist "%TIMER_EXE%" (
-    call :LogInfo "Downloading SetTimerResolution.exe (amitxv)..."
-    mkdir "%TIMER_DIR%" >nul 2>&1
-    
-    curl -L -f -s -o "%TIMER_EXE%" "https://github.com/amitxv/SetTimerResolution/raw/master/SetTimerResolution.exe" >nul 2>&1
-    if exist "%TIMER_EXE%" for %%I in ("%TIMER_EXE%") do if %%~zI LSS 10240 del /q "%TIMER_EXE%" >nul 2>&1
+rem Remove empty or obviously invalid downloads before checking the repository.
+if exist "%TIMER_EXE%" for %%I in ("%TIMER_EXE%") do if %%~zI LEQ 10240 del /q "%TIMER_EXE%" >nul 2>&1
+if exist "%MEASURE_EXE%" for %%I in ("%MEASURE_EXE%") do if %%~zI EQU 0 del /q "%MEASURE_EXE%" >nul 2>&1
 
-    if not exist "%TIMER_EXE%" (
-        curl -L -f -s -o "%TIMER_EXE%" "https://github.com/elifian/SetTimerResolution/raw/main/SetTimerResolution.exe" >nul 2>&1
-        if exist "%TIMER_EXE%" for %%I in ("%TIMER_EXE%") do if %%~zI LSS 10240 del /q "%TIMER_EXE%" >nul 2>&1
-    )
+set "TIMER_EXE_WAS_MISSING=0"
+if not exist "%TIMER_EXE%" set "TIMER_EXE_WAS_MISSING=1"
+set "TIMER_REFRESH_NEEDED=0"
+if not exist "%TIMER_EXE%" set "TIMER_REFRESH_NEEDED=1"
+if not exist "%MEASURE_EXE%" set "TIMER_REFRESH_NEEDED=1"
+if "%TIMER_REFRESH_NEEDED%"=="0" goto timerres_tools_ready
 
-    if not exist "%TIMER_EXE%" (
-        call :LogInfo "Direct link failed. Downloading repository archive..."
-        if exist "%REPO_ZIP%" del /q "%REPO_ZIP%" >nul 2>&1
-        if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%" >nul 2>&1
-        
-        curl -L -f -s -o "%REPO_ZIP%" "https://github.com/elifian/SetTimerResolution/archive/refs/heads/master.zip" >nul 2>&1
-        if not exist "%REPO_ZIP%" curl -L -f -s -o "%REPO_ZIP%" "https://github.com/elifian/SetTimerResolution/archive/refs/heads/main.zip" >nul 2>&1
-        
-        if exist "%REPO_ZIP%" (
-            mkdir "%EXTRACT_DIR%" >nul 2>&1
-            tar -xf "%REPO_ZIP%" -C "%EXTRACT_DIR%" >nul 2>&1
-            
-            for /r "%EXTRACT_DIR%" %%F in (SetTimerResolution.exe) do (
-                if not exist "%TIMER_EXE%" copy /Y "%%F" "%TIMER_EXE%" >nul 2>&1
-            )
-        )
-        
-        rd /s /q "%EXTRACT_DIR%" >nul 2>&1
-        del /q "%REPO_ZIP%" >nul 2>&1
-    )
+call :LogInfo "Checking the Utility Tools repository for missing timer files..."
+if not defined GITHUB_ZIP_URL goto timerres_utility_refresh_failed
+if exist "%REPO_ZIP%" del /q "%REPO_ZIP%" >nul 2>&1
+if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%" >nul 2>&1
 
-    if exist "%TIMER_EXE%" (
-        for %%I in ("%TIMER_EXE%") do if %%~zI GTR 10240 (
-            call :LogOK "SetTimerResolution.exe downloaded successfully."
-        ) else (
-            call :LogErr "Downloaded file is corrupted or invalid."
-            del /q "%TIMER_EXE%" >nul 2>&1
-            goto :timerres_islc
-        )
-    ) else (
-        call :LogErr "Failed to download SetTimerResolution.exe automatically."
-        call :LogInfo "Please download it manually from amitxv's GitHub and place it in:"
-        echo     "%TIMER_DIR%\"
-        goto :timerres_islc
-    )
-) else (
-    call :LogOK "SetTimerResolution.exe already exists."
-)
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile '%REPO_ZIP%' -UseBasicParsing" >"%TIMER_DOWNLOAD_LOG%" 2>&1
+if errorlevel 1 goto timerres_utility_refresh_failed
+if not exist "%REPO_ZIP%" goto timerres_utility_refresh_failed
+
+mkdir "%EXTRACT_DIR%" >nul 2>&1
+tar -xf "%REPO_ZIP%" -C "%EXTRACT_DIR%" >>"%TIMER_DOWNLOAD_LOG%" 2>&1
+if errorlevel 1 goto timerres_utility_refresh_failed
+
+rem Copy only the timer utilities needed by this section.
+for /r "%EXTRACT_DIR%" %%F in (SetTimerResolution.exe) do if not exist "%TIMER_EXE%" copy /Y "%%F" "%TIMER_EXE%" >nul 2>&1
+for /r "%EXTRACT_DIR%" %%F in (MeasureSleep.exe) do if not exist "%MEASURE_EXE%" copy /Y "%%F" "%MEASURE_EXE%" >nul 2>&1
+if "%TIMER_EXE_WAS_MISSING%"=="1" if exist "%TIMER_EXE%" set "TIMER_SOURCE=Utility Tools repository"
+
+rd /s /q "%EXTRACT_DIR%" >nul 2>&1
+del /q "%REPO_ZIP%" >nul 2>&1
+goto timerres_validate_tools
+
+:timerres_utility_refresh_failed
+if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%" >nul 2>&1
+if exist "%REPO_ZIP%" del /q "%REPO_ZIP%" >nul 2>&1
+call :LogWarn "Timer tools could not be retrieved from the Utility Tools repository."
+if exist "%TIMER_DOWNLOAD_LOG%" type "%TIMER_DOWNLOAD_LOG%"
+
+:timerres_validate_tools
+if exist "%TIMER_EXE%" for %%I in ("%TIMER_EXE%") do if %%~zI LEQ 10240 del /q "%TIMER_EXE%" >nul 2>&1
+if exist "%MEASURE_EXE%" for %%I in ("%MEASURE_EXE%") do if %%~zI EQU 0 del /q "%MEASURE_EXE%" >nul 2>&1
+if exist "%TIMER_EXE%" goto timerres_tools_ready
+
+call :LogWarn "SetTimerResolution.exe is unavailable from Utility Tools. Trying SwiftyPop TimerResBenchmark..."
+if exist "%TIMER_DOWNLOAD_LOG%" del /q "%TIMER_DOWNLOAD_LOG%" >nul 2>&1
+powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/SwiftyPop/TimerResBenchmark/main/SetTimerResolution.exe' -OutFile '%TIMER_EXE%' -UseBasicParsing" >"%TIMER_DOWNLOAD_LOG%" 2>&1
+if errorlevel 1 goto timerres_download_failed
+if not exist "%TIMER_EXE%" goto timerres_download_failed
+for %%I in ("%TIMER_EXE%") do if %%~zI LEQ 10240 del /q "%TIMER_EXE%" >nul 2>&1
+if not exist "%TIMER_EXE%" goto timerres_download_failed
+set "TIMER_SOURCE=SwiftyPop TimerResBenchmark"
+
+call :LogOK "SetTimerResolution.exe downloaded from SwiftyPop TimerResBenchmark."
+goto timerres_tools_ready
+
+:timerres_download_failed
+if exist "%TIMER_EXE%" del /q "%TIMER_EXE%" >nul 2>&1
+call :LogErr "Could not obtain SetTimerResolution.exe from either configured source."
+call :LogInfo "Download the executable manually from https://github.com/SwiftyPop/TimerResBenchmark"
+call :LogInfo "Expected location: %TIMER_EXE%"
+if exist "%TIMER_DOWNLOAD_LOG%" type "%TIMER_DOWNLOAD_LOG%"
+goto timerres_islc
+
+:timerres_tools_ready
+if exist "%TIMER_EXE%" call :LogOK "SetTimerResolution.exe is ready (%TIMER_SOURCE%)."
+if not exist "%MEASURE_EXE%" call :LogWarn "MeasureSleep.exe is unavailable; option 5 cannot run until it is added to Utility Tools."
 
 :timerres_menu
 cls
 echo.
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mSELECT TIMER RESOLUTION%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] 0.500ms %ESC%[90m(5000)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] 0.504ms %ESC%[90m(5040)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m3%ESC%[37m] 0.507ms %ESC%[90m(5070)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Custom Value %ESC%[90m(Enter microseconds)%ESC%[0m
-echo  %ESC%[37m [%ESC%[36m5%ESC%[37m] Measure Sleep Timing
-echo  %ESC%[37m [%ESC%[36m6%ESC%[37m] Skip Timer Resolution
+echo  %BLUE%SELECT TIMER RESOLUTION%RESET%
+echo  %WHITE% [%CYAN%1%WHITE%] 0.500ms %GRAY%(5000)%RESET%
+echo  %WHITE% [%CYAN%2%WHITE%] 0.504ms %GRAY%(5040)%RESET%
+echo  %WHITE% [%CYAN%3%WHITE%] 0.507ms %GRAY%(5070)%RESET%
+echo  %WHITE% [%CYAN%4%WHITE%] Custom Value %GRAY%(Enter microseconds)%RESET%
+echo  %WHITE% [%CYAN%5%WHITE%] Measure Sleep Timing
+echo  %WHITE% [%CYAN%6%WHITE%] Skip Timer Resolution
 echo.
 set "timer_choice="
-set /p "timer_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "timer_choice=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
 if not defined timer_choice goto timerres_menu
 set "timer_choice=%timer_choice:"=%"
@@ -4275,25 +4259,25 @@ goto timerres_menu
 cls
 echo.
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mMEASURE TIMER RESOLUTION%ESC%[0m
+echo  %BLUE%MEASURE TIMER RESOLUTION%RESET%
 echo.
-echo  %ESC%[37mMeasureSleep checks the actual timing behavior of Windows Sleep(1).%ESC%[0m
+echo  %WHITE%MeasureSleep checks the actual timing behavior of Windows Sleep(1).%RESET%
 echo.
 
 if not exist "%MEASURE_EXE%" (
     call :LogErr "MeasureSleep.exe was not found."
     echo.
-    echo  %ESC%[31m[ERROR]%ESC%[37m MeasureSleep.exe is missing.
+    echo  %RED%[ERROR]%WHITE% MeasureSleep.exe is missing.
     echo.
     echo  Place it here:
-    echo  %ESC%[90m%MEASURE_EXE%%ESC%[0m
+    echo  %GRAY%%MEASURE_EXE%%RESET%
     echo.
     timeout /t 3 /nobreak >nul
     goto timerres_menu
@@ -4310,7 +4294,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo  %ESC%[90mMeasureSleep is running separately. Review its results, then return here.%ESC%[0m
+echo  %GRAY%MeasureSleep is running separately. Review its results, then return here.%RESET%
 echo.
 pause
 goto timerres_menu
@@ -4319,18 +4303,18 @@ goto timerres_menu
 cls
 echo.
 echo.
-echo        %ESC%[34m██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%ESC%[0m
-echo        %ESC%[34m██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %ESC%[0m
-echo        %ESC%[34m██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %ESC%[0m
-echo        %ESC%[34m██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %ESC%[0m
-echo        %ESC%[34m╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %ESC%[0m
+echo        %BLUE%██████╗  █████╗ ██████╗ ██████╗ ██╗  ██╗███████╗███████╗██╗   ██╗%RESET%
+echo        %BLUE%██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║  ██║╚══███╔╝╚══███╔╝╚██╗ ██╔╝%RESET%
+echo        %BLUE%██████╔╗███████║██████╔╗██║  ██║███████║  ███╔╝   ███╔╝  ╚████╔╝ %RESET%
+echo        %BLUE%██╔══██╗██╔══██║██╔══██╗██║  ██║██╔══██║ ███╔╝   ███╔╝    ╚██╔╝  %RESET%
+echo        %BLUE%██████╔╝██║  ██║██║  ██║██████╔╝██║  ██║███████╗███████╗   ██║   %RESET%
+echo        %BLUE%╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   %RESET%
 echo.
-echo  %ESC%[34mENTER CUSTOM TIMER RESOLUTION%ESC%[0m
-echo  %ESC%[90mValue must be in microseconds (e.g., 5000 for 0.5ms). Max 50000.%ESC%[0m
+echo  %BLUE%ENTER CUSTOM TIMER RESOLUTION%RESET%
+echo  %GRAY%Value must be in microseconds (e.g., 5000 for 0.5ms). Max 50000.%RESET%
 echo.
 set "custom_val="
-set /p "custom_val=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Enter value: %ESC%[0m"
+set /p "custom_val=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Enter value: %RESET%"
 if not defined custom_val goto timerres_menu
 set "custom_val=%custom_val:"=%"
 set "custom_val=%custom_val: =%"
@@ -4356,28 +4340,37 @@ if !custom_val! GTR 50000 (
 set "TIMER_VAL=!custom_val!"
 
 :timer_apply
-call :LogInfo "Setting %TIMER_VAL%us Timer Resolution on startup..."
-set "TIMER_RUN_VALUE="%TIMER_EXE%" --resolution %TIMER_VAL% --no-console"
-:: Remove the legacy mixed-case value so upgrades do not leave two timer launch entries.
-call :TIRegLog delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bardhzzYTimerResolution" /f
-call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "bardhzzYTimerResolution" /t REG_SZ /d "%TIMER_RUN_VALUE%" /f
-if not errorlevel 1 (
-    call :LogOK "Timer Resolution set to %TIMER_VAL%us permanently (Startup Registry)."
+call :LogInfo "Creating Timer Resolution shortcut in the signed-in user's Startup folder..."
+set "BARDHZZ_TIMER_EXE=%TIMER_EXE%"
+set "BARDHZZ_TIMER_DIR=%TIMER_DIR%"
+set "BARDHZZ_TIMER_VAL=%TIMER_VAL%"
+set "TIMER_SHORTCUT_LOG=%TEMP%\bardhzzY_timer_startup.log"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -EncodedCommand JABFAHIAcgBvAHIAQQBjAHQAaQBvAG4AUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwB0AG8AcAAnAAoAJABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnAAoAdAByAHkAIAB7AAoAIAAkAGUAeABlAD0AJABlAG4AdgA6AEIAQQBSAEQASABaAFoAXwBUAEkATQBFAFIAXwBFAFgARQA7ACAAJABkAGkAcgA9ACQAZQBuAHYAOgBCAEEAUgBEAEgAWgBaAF8AVABJAE0ARQBSAF8ARABJAFIAOwAgACQAcgA9ACQAZQBuAHYAOgBCAEEAUgBEAEgAWgBaAF8AVABJAE0ARQBSAF8AVgBBAEwACgAgAGkAZgAgACgALQBuAG8AdAAgACgAVABlAHMAdAAtAFAAYQB0AGgAIAAtAEwAaQB0AGUAcgBhAGwAUABhAHQAaAAgACQAZQB4AGUAIAAtAFAAYQB0AGgAVAB5AHAAZQAgAEwAZQBhAGYAKQApACAAewAgAHQAaAByAG8AdwAgACIAUwBlAHQAVABpAG0AZQByAFIAZQBzAG8AbAB1AHQAaQBvAG4ALgBlAHgAZQAgAG4AbwB0ACAAZgBvAHUAbgBkADoAIAAkAGUAeABlACIAIAB9AAoAIABpAGYAIAAoACQAcgAgAC0AbgBvAHQAbQBhAHQAYwBoACAAJwBeAFwAZAArACQAJwAgAC0AbwByACAAWwBpAG4AdABdACQAcgAgAC0AbAB0ACAAMQAgAC0AbwByACAAWwBpAG4AdABdACQAcgAgAC0AZwB0ACAANQAwADAAMAAwACkAIAB7ACAAdABoAHIAbwB3ACAAIgBJAG4AdgBhAGwAaQBkACAAcgBlAHMAbwBsAHUAdABpAG8AbgA6ACAAJAByACIAIAB9AAoAIAAkAHMAcwA9AFsARABpAGEAZwBuAG8AcwB0AGkAYwBzAC4AUAByAG8AYwBlAHMAcwBdADoAOgBHAGUAdABDAHUAcgByAGUAbgB0AFAAcgBvAGMAZQBzAHMAKAApAC4AUwBlAHMAcwBpAG8AbgBJAGQACgAgACQAZQA9AEcAZQB0AC0AQwBpAG0ASQBuAHMAdABhAG4AYwBlACAAVwBpAG4AMwAyAF8AUAByAG8AYwBlAHMAcwAgAC0ARgBpAGwAdABlAHIAIAAiAE4AYQBtAGUAPQAnAGUAeABwAGwAbwByAGUAcgAuAGUAeABlACcAIgAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwB0AG8AcAAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBTAGUAcwBzAGkAbwBuAEkAZAAgAC0AZQBxACAAJABzAHMAIAB9ACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIAAtAEYAaQByAHMAdAAgADEACgAgAGkAZgAgACgALQBuAG8AdAAgACQAZQApACAAewAgAHQAaAByAG8AdwAgACIATgBvACAARQB4AHAAbABvAHIAZQByACAAcAByAG8AYwBlAHMAcwAgAGYAbwB1AG4AZAAgAGkAbgAgAGkAbgB0AGUAcgBhAGMAdABpAHYAZQAgAHMAZQBzAHMAaQBvAG4AIAAkAHMAcwA7ACAAbgBvAHQAIABjAHIAZQBhAHQAaQBuAGcAIABhACAAcwBoAG8AcgB0AGMAdQB0ACAAaQBuACAAdABoAGUAIAB3AHIAbwBuAGcAIABwAHIAbwBmAGkAbABlAC4AIgAgAH0ACgAgACQAbwA9AEkAbgB2AG8AawBlAC0AQwBpAG0ATQBlAHQAaABvAGQAIAAtAEkAbgBwAHUAdABPAGIAagBlAGMAdAAgACQAZQAgAC0ATQBlAHQAaABvAGQATgBhAG0AZQAgAEcAZQB0AE8AdwBuAGUAcgAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwB0AG8AcAAKACAAaQBmACAAKAAkAG8ALgBSAGUAdAB1AHIAbgBWAGEAbAB1AGUAIAAtAG4AZQAgADAAIAAtAG8AcgAgAC0AbgBvAHQAIAAkAG8ALgBVAHMAZQByACkAIAB7ACAAdABoAHIAbwB3ACAAJwBDAG8AdQBsAGQAIABuAG8AdAAgAGkAZABlAG4AdABpAGYAeQAgAHQAaABlACAAcwBpAGcAbgBlAGQALQBpAG4AIAB1AHMAZQByAC4AJwAgAH0ACgAgACQAYQA9AGkAZgAgACgAJABvAC4ARABvAG0AYQBpAG4AKQAgAHsAIAAnAHsAMAB9AFwAewAxAH0AJwAgAC0AZgAgACQAbwAuAEQAbwBtAGEAaQBuACwAJABvAC4AVQBzAGUAcgAgAH0AIABlAGwAcwBlACAAewAgACQAbwAuAFUAcwBlAHIAIAB9AAoAIAAkAHMAaQBkAD0AKABbAFMAZQBjAHUAcgBpAHQAeQAuAFAAcgBpAG4AYwBpAHAAYQBsAC4ATgBUAEEAYwBjAG8AdQBuAHQAXQA6ADoAbgBlAHcAKAAkAGEAKQApAC4AVAByAGEAbgBzAGwAYQB0AGUAKABbAFMAZQBjAHUAcgBpAHQAeQAuAFAAcgBpAG4AYwBpAHAAYQBsAC4AUwBlAGMAdQByAGkAdAB5AEkAZABlAG4AdABpAGYAaQBlAHIAXQApAC4AVgBhAGwAdQBlAAoAIAAkAHAAPQBHAGUAdAAtAEMAaQBtAEkAbgBzAHQAYQBuAGMAZQAgAFcAaQBuADMAMgBfAFUAcwBlAHIAUAByAG8AZgBpAGwAZQAgAC0ARgBpAGwAdABlAHIAIAAiAFMASQBEAD0AJwAkAHMAaQBkACcAIgAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwB0AG8AcAAgAHwAIABTAGUAbABlAGMAdAAtAE8AYgBqAGUAYwB0ACAALQBGAGkAcgBzAHQAIAAxAAoAIABpAGYAIAAoAC0AbgBvAHQAIAAkAHAAKQAgAHsAIAB0AGgAcgBvAHcAIAAiAFAAcgBvAGYAaQBsAGUAIABuAG8AdAAgAGYAbwB1AG4AZAAgAGYAbwByACAAJABhAC4AIgAgAH0ACgAgACQAcwB0AGEAcgB0AHUAcAA9AEoAbwBpAG4ALQBQAGEAdABoACAAJABwAC4ATABvAGMAYQBsAFAAYQB0AGgAIAAnAEEAcABwAEQAYQB0AGEAXABSAG8AYQBtAGkAbgBnAFwATQBpAGMAcgBvAHMAbwBmAHQAXABXAGkAbgBkAG8AdwBzAFwAUwB0AGEAcgB0ACAATQBlAG4AdQBcAFAAcgBvAGcAcgBhAG0AcwBcAFMAdABhAHIAdAB1AHAAJwAKACAAJABrAD0AIgBSAGUAZwBpAHMAdAByAHkAOgA6AEgASwBFAFkAXwBVAFMARQBSAFMAXAAkAHMAaQBkAFwAUwBvAGYAdAB3AGEAcgBlAFwATQBpAGMAcgBvAHMAbwBmAHQAXABXAGkAbgBkAG8AdwBzAFwAQwB1AHIAcgBlAG4AdABWAGUAcgBzAGkAbwBuAFwARQB4AHAAbABvAHIAZQByAFwAVQBzAGUAcgAgAFMAaABlAGwAbAAgAEYAbwBsAGQAZQByAHMAIgAKACAAJABmAD0ARwBlAHQALQBJAHQAZQBtAFAAcgBvAHAAZQByAHQAeQAgAC0ATABpAHQAZQByAGEAbABQAGEAdABoACAAJABrACAALQBOAGEAbQBlACAAUwB0AGEAcgB0AHUAcAAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAKACAAaQBmACAAKAAkAGYALgBTAHQAYQByAHQAdQBwACkAIAB7AAoAIAAgACQAcwB0AGEAcgB0AHUAcAA9ACgAWwBzAHQAcgBpAG4AZwBdACQAZgAuAFMAdABhAHIAdAB1AHAAKQAuAFIAZQBwAGwAYQBjAGUAKAAnACUAVQBTAEUAUgBQAFIATwBGAEkATABFACUAJwAsACQAcAAuAEwAbwBjAGEAbABQAGEAdABoACkALgBSAGUAcABsAGEAYwBlACgAJwAlAEEAUABQAEQAQQBUAEEAJQAnACwAKABKAG8AaQBuAC0AUABhAHQAaAAgACQAcAAuAEwAbwBjAGEAbABQAGEAdABoACAAJwBBAHAAcABEAGEAdABhAFwAUgBvAGEAbQBpAG4AZwAnACkAKQAuAFIAZQBwAGwAYQBjAGUAKAAnACUATABPAEMAQQBMAEEAUABQAEQAQQBUAEEAJQAnACwAKABKAG8AaQBuAC0AUABhAHQAaAAgACQAcAAuAEwAbwBjAGEAbABQAGEAdABoACAAJwBBAHAAcABEAGEAdABhAFwATABvAGMAYQBsACcAKQApAAoAIAAgACQAcwB0AGEAcgB0AHUAcAA9AFsARQBuAHYAaQByAG8AbgBtAGUAbgB0AF0AOgA6AEUAeABwAGEAbgBkAEUAbgB2AGkAcgBvAG4AbQBlAG4AdABWAGEAcgBpAGEAYgBsAGUAcwAoACQAcwB0AGEAcgB0AHUAcAApAAoAIAB9AAoAIABpAGYAIAAoAC0AbgBvAHQAIAAoAFQAZQBzAHQALQBQAGEAdABoACAALQBMAGkAdABlAHIAYQBsAFAAYQB0AGgAIAAkAHMAdABhAHIAdAB1AHAAIAAtAFAAYQB0AGgAVAB5AHAAZQAgAEMAbwBuAHQAYQBpAG4AZQByACkAKQAgAHsAIABOAGUAdwAtAEkAdABlAG0AIAAtAEkAdABlAG0AVAB5AHAAZQAgAEQAaQByAGUAYwB0AG8AcgB5ACAALQBQAGEAdABoACAAJABzAHQAYQByAHQAdQBwACAALQBGAG8AcgBjAGUAIAB8ACAATwB1AHQALQBOAHUAbABsACAAfQAKACAAJABzAD0ASgBvAGkAbgAtAFAAYQB0AGgAIAAkAHMAdABhAHIAdAB1AHAAIAAnAGIAYQByAGQAaAB6AHoAWQAgAFQAaQBtAGUAcgAgAFIAZQBzAG8AbAB1AHQAaQBvAG4ALgBsAG4AawAnADsAIAAkAHcAPQBOAGUAdwAtAE8AYgBqAGUAYwB0ACAALQBDAG8AbQBPAGIAagBlAGMAdAAgAFcAUwBjAHIAaQBwAHQALgBTAGgAZQBsAGwAOwAgACQAbAA9ACQAdwAuAEMAcgBlAGEAdABlAFMAaABvAHIAdABjAHUAdAAoACQAcwApAAoAIAAkAGwALgBUAGEAcgBnAGUAdABQAGEAdABoAD0AJABlAHgAZQA7ACAAJABsAC4AQQByAGcAdQBtAGUAbgB0AHMAPQAiAC0ALQBuAG8ALQBjAG8AbgBzAG8AbABlACAALQAtAHIAZQBzAG8AbAB1AHQAaQBvAG4AIAAkAHIAIgA7ACAAJABsAC4AVwBvAHIAawBpAG4AZwBEAGkAcgBlAGMAdABvAHIAeQA9ACQAZABpAHIAOwAgACQAbAAuAEQAZQBzAGMAcgBpAHAAdABpAG8AbgA9ACcAYgBhAHIAZABoAHoAegBZACAAVABpAG0AZQByACAAUgBlAHMAbwBsAHUAdABpAG8AbgAnADsAIAAkAGwALgBTAGEAdgBlACgAKQAKACAAaQBmACAAKAAtAG4AbwB0ACAAKABUAGUAcwB0AC0AUABhAHQAaAAgAC0ATABpAHQAZQByAGEAbABQAGEAdABoACAAJABzACAALQBQAGEAdABoAFQAeQBwAGUAIABMAGUAYQBmACkAKQAgAHsAIAB0AGgAcgBvAHcAIAAiAFMAaABvAHIAdABjAHUAdAAgAHcAYQBzACAAbgBvAHQAIABjAHIAZQBhAHQAZQBkADoAIAAkAHMAIgAgAH0ACgAgACQAdgA9ACQAdwAuAEMAcgBlAGEAdABlAFMAaABvAHIAdABjAHUAdAAoACQAcwApADsAIAAkAGEAcgBnAHMAPQAiAC0ALQBuAG8ALQBjAG8AbgBzAG8AbABlACAALQAtAHIAZQBzAG8AbAB1AHQAaQBvAG4AIAAkAHIAIgAKACAAaQBmACAAKAAkAHYALgBUAGEAcgBnAGUAdABQAGEAdABoACAALQBpAG4AZQAgACQAZQB4AGUAIAAtAG8AcgAgACQAdgAuAEEAcgBnAHUAbQBlAG4AdABzACAALQBuAGUAIAAkAGEAcgBnAHMAKQAgAHsAIAB0AGgAcgBvAHcAIAAnAFMAaABvAHIAdABjAHUAdAAgAHQAYQByAGcAZQB0ACAAbwByACAAYQByAGcAdQBtAGUAbgB0AHMAIABkAGkAZAAgAG4AbwB0ACAAcwBhAHYAZQAgAGMAbwByAHIAZQBjAHQAbAB5AC4AJwAgAH0ACgAgAFcAcgBpAHQAZQAtAE8AdQB0AHAAdQB0ACAAIgBJAG4AdABlAHIAYQBjAHQAaQB2AGUAIAB1AHMAZQByADoAIAAkAGEAIgA7ACAAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAFMAdABhAHIAdAB1AHAAIABmAG8AbABkAGUAcgA6ACAAJABzAHQAYQByAHQAdQBwACIAOwAgAFcAcgBpAHQAZQAtAE8AdQB0AHAAdQB0ACAAIgBTAGgAbwByAHQAYwB1AHQAOgAgACQAcwAiADsAIABXAHIAaQB0AGUALQBPAHUAdABwAHUAdAAgACIAVABhAHIAZwBlAHQAOgAgACQAKAAkAHYALgBUAGEAcgBnAGUAdABQAGEAdABoACkAIgA7ACAAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAEEAcgBnAHUAbQBlAG4AdABzADoAIAAkACgAJAB2AC4AQQByAGcAdQBtAGUAbgB0AHMAKQAiAAoAIAB0AHIAeQAgAHsAIABSAGUAbQBvAHYAZQAtAEkAdABlAG0AUAByAG8AcABlAHIAdAB5ACAALQBQAGEAdABoACAAJwBIAEsATABNADoAXABTAE8ARgBUAFcAQQBSAEUAXABNAGkAYwByAG8AcwBvAGYAdABcAFcAaQBuAGQAbwB3AHMAXABDAHUAcgByAGUAbgB0AFYAZQByAHMAaQBvAG4AXABSAHUAbgAnACAALQBOAGEAbQBlACAAJwBiAGEAcgBkAGgAegB6AFkAVABpAG0AZQByAFIAZQBzAG8AbAB1AHQAaQBvAG4AJwAgAC0ARQByAHIAbwByAEEAYwB0AGkAbwBuACAAUwB0AG8AcAA7ACAAVwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAnAFIAZQBtAG8AdgBlAGQAIABsAGUAZwBhAGMAeQAgAFIAdQBuACAAZQBuAHQAcgB5AC4AJwAgAH0AIABjAGEAdABjAGgAIAB7AH0ACgAgAGUAeABpAHQAIAAwAAoAfQAgAGMAYQB0AGMAaAAgAHsAIABbAEMAbwBuAHMAbwBsAGUAXQA6ADoARQByAHIAbwByAC4AVwByAGkAdABlAEwAaQBuAGUAKAAiAFQAaQBtAGUAcgAgAFIAZQBzAG8AbAB1AHQAaQBvAG4AIABzAGgAbwByAHQAYwB1AHQAIABjAHIAZQBhAHQAaQBvAG4AIABmAGEAaQBsAGUAZAA6ACAAJAAoACQAXwAuAEUAeABjAGUAcAB0AGkAbwBuAC4ATQBlAHMAcwBhAGcAZQApACIAKQA7ACAAZQB4AGkAdAAgADEAIAB9AA== > "%TIMER_SHORTCUT_LOG%" 2>&1
+if errorlevel 1 (
+    call :LogErr "Failed to create the Timer Resolution Startup shortcut."
+    if exist "%TIMER_SHORTCUT_LOG%" type "%TIMER_SHORTCUT_LOG%"
+    call :LogInfo "Diagnostic log: %TIMER_SHORTCUT_LOG%"
 ) else (
-    call :LogErr "Failed to set startup registry key."
+    call :LogOK "Startup shortcut set to %TIMER_VAL%us."
+    call :LogInfo "Shortcut verified in the signed-in user's Startup folder."
+    call :LogInfo "Arguments: --no-console --resolution %TIMER_VAL%"
 )
 
 call :LogInfo "Starting SetTimerResolution for current session..."
-start "" "%TIMER_EXE%" --resolution %TIMER_VAL% --no-console
-call :LogOK "Timer Resolution applied for this session."
+start "" "%TIMER_EXE%" --no-console --resolution %TIMER_VAL%
+if errorlevel 1 (
+    call :LogErr "Failed to launch SetTimerResolution for this session."
+) else (
+    call :LogOK "SetTimerResolution launched for this session."
+)
 
 :timerres_islc
 echo.
-echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Download ISLC (Recommended for 16GB RAM or less)
-echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Skip ISLC
+echo  %WHITE% [%CYAN%1%WHITE%] Download ISLC (Recommended for 16GB RAM or less)
+echo  %WHITE% [%CYAN%2%WHITE%] Skip ISLC
 echo.
 set "islc_choice="
-set /p "islc_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "islc_choice=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
 if not defined islc_choice goto :timerres_end
 set "islc_choice=%islc_choice:"=%"
@@ -4402,7 +4395,7 @@ if exist "%ISLC_INSTALLER%" del /q "%ISLC_INSTALLER%" >nul 2>&1
 curl -L -f -s -o "%ISLC_INSTALLER%" "https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe" >nul 2>&1
 
 if not exist "%ISLC_INSTALLER%" (
-    powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe' -OutFile '%ISLC_INSTALLER%' -UseBasicParsing } catch { exit 1 }" >nul 2>&1
+    powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://www.wagnardsoft.com/ISLC/ISLC%%20v1.0.3.2.exe' -OutFile '%ISLC_INSTALLER%' -UseBasicParsing } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 )
 
 if exist "%ISLC_INSTALLER%" (
@@ -4512,16 +4505,8 @@ echo.
 call :LogOK "[+] GPedit is active and Fortnite network priority is locked in."
 
 cls
-color 9
+color %CONSOLE_BLUE%
 chcp 65001 >nul 2>&1
-
-set "Reset=%ESC%[0m"
-set "DarkYellow=%ESC%[33m"
-set "Red=%ESC%[91m"
-set "Green=%ESC%[92m"
-set "Blue=%ESC%[94m"
-set "Cyan=%ESC%[96m"
-set "White=%ESC%[97m"
 
 if not exist "C:\Program Files\Epic Games\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe" (
    goto :FN_Default_Path_Not_Found
@@ -4532,25 +4517,25 @@ if not exist "C:\Program Files\Epic Games\Fortnite\FortniteGame\Binaries\Win64\F
 
 :FN_Default_Path_Not_Found
 cls
-color C
+color %CONSOLE_ERROR%
 chcp 65001 >nul 2>&1
 echo ╔═══════════════════════════════════════════════════╗
 echo ║ Fortnite is not installed in the default Path.    ║
 echo ╚═══════════════════════════════════════════════════╝
 echo • Fortnite is likely installed on another drive or location!
 echo.
-echo %White%[Choose an option]
-echo %Green%1. Manually Input Path
-echo %DarkYellow%2. Continue Anyway
-echo %Cyan%3. Learn More
-echo %Red%4. Back to Main Menu
+echo %BRIGHT_WHITE%[Choose an option]
+echo %BRIGHT_GREEN%1. Manually Input Path
+echo %YELLOW%2. Continue Anyway
+echo %BRIGHT_CYAN%3. Learn More
+echo %BRIGHT_RED%4. Back to Main Menu
 set "fnoption="
-set /p fnoption="%White%Enter option number: "
+set /p fnoption="%BRIGHT_WHITE%Enter option number: "
 chcp 65001 >nul 2>&1
 if "%fnoption%"=="1" goto :FN_Manual_Path
 if "%fnoption%"=="2" (
     cls
-    color C
+    color %CONSOLE_ERROR%
     echo ╔══════════════════════════════════════════╗
     echo ║ Continuing with Fortnite Optimizer.      ║
     echo ╚══════════════════════════════════════════╝
@@ -4570,14 +4555,16 @@ goto :FN_Default_Path_Not_Found
 
 :FN_Manual_Path
 cls
-color A
+color %CONSOLE_SUCCESS%
 chcp 65001 >nul 2>&1
 echo ╔═══════════════════════════════════════════════════════════════════════════════════════╗
 echo ║ Adding Manual Fortnite Path. [Path must include FortniteClient-Win64-Shipping.exe]    ║
 echo ╚═══════════════════════════════════════════════════════════════════════════════════════╝
 echo • Example: "C:\Program Files\Epic Games\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe"
 echo.
+set "FortnitePath="
 set /p FortnitePath="Enter Your Fortnite Path: "
+if not defined FortnitePath goto :FN_Manual_Path
 set "FortnitePath=%FortnitePath:"=%"
 if not exist "%FortnitePath%" (
     echo [X] Path does not exist! Try again.
@@ -4610,13 +4597,13 @@ if exist "%FN_DownloadsFolder%\%FN_FileName%" (
    ) else (
       tar -xf "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
    )
-   if errorlevel 1 (set "FN_TAR_RC=1") else (set "FN_TAR_RC=0")
-   popd >nul 2>&1
-   if not "%FN_TAR_RC%"=="0" (
-      call :LogErr "Fortnite Tools archive extraction failed (rc=%FN_TAR_RC%)."
+   if errorlevel 1 (
+      popd >nul 2>&1
+      call :LogErr "Fortnite Tools archive extraction failed."
       del /q "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
       goto :FN_Download_Failed
    )
+   popd >nul 2>&1
    del /q "%FN_DownloadsFolder%\%FN_FileName%" >nul 2>&1
    goto :FN_Start_Screen
 ) else (
@@ -4626,17 +4613,18 @@ if exist "%FN_DownloadsFolder%\%FN_FileName%" (
 
 :FN_Download_Failed
 cls
-color C
+color %CONSOLE_ERROR%
 chcp 65001 >nul 2>&1
 echo ╔════════════════════════════════════════════════════════╗
 echo ║ Fortnite Optimizer Tools Folder failed to download.    ║
 echo ╚════════════════════════════════════════════════════════╝
 echo • Please ensure you're connected to the internet!
 echo.
-echo %White%[Choose an option]
-echo %Green%1. Retry
-echo %Red%2. Back to Main Menu
-set /p fnoption="%White%Enter option number: "
+echo %BRIGHT_WHITE%[Choose an option]
+echo %BRIGHT_GREEN%1. Retry
+echo %BRIGHT_RED%2. Back to Main Menu
+set "fnoption="
+set /p fnoption="%BRIGHT_WHITE%Enter option number: "
 chcp 65001 >nul 2>&1
 if "%fnoption%"=="1" (
     timeout 2 > nul
@@ -4649,35 +4637,35 @@ goto :FN_Download_Failed
 
 :FN_Start_Screen
 cls
-echo %ESC%[0m
+echo %RESET%
 chcp 65001 >nul 2>&1
 echo.
 echo.
-echo.                             %ESC%[34m███████╗ ██████╗ ██████╗ ████████╗███╗   ██╗██╗████████╗███████╗       %ESC%[0m
-echo.                             %ESC%[34m██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝████╗  ██║██║╚══██╔══╝██╔════╝       %ESC%[0m
-echo.                             %ESC%[34m██████╗ ██║   ██║██████╔╝   ██║   ██╔██╗ ██║██║   ██║   █████╗         %ESC%[0m
-echo.                             %ESC%[34m██╔══╝  ██║   ██║██╔══██╗   ██║   ██║╚██╗██║██║   ██║   ██╔══╝         %ESC%[0m
-echo.                             %ESC%[34m██║     ╚██████╔╝██║  ██║   ██║   ██║ ╚████║██║   ██║   ███████╗       %ESC%[0m
-echo.                             %ESC%[34m╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚══════╝       %ESC%[0m
+echo.                             %BRIGHT_BLUE%███████╗ ██████╗ ██████╗ ████████╗███╗   ██╗██╗████████╗███████╗       %RESET%
+echo.                             %BRIGHT_BLUE%██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝████╗  ██║██║╚══██╔══╝██╔════╝       %RESET%
+echo.                             %BRIGHT_BLUE%██████╗ ██║   ██║██████╔╝   ██║   ██╔██╗ ██║██║   ██║   █████╗         %RESET%
+echo.                             %BRIGHT_BLUE%██╔══╝  ██║   ██║██╔══██╗   ██║   ██║╚██╗██║██║   ██║   ██╔══╝         %RESET%
+echo.                             %BRIGHT_BLUE%██║     ╚██████╔╝██║  ██║   ██║   ██║ ╚████║██║   ██║   ███████╗       %RESET%
+echo.                             %BRIGHT_BLUE%╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝   ╚═╝   ╚══════╝       %RESET%
 echo.                                                                       
-echo.                             %ESC%[34m██████╗  ██████╗ ████████╗██╗███╗   ███╗██╗███████╗███████╗██████╗     %ESC%[0m
-echo.                             %ESC%[34m██╔═══██╗██╔══██╗╚══██╔══╝██║████╗ ████║██║╚══███╔╝██╔════╝██╔══██╗    %ESC%[0m
-echo.                             %ESC%[34m██║   ██║██████╔╝   ██║   ██║██╔████╔██║██║  ███╔╝ █████╗  ██████╔╝    %ESC%[0m
-echo.                             %ESC%[34m██║   ██║██╔═══╝    ██║   ██║██║╚██╔╝██║██║ ███╔╝  ██╔══╝  ██╔══██╗    %ESC%[0m
-echo.                             %ESC%[34m╚██████╔╝██║        ██║   ██║██║ ╚═╝ ██║██║███████╗███████╗██║  ██║    %ESC%[0m
-echo.                             %ESC%[34m ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝╚══════╝╚═╝  ╚═╝    %ESC%[0m
+echo.                             %BRIGHT_BLUE%██████╗  ██████╗ ████████╗██╗███╗   ███╗██╗███████╗███████╗██████╗     %RESET%
+echo.                             %BRIGHT_BLUE%██╔═══██╗██╔══██╗╚══██╔══╝██║████╗ ████║██║╚══███╔╝██╔════╝██╔══██╗    %RESET%
+echo.                             %BRIGHT_BLUE%██║   ██║██████╔╝   ██║   ██║██╔████╔██║██║  ███╔╝ █████╗  ██████╔╝    %RESET%
+echo.                             %BRIGHT_BLUE%██║   ██║██╔═══╝    ██║   ██║██║╚██╔╝██║██║ ███╔╝  ██╔══╝  ██╔══██╗    %RESET%
+echo.                             %BRIGHT_BLUE%╚██████╔╝██║        ██║   ██║██║ ╚═╝ ██║██║███████╗███████╗██║  ██║    %RESET%
+echo.                             %BRIGHT_BLUE% ╚═════╝ ╚═╝        ╚═╝   ╚═╝╚═╝     ╚═╝╚═╝╚══════╝╚══════╝╚═╝  ╚═╝    %RESET%
 echo. 
-echo.                                  %ESC%[34m╔════════════════════════════════════════════════════╗%ESC%[0m
-echo.                                  %ESC%[34m║%ESC%[0m              %ESC%[37mVersion 2.1 - By Quaked%ESC%[0m               %ESC%[34m║%ESC%[0m
-echo.                                  %ESC%[34m╚════════════════════════════════════════════════════╝%ESC%[0m
+echo.                                  %BRIGHT_BLUE%╔════════════════════════════════════════════════════╗%RESET%
+echo.                                  %BRIGHT_BLUE%║%RESET%              %BRIGHT_WHITE%Version 2.1 - By Quaked%RESET%               %BRIGHT_BLUE%║%RESET%
+echo.                                  %BRIGHT_BLUE%╚════════════════════════════════════════════════════╝%RESET%
 echo.
-echo. %ESC%[34m╔═════════╗%ESC%[0m                                                                        
-echo. %ESC%[34m║%ESC%[0m %ESC%[37mLoading %ESC%[34m║%ESC%[0m                                              
-echo. %ESC%[34m╚═════════╝%ESC%[0m
+echo. %BRIGHT_BLUE%╔═════════╗%RESET%                                                                        
+echo. %BRIGHT_BLUE%║%RESET% %BRIGHT_WHITE%Loading %BRIGHT_BLUE%║%RESET%                                              
+echo. %BRIGHT_BLUE%╚═════════╝%RESET%
 timeout 2 > nul
 
 cls
-color 9
+color %CONSOLE_BLUE%
 chcp 65001 >nul 2>&1
 echo ╔═════════════════════════════════════════════════════════╗
 echo ║ Auto Setting Graphics Preferences, Priority and FSO.    ║
@@ -4694,7 +4682,7 @@ timeout 3 > nul
 
 :FN_Import_Config
 cls
-color 9
+color %CONSOLE_BLUE%
 chcp 65001 >nul 2>&1
 echo ╔═══════════════════════════════════════════════╗
 echo ║ Importing Optimized Fortnite Game Configs.    ║
@@ -4703,85 +4691,86 @@ echo • Please choose a config depending on your use case.
 echo.
 if not exist "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" mkdir "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient"
 
-echo %White%[Choose an option]
-echo %Green%1. Legacy Performance Mode.
-echo %Blue%2. New Performance Mode.
-echo %Blue%3. DX 12.
-echo %Blue%4. DX 11.
-echo %Red%5. Skip.
-set /p fnoption="%White%Enter option number: "
+echo %BRIGHT_WHITE%[Choose an option]
+echo %BRIGHT_GREEN%1. Legacy Performance Mode.
+echo %BRIGHT_BLUE%2. New Performance Mode.
+echo %BRIGHT_BLUE%3. DX 12.
+echo %BRIGHT_BLUE%4. DX 11.
+echo %BRIGHT_RED%5. Skip.
+set "fnoption="
+set /p fnoption="%BRIGHT_WHITE%Enter option number: "
 if "%fnoption%"=="1" (
     cls
-    color A
+    color %CONSOLE_SUCCESS%
     echo ╔═══════════════════════════════════════╗
     echo ║ Importing Legacy Performance Mode.    ║
     echo ╚═══════════════════════════════════════╝
     copy /Y "C:\Fortnite Optimizer Tools\Legacy Performance Mode\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import Legacy Performance Mode!"
-        echo %Red%Failed to import Legacy Performance Mode!
+        echo %BRIGHT_RED%Failed to import Legacy Performance Mode!
         timeout 3 > nul
         goto :FN_Import_Failed
     ) else (
         call :LogOK "Successfully imported Legacy Performance Mode!"
-        echo %Green%Successfully imported Legacy Performance Mode!
+        echo %BRIGHT_GREEN%Successfully imported Legacy Performance Mode!
         timeout 3 > nul
         goto :FN_Command_Line
     )
 )
 if "%fnoption%"=="2" (
     cls
-    color A
+    color %CONSOLE_SUCCESS%
     echo ╔════════════════════════════════════╗
     echo ║ Importing New Performance Mode.    ║
     echo ╚════════════════════════════════════╝
     copy /Y "C:\Fortnite Optimizer Tools\New Performance Mode\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import New Performance Mode!"
-        echo %Red%Failed to import New Performance Mode!
+        echo %BRIGHT_RED%Failed to import New Performance Mode!
         timeout 3 > nul
         goto :FN_Import_Failed
     ) else (
         call :LogOK "Successfully imported New Performance Mode!"
-        echo %Green%Successfully imported New Performance Mode!
+        echo %BRIGHT_GREEN%Successfully imported New Performance Mode!
         timeout 3 > nul
         goto :FN_Command_Line
     )
 )
 if "%fnoption%"=="3" (
     cls
-    color A
+    color %CONSOLE_SUCCESS%
     echo ╔═════════════════════╗
     echo ║ Importing DX 12.    ║
     echo ╚═════════════════════╝
     copy /Y "C:\Fortnite Optimizer Tools\DX 12\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import DX 12!"
-        echo %Red%Failed to import DX 12!
+        echo %BRIGHT_RED%Failed to import DX 12!
         timeout 3 > nul
         goto :FN_Import_Failed
     ) else (
         call :LogOK "Successfully imported DX 12!"
-        echo %Green%Successfully imported DX 12!
+        echo %BRIGHT_GREEN%Successfully imported DX 12!
         timeout 3 > nul
         goto :FN_Command_Line
     )
 )
 if "%fnoption%"=="4" (
     cls
-    color A
+    color %CONSOLE_SUCCESS%
     echo ╔═════════════════════╗
     echo ║ Importing DX 11.    ║
     echo ╚═════════════════════╝
     copy /Y "C:\Fortnite Optimizer Tools\DX 11\GameUserSettings.ini" "%USERPROFILE%\AppData\Local\FortniteGame\Saved\Config\WindowsClient" >nul 2>&1
     if errorlevel 1 (
         call :LogErr "Failed to import DX 11!"
-        echo %Red%Failed to import DX 11!
+        echo %BRIGHT_RED%Failed to import DX 11!
         timeout 3 > nul
         goto :FN_Import_Failed
     ) else (
         call :LogOK "Successfully imported DX 11!"
-        echo %Green%Successfully imported DX 11!
+        echo %BRIGHT_GREEN%Successfully imported DX 11!
         timeout 3 > nul
         goto :FN_Command_Line
     )
@@ -4796,18 +4785,19 @@ goto :FN_Import_Config
 
 :FN_Import_Failed
 cls
-color C
+color %CONSOLE_ERROR%
 chcp 65001 >nul 2>&1
 echo ╔═════════════════════════════════════════════════════╗
 echo ║ Optimized Fortnite Game Config Failed to Import.    ║
 echo ╚═════════════════════════════════════════════════════╝
 echo • Fortnite Optimizer Tools may be empty!
 echo.
-echo %White%[Choose an option]
-echo %Green%1. Retry Import
-echo %DarkYellow%2. Continue Anyway
-echo %Red%3. Back to Main Menu
-set /p fnoption="%White%Enter option number: "
+echo %BRIGHT_WHITE%[Choose an option]
+echo %BRIGHT_GREEN%1. Retry Import
+echo %YELLOW%2. Continue Anyway
+echo %BRIGHT_RED%3. Back to Main Menu
+set "fnoption="
+set /p fnoption="%BRIGHT_WHITE%Enter option number: "
 chcp 65001 >nul 2>&1
 if "%fnoption%"=="1" (
     timeout 2 > nul
@@ -4827,7 +4817,7 @@ goto :FN_Import_Failed
 
 :FN_Command_Line
 cls
-color 9
+color %CONSOLE_BLUE%
 call :LogInfo "Opening Epic Games Launcher and Github Guide..."
 echo ╔═════════════════════════════════════════════════════════╗
 echo ║ Adding Fortnite Additional Command Line Arguments.      ║
@@ -4852,7 +4842,7 @@ goto :FN_Done
 
 :FN_Done
 cls
-color B
+color %CONSOLE_INFO%
 chcp 65001 >nul 2>&1
 call :LogOK "Fortnite Optimizer routine completed."
 echo =====================================
@@ -4865,19 +4855,19 @@ goto main
 call :LogSection "Revert Tweaks"
 cls
 chcp 65001 >nul 2>&1
-echo %ESC%[0m
-color 0C
+echo %RESET%
+color %CONSOLE_ERROR%
 echo.
 echo ======================================================
 echo           bardhzzY Tweaks - Revert / Undo Mode
 echo ======================================================
 echo.
 echo [!] WARNING: This will forcefully overwrite your current
-echo     registry with the backup created via Option 15.
+echo     registry with the backup created via Option 19 (Registry Backup).
 echo.
 echo [!] NOTE: If you used the 'Clean Up' tool to remove Windows Apps,
 echo     those specific apps will NOT be reinstalled by this process.
-echo     Use Windows System Restore (Option 11) for a full app rollback.
+echo     Use Windows System Restore (Option 18) for a full app rollback.
 echo.
 choice /c YN /n /m "Do you want to revert all registry tweaks to default? (Y/N): "
 if %errorlevel% equ 2 goto main
@@ -4903,6 +4893,14 @@ if not exist "%BACKUP_DIR%\HKCU_Software.reg" (
 )
 
 if not exist "%BACKUP_DIR%\HKCU_CPanel.reg" (
+    set "BACKUP_OK=0"
+)
+
+if not exist "%BACKUP_DIR%\HKCR.reg" (
+    set "BACKUP_OK=0"
+)
+
+if not exist "%BACKUP_DIR%\HKU.reg" (
     set "BACKUP_OK=0"
 )
 
@@ -4971,14 +4969,16 @@ if errorlevel 1 (
 call :LogInfo "Importing HKCR + HKU..."
 call :TIRun reg import "%BACKUP_DIR%\HKCR.reg" >nul 2>&1
 if errorlevel 1 (
-    call :LogWarn "Import HKCR failed (non-critical, may need TI)."
+    call :LogWarn "Import HKCR failed (may need TI)."
+    set "REVERT_OK=0"
 ) else (
     call :LogOK "Import HKCR"
 )
 
 reg import "%BACKUP_DIR%\HKU.reg" >nul 2>&1
 if errorlevel 1 (
-    call :LogWarn "Import HKU failed (non-critical, may need TI)."
+    call :LogWarn "Import HKU failed (may need TI)."
+    set "REVERT_OK=0"
 ) else (
     call :LogOK "Import HKU"
 )
@@ -4999,46 +4999,52 @@ echo [+] Restarting Explorer to apply visual reverts...
 taskkill /f /im explorer.exe >nul 2>&1
 start explorer.exe >nul 2>&1
 
-call :LogOK "Registry Successfully Reverted to Original State!"
-echo.
-echo ======================================================
-echo [OK] Registry Successfully Reverted to Original State!
-echo ======================================================
+if "%REVERT_OK%"=="1" (
+    call :LogOK "Registry restore completed successfully."
+    echo.
+    echo ======================================================
+    echo [OK] Registry restore completed successfully.
+    echo ======================================================
+) else (
+    call :LogErr "Registry restore finished with errors; system is not fully reverted."
+    echo.
+    echo ======================================================
+    echo [X] Registry restore finished with errors.
+    echo [!] System is NOT guaranteed to be fully reverted.
+    echo ======================================================
+)
 echo [!] A System Restart is HIGHLY recommended to flush all drivers.
 echo.
 pause
 goto main
 
-:: =====================================================================
-:: Disable Defender (Enhanced) - with Tamper Protection handling + IFEO failsafe
-:: Firewall is NOT touched per user request.
-:: =====================================================================
+rem Disable Defender.
 :defender
 call :LogSection "Disable Defender (Enhanced)"
 cls
 MODE 100,40
-color 0F
-echo %ESC%[0m
+color %CONSOLE_DEFAULT%
+echo %RESET%
 
 echo.
-echo  %ESC%[91m==========================================================================%ESC%[0m
-echo  %ESC%[91m                 WINDOWS DEFENDER DISABLE - AGGRESSIVE%ESC%[0m
-echo  %ESC%[91m==========================================================================%ESC%[0m
+echo  %BRIGHT_RED%==========================================================================%RESET%
+echo  %BRIGHT_RED%                 WINDOWS DEFENDER DISABLE - AGGRESSIVE%RESET%
+echo  %BRIGHT_RED%==========================================================================%RESET%
 echo.
-echo  %ESC%[37mThis option is intentionally aggressive and will disable Windows security%ESC%[0m
-echo  %ESC%[37mcomponents including Defender, SmartScreen, Security Center services,%ESC%[0m
-echo  %ESC%[37mscheduled scans, and the Defender executable fallback protection.%ESC%[0m
+echo  %WHITE%This option is intentionally aggressive and will disable Windows security%RESET%
+echo  %WHITE%components including Defender, SmartScreen, Security Center services,%RESET%
+echo  %WHITE%scheduled scans, and the Defender executable fallback protection.%RESET%
 echo.
-echo  %ESC%[91m[!] WARNING: This reduces Windows security protections significantly.%ESC%[0m
-echo  %ESC%[33m[!] Windows Firewall will NOT be changed by this option.%ESC%[0m
-echo  %ESC%[33m[!] A restart is required for the changes to fully apply.%ESC%[0m
-echo  %ESC%[36m[ i ] Re-enable Defender is available from the main menu.%ESC%[0m
+echo  %BRIGHT_RED%[!] WARNING: This reduces Windows security protections significantly.%RESET%
+echo  %YELLOW%[!] Windows Firewall will NOT be changed by this option.%RESET%
+echo  %YELLOW%[!] A restart is required for the changes to fully apply.%RESET%
+echo  %CYAN%[ i ] Re-enable Defender is available from the main menu.%RESET%
 echo.
-echo  %ESC%[91m--------------------------------------------------------------------------%ESC%[0m
-echo  %ESC%[97mContinue with aggressive Defender disabling?%ESC%[0m
+echo  %BRIGHT_RED%--------------------------------------------------------------------------%RESET%
+echo  %BRIGHT_WHITE%Continue with aggressive Defender disabling?%RESET%
 
-echo        %ESC%[32m[Y]%ESC%[37m Yes - continue
-echo        %ESC%[31m[N]%ESC%[37m No  - return to main menu
+echo        %GREEN%[Y]%WHITE% Yes - continue
+echo        %RED%[N]%WHITE% No  - return to main menu
 echo.
 choice /c YN /n /m "       Continue? [Y/N]: "
 if errorlevel 2 (
@@ -5058,16 +5064,16 @@ if "%TP_STATE%"=="0x5" (
     call :LogInfo "Opening windowsdefender: so you can turn off RTP + TP manually..."
     start windowsdefender:
     echo.
-    echo  %ESC%[33m--------------------------------------------------------------------------%ESC%[0m
-    echo  %ESC%[97mIn the Windows Security window:%ESC%[0m
+    echo  %YELLOW%--------------------------------------------------------------------------%RESET%
+    echo  %BRIGHT_WHITE%In the Windows Security window:%RESET%
     echo    1. Virus ^& threat protection ^> Manage settings
     echo    2. Turn OFF Real-time protection
     echo    3. Turn OFF Cloud-delivered protection
     echo    4. Turn OFF Automatic sample submission
     echo    5. Turn OFF Tamper Protection
-    echo  %ESC%[33m--------------------------------------------------------------------------%ESC%[0m
-    echo        %ESC%[32m[Y]%ESC%[37m Done - continue disabling Defender
-    echo        %ESC%[31m[N]%ESC%[37m Cancel - return to main menu
+    echo  %YELLOW%--------------------------------------------------------------------------%RESET%
+    echo        %GREEN%[Y]%WHITE% Done - continue disabling Defender
+    echo        %RED%[N]%WHITE% Cancel - return to main menu
     choice /c YN /n /m "       Continue? [Y/N]: "
     if errorlevel 2 (
         call :LogWarn "Defender disable cancelled while Tamper Protection was enabled."
@@ -5110,7 +5116,7 @@ call :TIScLog stop wscsvc
 call :TIScLog config wscsvc start= disabled
 call :TIScLog stop SecurityHealthService
 call :TIScLog config SecurityHealthService start= disabled
-:: Hard-set via registry in case sc fails (TrustedInstaller-protected)
+rem Apply the service setting through the registry if needed.
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WinDefend" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WdNisSvc" /v "Start" /t REG_DWORD /d 4 /f
 call :TIRegLog add "HKLM\SYSTEM\CurrentControlSet\Services\WdBoot" /v "Start" /t REG_DWORD /d 4 /f
@@ -5152,26 +5158,24 @@ call :LogOK "Defender + SmartScreen + Security Center disabled."
 call :LogWarn "A SYSTEM RESTART is required for all changes to take effect."
 echo.
 echo  ============================================================
-echo  %ESC%[32m[OK]%ESC%[0m %ESC%[37mDefender + SmartScreen + Security Center%ESC%[0m
-echo  %ESC%[37m     disabled. RESTART to apply.%ESC%[0m
-echo  %ESC%[33mNOTE: Windows Firewall was NOT touched.%ESC%[0m
+echo  %GREEN%[OK]%RESET% %WHITE%Defender + SmartScreen + Security Center%RESET%
+echo  %WHITE%     disabled. RESTART to apply.%RESET%
+echo  %YELLOW%NOTE: Windows Firewall was NOT touched.%RESET%
 echo  ============================================================
 echo.
-echo  To re-enable: use menu option 18 (Re-enable Defender).
+echo  To re-enable: use menu option 15 (Re-enable Defender).
 echo.
 pause
 goto main
 
-:: =====================================================================
-:: Re-enable Defender + SmartScreen (Firewall untouched)
-:: =====================================================================
+rem Re-enable Defender and SmartScreen.
 :defender_revert
 call :LogSection "Re-enable Defender + SmartScreen"
 cls
-color 0A
-echo %ESC%[0m
+color %CONSOLE_SUCCESS%
+echo %RESET%
 echo.
-echo  %ESC%[32mRe-enabling Windows Defender, SmartScreen, Security Center...%ESC%[0m
+echo  %GREEN%Re-enabling Windows Defender, SmartScreen, Security Center...%RESET%
 echo.
 
 call :LogInfo "Removing IFEO failsafe..."
@@ -5199,9 +5203,9 @@ call :TIScLog config WdBoot start= demand
 call :TIScLog config wscsvc start= demand
 call :TIScLog config SecurityHealthService start= demand
 
-call :LogInfo "Removing gaming Defender exclusions created by Windows Tweaks..."
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { Remove-MpPreference -ExclusionPath 'C:\Program Files\Epic Games','C:\Program Files (x86)\Steam','C:\Program Files\Riot Games','C:\Program Files\EA Games','C:\Games','D:\Games','E:\Games' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionProcess 'FortniteClient-Win64-Shipping.exe','FortniteLauncher.exe','EpicGamesLauncher.exe','steam.exe','RiotClientServices.exe' -ErrorAction SilentlyContinue; Remove-MpPreference -ExclusionExtension 'pak','upk','big','bsp','vtf','assets' -ErrorAction SilentlyContinue; exit 0 } catch { exit 1 }" >nul 2>&1
-if not errorlevel 1 (call :LogOK "Gaming Defender exclusions removed") else (call :LogWarn "Could not fully remove gaming Defender exclusions (Defender may still be unavailable)" )
+rem Keep existing gaming and launcher exclusions.
+call :LogInfo "Keeping existing gaming Defender exclusions..."
+call :LogOK "Gaming Defender exclusions preserved."
 
 call :LogInfo "Re-enabling SmartScreen..."
 call :TIRegLog add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v "SmartScreenEnabled" /t REG_SZ /d "On" /f
@@ -5223,10 +5227,179 @@ call :SchLog /Change /TN "\Microsoft\Windows\Windows Defender\Windows Defender V
 call :LogOK "Defender + SmartScreen re-enabled. RESTART to apply."
 echo.
 echo  ============================================================
-echo  %ESC%[32m[OK]%ESC%[0m %ESC%[37mDefender re-enabled. RESTART to apply.%ESC%[0m
-echo  %ESC%[33mNOTE: If Tamper Protection is on, you may need to manually%ESC%[0m
-echo  %ESC%[33m      re-enable RTP in the Defender UI after restart.%ESC%[0m
+echo  %GREEN%[OK]%RESET% %WHITE%Defender re-enabled. RESTART to apply.%RESET%
+echo  %YELLOW%NOTE: If Tamper Protection is on, you may need to manually%RESET%
+echo  %YELLOW%      re-enable RTP in the Defender UI after restart.%RESET%
 echo  ============================================================
+echo.
+pause
+goto main
+
+:imod_disabler
+call :LogSection "xHCI IMOD Disabler"
+cls
+echo.
+echo  %BLUE%============================================================%RESET%
+echo                  %BRIGHT_CYAN%xHCI IMOD DISABLER%RESET%
+echo  %BLUE%============================================================%RESET%
+echo.
+echo  %WHITE%This tool modifies low-level USB xHCI controller registers.%RESET%
+echo  %YELLOW%It may affect multiple USB devices, not only your mouse.%RESET%
+echo.
+echo  %GREEN%[RECOMMENDED]%WHITE% Use Task Scheduler for automatic startup.%RESET%
+echo  %RED%[AVOID]%WHITE% Registry Run; the author warns it can cause BSOD loops.%RESET%
+echo.
+echo  %YELLOW%[COMPATIBILITY]%WHITE% On affected updated Windows 11 systems, Windows may%RESET%
+echo  %WHITE%block the legacy drivers required by this tool. A task can be%RESET%
+echo  %WHITE%created successfully even if the tool itself cannot apply IMOD.%RESET%
+echo.
+if not exist "%IMOD_EXE%" (
+    call :LogErr "xHCI IMOD Disabler executable was not found."
+    echo  Expected file:
+    echo  "%IMOD_EXE%"
+    echo.
+    echo  Add the executable and its required driver files to the
+    echo  Utility Tools repository, then download/refresh the tools.
+    echo.
+    pause
+    goto main
+)
+echo  %GREEN%[OK] Tool detected:%RESET%
+echo  "%IMOD_EXE%"
+echo  %GRAY%Keep the executable and all four required upstream driver files%RESET%
+echo  %GRAY%together in this folder. The startup task will run silently.%RESET%
+echo.
+echo  %CYAN%[1]%WHITE% Open the interactive tool %GRAY%(manual use / testing)%RESET%
+echo  %YELLOW%[2]%WHITE% Create a Task Scheduler entry %GRAY%(silent at each logon)%RESET%
+echo  %RED%[3]%WHITE% Remove the bardhzzY Task Scheduler entry%RESET%
+echo  %GRAY%[4] Back to main menu%RESET%
+echo.
+choice /c 1234 /n /m "Select an option: "
+if errorlevel 4 goto main
+if errorlevel 3 goto imod_remove_task
+if errorlevel 2 goto imod_setup_task
+if errorlevel 1 goto imod_launch_interactive
+
+goto main
+
+:imod_launch_interactive
+call :LogInfo "Launching xHCI IMOD Disabler interactively..."
+start "" "%IMOD_EXE%"
+if errorlevel 1 (
+    call :LogErr "Could not start xHCI IMOD Disabler."
+) else (
+    call :LogOK "Launch request sent. The app should open in a separate window."
+)
+echo.
+echo  To enable automatic startup, use this script's Task Scheduler option
+echo  or the tool's own Task Scheduler option, but do not enable both.
+echo  First test the tool manually. Confirm whether Windows allows its
+echo  required drivers to load before relying on automatic startup.
+echo.
+pause
+goto main
+
+:imod_setup_task
+cls
+echo.
+echo  %BLUE%============================================================%RESET%
+echo              %BRIGHT_CYAN%IMOD TASK SCHEDULER SETUP%RESET%
+echo  %BLUE%============================================================%RESET%
+echo.
+echo  %WHITE%This creates a logon task for the current user with highest%RESET%
+echo  %WHITE%privileges. It runs the executable with --Silent each logon.%RESET%
+echo.
+echo  %YELLOW%[NOTE]%WHITE% This does NOT prove IMOD was successfully disabled. Driver policy,%RESET%
+echo  %WHITE%missing driver files, or hardware compatibility can still prevent%RESET%
+echo  %WHITE%the tool from working.%RESET%
+echo.
+echo  %GRAY%The script checks for an existing scheduled task using this same%RESET%
+echo  %GRAY%executable to avoid creating an obvious duplicate.%RESET%
+echo.
+echo  %CYAN%Task name:%WHITE% bardhzzY xHCI IMOD Disabler%RESET%
+echo.
+choice /c YN /n /m "Create this scheduled task? [Y/N]: "
+if errorlevel 2 goto main
+
+call :LogInfo "Checking and configuring the IMOD logon task..."
+del /q "%TEMP%\bardhzzY_imod_task_setup.log" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $exe = '%IMOD_EXE%'; if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { Write-Output 'ERROR|Executable not found'; exit 2 }; $existingTasks = @(Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $task = $_; @($task.Actions | Where-Object { $_.Execute -and $_.Execute -ieq $exe }).Count -gt 0 }); if ($existingTasks.Count -gt 0) { Write-Output ('EXISTS|'+(($existingTasks | ForEach-Object {$_.TaskName}) -join ';')); exit 10 }; $user=[System.Security.Principal.WindowsIdentity]::GetCurrent().Name; $action=New-ScheduledTaskAction -Execute $exe -Argument '--Silent' -WorkingDirectory (Split-Path -Parent $exe); $trigger=New-ScheduledTaskTrigger -AtLogOn -User $user; $principal=New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Highest; Register-ScheduledTask -TaskName 'bardhzzY xHCI IMOD Disabler' -Action $action -Trigger $trigger -Principal $principal -Description 'Runs QuakedK xHCI IMOD Disabler silently at user logon.' -Force | Out-Null; Write-Output 'CREATED'; exit 0" > "%TEMP%\bardhzzY_imod_task_setup.log" 2>&1
+set "IMOD_TASK_RC=%errorlevel%"
+if "%IMOD_TASK_RC%"=="0" goto imod_task_created
+if "%IMOD_TASK_RC%"=="10" goto imod_task_exists
+goto imod_task_failed
+
+:imod_task_created
+call :LogOK "Scheduled task created successfully."
+echo.
+echo  %GREEN%[OK]%WHITE% Task created: bardhzzY xHCI IMOD Disabler%RESET%
+echo  %GREEN%[OK]%WHITE% Trigger:%RESET% when the current user logs on
+echo  %GREEN%[OK]%WHITE% Run level:%RESET% highest privileges
+echo  %GREEN%[OK]%WHITE% Argument:%RESET% --Silent
+echo.
+echo  %CYAN%It will run automatically at the current user's next logon.%RESET%
+echo  %YELLOW%A successful task setup does not prove the driver loaded or that%RESET%
+echo  %YELLOW%IMOD was changed. Review the tool/logs after testing.%RESET%
+echo.
+choice /c YN /n /m "Run the scheduled task once now as well? [Y/N]: "
+if errorlevel 2 goto imod_task_finish
+schtasks /Run /TN "bardhzzY xHCI IMOD Disabler" >nul 2>&1
+if errorlevel 1 (
+    call :LogErr "Task was created, but Windows could not start it now."
+    echo  You can still test it after logon in Task Scheduler.
+) else (
+    call :LogInfo "Windows accepted the request to run the task. This is not proof of IMOD success."
+    echo  Windows accepted the run request. Check driver/tool status to confirm it worked.
+)
+goto imod_task_finish
+
+:imod_task_exists
+call :LogWarn "An existing scheduled task already points to this executable. No duplicate was created."
+echo.
+echo  %YELLOW%An existing task was detected:%RESET%
+type "%TEMP%\bardhzzY_imod_task_setup.log"
+echo.
+echo  %GRAY%No duplicate task was created. Check the listed task in Task Scheduler.%RESET%
+echo  %YELLOW%Keep only one IMOD startup task enabled.%RESET%
+goto imod_task_finish
+
+:imod_task_failed
+call :LogErr "Could not create the IMOD scheduled task."
+echo.
+echo  %RED%Task Scheduler setup failed. Details:%RESET%
+if exist "%TEMP%\bardhzzY_imod_task_setup.log" type "%TEMP%\bardhzzY_imod_task_setup.log"
+echo.
+echo  %GRAY%Run this script as administrator and verify Task Scheduler is available.%RESET%
+goto imod_task_finish
+
+:imod_task_finish
+echo.
+pause
+goto main
+
+:imod_remove_task
+cls
+echo.
+echo  %BLUE%============================================================%RESET%
+echo             %BRIGHT_RED%REMOVE IMOD SCHEDULED TASK%RESET%
+echo  %BLUE%============================================================%RESET%
+echo.
+echo  %WHITE%This removes only the task managed by bardhzzY Tweaks:%RESET%
+echo  %CYAN%bardhzzY xHCI IMOD Disabler%RESET%
+echo.
+echo  %GRAY%It will not remove a differently named task created from inside%RESET%
+echo  %GRAY%the IMOD tool. Check Task Scheduler if you previously enabled one.%RESET%
+echo.
+choice /c YN /n /m "Remove the bardhzzY scheduled task? [Y/N]: "
+if errorlevel 2 goto main
+schtasks /Delete /TN "bardhzzY xHCI IMOD Disabler" /F >nul 2>&1
+if errorlevel 1 (
+    call :LogWarn "Task was not found or could not be removed."
+    echo  The task may already be absent, or Windows denied removal.
+) else (
+    call :LogOK "bardhzzY IMOD scheduled task removed."
+    echo  Automatic startup through this task is now disabled.
+)
 echo.
 pause
 goto main
@@ -5235,23 +5408,23 @@ goto main
 call :LogSection "System Fixes / Recovery"
 cls
 MODE 100,30
-color 0B
-echo %ESC%[0m
+color %CONSOLE_INFO%
+echo %RESET%
 
 echo.
 echo  ============================================================
-echo                  %ESC%[36mSYSTEM FIXES / RECOVERY%ESC%[0m
+echo                  %CYAN%SYSTEM FIXES / RECOVERY%RESET%
 echo  ============================================================
 echo.
-echo  %ESC%[37m Use this section to fix issues caused by aggressive tweaks.%ESC%[0m
+echo  %WHITE% Use this section to fix issues caused by aggressive tweaks.%RESET%
 echo.
-echo  %ESC%[37m [%ESC%[36m1%ESC%[37m] Wi-Fi / Network Fixer (re-enable 16 network services)
-echo  %ESC%[37m [%ESC%[36m2%ESC%[37m] Epic Games Fixer (re-enable Epic services)
-echo  %ESC%[37m [%ESC%[36m3%ESC%[37m] Rockstar Games Fixer (re-enable Rockstar service)
-echo  %ESC%[37m [%ESC%[36m4%ESC%[37m] Back to Main Menu
+echo  %WHITE% [%CYAN%1%WHITE%] Wi-Fi / Network Fixer (re-enable 16 network services)
+echo  %WHITE% [%CYAN%2%WHITE%] Epic Games Fixer (re-enable Epic services)
+echo  %WHITE% [%CYAN%3%WHITE%] Rockstar Games Fixer (re-enable Rockstar service)
+echo  %WHITE% [%CYAN%4%WHITE%] Back to Main Menu
 echo.
 set "fix_choice="
-set /p "fix_choice=%ESC%[34m[%ESC%[37m ? %ESC%[34m]%ESC%[37m Select an option: %ESC%[0m"
+set /p "fix_choice=%BLUE%[%WHITE% ? %BLUE%]%WHITE% Select an option: %RESET%"
 
 if not defined fix_choice goto fixes
 set "fix_choice=%fix_choice:"=%"
@@ -5323,24 +5496,24 @@ call :LogSection "Restart PC"
 cls
 MODE 90,28
 chcp 65001 >nul 2>&1
-echo %ESC%[0m
-color 0F
+echo %RESET%
+color %CONSOLE_DEFAULT%
 
 echo.
-echo  %ESC%[34m==========================================================================%ESC%[0m
+echo  %BLUE%==========================================================================%RESET%
 echo.
-echo                       %ESC%[33mRESTART COMPUTER%ESC%[0m
+echo                       %YELLOW%RESTART COMPUTER%RESET%
 echo.
-echo  %ESC%[34m==========================================================================%ESC%[0m
+echo  %BLUE%==========================================================================%RESET%
 echo.
-echo        %ESC%[37mA system restart is recommended after applying tweaks%ESC%[0m
-echo        %ESC%[37mso that all service, registry, and driver changes%ESC%[0m
-echo        %ESC%[37mtake full effect.%ESC%[0m
+echo        %WHITE%A system restart is recommended after applying tweaks%RESET%
+echo        %WHITE%so that all service, registry, and driver changes%RESET%
+echo        %WHITE%take full effect.%RESET%
 echo.
-echo        %ESC%[36m[%ESC%[37m Y %ESC%[36m]%ESC%[32m Restart now     %ESC%[90m(^<-- auto in 5s)%ESC%[0m
-echo        %ESC%[36m[%ESC%[37m N %ESC%[36m]%ESC%[33m Cancel           %ESC%[90mreturn to menu%ESC%[0m
+echo        %CYAN%[%WHITE% Y %CYAN%]%GREEN% Restart now     %GRAY%(^<-- auto in 5s)%RESET%
+echo        %CYAN%[%WHITE% N %CYAN%]%YELLOW% Cancel           %GRAY%return to menu%RESET%
 echo.
-echo  %ESC%[34m--------------------------------------------------------------------------%ESC%[0m
+echo  %BLUE%--------------------------------------------------------------------------%RESET%
 echo.
 
 choice /c YN /t 5 /d Y /n /m "Choice"
@@ -5349,13 +5522,13 @@ if %errorlevel% equ 1 (
     call :LogInfo "User confirmed. Restarting PC now..."
     cls
     echo.
-    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo  %BLUE%==========================================================================%RESET%
     echo.
-    echo                    %ESC%[32mRESTARTING NOW%ESC%[0m
+    echo                    %GREEN%RESTARTING NOW%RESET%
     echo.
-    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo  %BLUE%==========================================================================%RESET%
     echo.
-    echo        %ESC%[90mSaving settings... closing sessions...%ESC%[0m
+    echo        %GRAY%Saving settings... closing sessions...%RESET%
     echo.
     shutdown /r /t 3 /c "bardhzzY Tweaks: restarting in 3 seconds..."
     timeout /t 4 /nobreak >nul
@@ -5364,25 +5537,55 @@ if %errorlevel% equ 1 (
     call :LogWarn "Restart cancelled by user. Returning to menu..."
     cls
     echo.
-    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo  %BLUE%==========================================================================%RESET%
     echo.
-    echo                    %ESC%[33mRESTART CANCELLED%ESC%[0m
+    echo                    %YELLOW%RESTART CANCELLED%RESET%
     echo.
-    echo  %ESC%[34m==========================================================================%ESC%[0m
+    echo  %BLUE%==========================================================================%RESET%
     echo.
-    echo        %ESC%[90mReturning to main menu...%ESC%[0m
+    echo        %GRAY%Returning to main menu...%RESET%
     echo.
     timeout 2 >nul
     goto main
 )
 
-:: =====================================================================
-:: bardhzzY PROFESSIONAL LOGGING SYSTEM v14.2
-:: =====================================================================
+rem Check the published script version.
+:CheckScriptVersion
+set "SCRIPT_VERSION_STATUS=UNAVAILABLE"
+set "SCRIPT_LATEST_VERSION="
+set "SCRIPT_VERSION_CHECK_FILE=%TEMP%\bardhzzY_script_version_check.txt"
+if exist "%SCRIPT_VERSION_CHECK_FILE%" del /q "%SCRIPT_VERSION_CHECK_FILE%" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $localText=$env:SCRIPT_VERSION.Trim().TrimStart([char[]]@('v','V')); $r=Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/bardh1xyz/bardhzzY-Utility-Tools/main/script-version.txt' -UseBasicParsing -TimeoutSec 5; $remote=($r.Content -split '\r?\n' | Where-Object { $_.Trim() -ne '' } | Select-Object -First 1).Trim(); $remoteText=$remote.TrimStart([char[]]@('v','V')); if ($localText -notmatch '^\d+(\.\d+){1,3}$' -or $remoteText -notmatch '^\d+(\.\d+){1,3}$') { throw 'Invalid version marker' }; $local=[version]$localText; $latest=[version]$remoteText; if ($latest -gt $local) { 'UPDATE|' + $remote } elseif ($latest -lt $local) { 'AHEAD|' + $remote } else { 'CURRENT|' + $remote } } catch { 'UNAVAILABLE|' }" >"%SCRIPT_VERSION_CHECK_FILE%" 2>nul
+if exist "%SCRIPT_VERSION_CHECK_FILE%" (
+    for /f "usebackq tokens=1,* delims=|" %%A in ("%SCRIPT_VERSION_CHECK_FILE%") do (
+        set "SCRIPT_VERSION_STATUS=%%A"
+        set "SCRIPT_LATEST_VERSION=%%B"
+    )
+    del /q "%SCRIPT_VERSION_CHECK_FILE%" >nul 2>&1
+)
+if /i "%SCRIPT_VERSION_STATUS%"=="UPDATE" call :LogWarn "A newer script version is available: %SCRIPT_LATEST_VERSION% (current: %SCRIPT_VERSION%)."
+if /i "%SCRIPT_VERSION_STATUS%"=="CURRENT" call :LogInfo "Script version %SCRIPT_VERSION% is current."
+if /i "%SCRIPT_VERSION_STATUS%"=="UNAVAILABLE" call :LogInfo "Script version check unavailable; continuing normally."
+goto :eof
 
+:DetectToolPaths
+set "ADVANCEDRUN_EXE=%UTIL_DIR%\AdvancedRun\AdvancedRun.exe"
+if exist "%ADVANCEDRUN_EXE%" goto DetectToolPaths_AdvancedRunDone
+if exist "%UTIL_DIR%\AdvancedRun.exe" set "ADVANCEDRUN_EXE=%UTIL_DIR%\AdvancedRun.exe"
+:DetectToolPaths_AdvancedRunDone
+
+rem Locate the power plans in the current repository layout.
+set "POWERPLAN_DIR=%UTIL_DIR%\PowerPlans"
+set "POWERPLAN_STANDARD_FILE=%POWERPLAN_DIR%\bardhzzY powerplan.pow"
+set "POWERPLAN_IDLE_OFF_FILE=%POWERPLAN_DIR%\bardhzzY powerplan idle off.pow"
+:DetectToolPaths_Done
+set "POWERPLAN_FILE=%POWERPLAN_STANDARD_FILE%"
+if exist "%POWERPLAN_FILE%" goto :eof
+set "POWERPLAN_FILE=%POWERPLAN_IDLE_OFF_FILE%"
+goto :eof
 :LogInit
-set "SCRIPT_VERSION=v3.0.0.3"
-set "SCRIPT_BUILD=09-02-2026"
+set "SCRIPT_VERSION=v3.0.0.4"
+set "SCRIPT_BUILD=10-24-2026"
 set "LOG_ROOT=%ProgramData%\bardhzzY\Logs"
 set "LOG_ENABLED=0"
 set "LOG_SECTION=SYSTEM"
@@ -5449,7 +5652,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
-echo %ESC%[37m[INFO]%ESC%[0m %MSG%
+echo %WHITE%[INFO]%RESET% %MSG%
 if not "%LOG_ENABLED%"=="1" goto LogInfo_Done
 >>"%LOG_FILE%" echo([%LOG_NOW%] [INFO ] [%SEC%] %MSG%
 :LogInfo_Done
@@ -5474,7 +5677,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
-echo %ESC%[32m[  OK]%ESC%[0m %MSG%
+echo %GREEN%[  OK]%RESET% %MSG%
 if not "%LOG_ENABLED%"=="1" goto LogOK_Done
 >>"%LOG_FILE%" echo([%LOG_NOW%] [  OK ] [%SEC%] %MSG%
 :LogOK_Done
@@ -5499,7 +5702,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
-echo %ESC%[31m[FAIL]%ESC%[0m %MSG%
+echo %RED%[FAIL]%RESET% %MSG%
 if not "%LOG_ENABLED%"=="1" goto LogErr_Done
 >>"%LOG_FILE%" echo([%LOG_NOW%] [FAILED] [%SEC%] %MSG%
 if defined LOG_ERR >>"%LOG_ERR%" echo([%LOG_NOW%] [%SEC%] %MSG%
@@ -5525,7 +5728,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
-echo %ESC%[33m[WARN]%ESC%[0m %MSG%
+echo %YELLOW%[WARN]%RESET% %MSG%
 if not "%LOG_ENABLED%"=="1" goto LogWarn_Done
 >>"%LOG_FILE%" echo([%LOG_NOW%] [ WARN] [%SEC%] %MSG%
 :LogWarn_Done
@@ -5550,7 +5753,7 @@ set "SEC=%SEC:&=^&%"
 set "SEC=%SEC:|=^|%"
 set "SEC=%SEC:<=^<%"
 set "SEC=%SEC:>=^>%"
-echo %ESC%[90m[SKIP]%ESC%[0m %MSG%
+echo %GRAY%[SKIP]%RESET% %MSG%
 if not "%LOG_ENABLED%"=="1" goto LogSkip_Done
 >>"%LOG_FILE%" echo([%LOG_NOW%] [ SKIP] [%SEC%] %MSG%
 :LogSkip_Done
@@ -5583,8 +5786,7 @@ reg !RL_ARGS! >nul 2>&1
 set "BARDHZZ_ERR=!errorlevel!"
 set "LOG_MSG=%*"
 if "!BARDHZZ_ERR!"=="0" goto RegLog_OK
-REM reg.exe can return non-zero on some managed/protected keys even when the write landed.
-REM Verify only typed add operations and compare numeric DWORD/QWORD values numerically.
+rem Verify failed registry writes where the value can be read back.
 echo !RL_ARGS! | findstr /B /I "add " >nul 2>&1 || goto RegLog_Fail
 set "RL_KEY="
 set "RL_VAL_NAME="
@@ -5614,7 +5816,7 @@ for /f "tokens=2,*" %%X in ('reg query "!RL_KEY!" /v "!RL_VAL_NAME!" 2^>nul ^| f
 if not defined RL_ACTUAL goto RegLog_Fail
 set "RL_VERIFY_ACTUAL=!RL_ACTUAL!"
 set "RL_VERIFY_EXPECTED=!RL_VAL_DATA!"
-powershell -NoProfile -Command "$a=$env:RL_VERIFY_ACTUAL;$w=$env:RL_VERIFY_EXPECTED; try { if($a -match '^0x'){ $an=[UInt64]::Parse($a.Substring(2),'HexNumber') } else { $an=[UInt64]$a }; if($w -match '^0x'){ $wn=[UInt64]::Parse($w.Substring(2),'HexNumber') } else { $wn=[UInt64]$w }; if($an -eq $wn){exit 0}else{exit 1} } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "$a=$env:RL_VERIFY_ACTUAL;$w=$env:RL_VERIFY_EXPECTED; try { if($a -match '^0x'){ $an=[UInt64]::Parse($a.Substring(2),'HexNumber') } else { $an=[UInt64]$a }; if($w -match '^0x'){ $wn=[UInt64]::Parse($w.Substring(2),'HexNumber') } else { $wn=[UInt64]$w }; if($an -eq $wn){exit 0}else{exit 1} } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 if errorlevel 1 goto RegLog_Fail
 goto RegLog_OK
 :RegLog_Fail
@@ -5627,9 +5829,7 @@ call :LogOK
 endlocal
 goto :eof
 
-:: =====================================================================
-:: TrustedInstaller execution helper (AdvancedRun)
-:: =====================================================================
+rem Use TrustedInstaller for protected system operations; keep the menu in the user session.
 :TIRun
 setlocal DisableDelayedExpansion
 if "%~1"=="" (
@@ -5662,9 +5862,9 @@ endlocal & exit /b %TIRUN_RC%
 :TIRegLog
 setlocal EnableDelayedExpansion
 set "BARDHZZ_ARGS=%*"
-:: Never create fake service registry keys just to set Start=4. If the service
-:: itself is not installed, report SKIP instead of a misleading red failure.
-if /I "%~1"=="add" if /I not "%~2"=="" if "%~2:~0,39%"=="HKLM\SYSTEM\CurrentControlSet\Services\" (
+set "TI_REG_KEY=%~2"
+rem Skip service startup changes when the service key is missing.
+if /I "%~1"=="add" if /I not "%~2"=="" if /I "!TI_REG_KEY:~0,39!"=="HKLM\SYSTEM\CurrentControlSet\Services\" (
     reg query "%~2" >nul 2>&1
     if errorlevel 1 (
         set "LOG_MSG=%~2 (service key not present)"
@@ -5676,11 +5876,11 @@ if /I "%~1"=="add" if /I not "%~2"=="" if "%~2:~0,39%"=="HKLM\SYSTEM\CurrentCont
 
 if "%TI_AVAILABLE%"=="1" (
     set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\reg.exe" /CommandLine '%BARDHZZ_ARGS%' /RunAs 8 /WaitProcess 1 /Run"
-    %BARDHZZ_CMD% >nul 2>&1
+    rem Delayed expansion is needed inside this block.
+    !BARDHZZ_CMD! >nul 2>&1
     set "BARDHZZ_ERR=!errorlevel!"
     if not "!BARDHZZ_ERR!"=="0" (
-        :: AdvancedRun failed for this operation. Fall back to the current
-        :: Administrator token rather than aborting the tweak.
+        rem Retry as administrator if AdvancedRun fails.
         reg %* >nul 2>&1
         set "BARDHZZ_ERR=!errorlevel!"
         set "LOG_MSG=%* (Administrator fallback)"
@@ -5704,6 +5904,43 @@ call :LogErr
 endlocal
 goto :eof
 
+rem Timer-resolution registry helper.
+:TimerRegLog
+setlocal DisableDelayedExpansion
+if "%~1"=="" goto TimerRegLog_BadArgs
+set "TIMER_REG_ARGS=%*"
+if not "%TI_AVAILABLE%"=="1" goto TimerRegLog_Admin
+"%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\reg.exe" /CommandLine '%TIMER_REG_ARGS%' /RunAs 8 /WaitProcess 1 /Run >nul 2>&1
+set "TIMER_REG_ERR=%errorlevel%"
+if "%TIMER_REG_ERR%"=="0" goto TimerRegLog_TI_OK
+reg %* >nul 2>&1
+set "TIMER_REG_ERR=%errorlevel%"
+set "LOG_MSG=%* (Administrator fallback)"
+if "%TIMER_REG_ERR%"=="0" goto TimerRegLog_OK
+goto TimerRegLog_Fail
+
+:TimerRegLog_TI_OK
+set "LOG_MSG=%*"
+goto TimerRegLog_OK
+
+:TimerRegLog_Admin
+reg %* >nul 2>&1
+set "TIMER_REG_ERR=%errorlevel%"
+set "LOG_MSG=%* (Administrator)"
+if not "%TIMER_REG_ERR%"=="0" goto TimerRegLog_Fail
+
+:TimerRegLog_OK
+call :LogOK
+endlocal & exit /b 0
+
+:TimerRegLog_Fail
+set "LOG_MSG=%LOG_MSG% (err=%TIMER_REG_ERR%)"
+call :LogErr
+endlocal & exit /b %TIMER_REG_ERR%
+
+:TimerRegLog_BadArgs
+endlocal & exit /b 87
+
 :ScLog
 setlocal DisableDelayedExpansion
 sc %* >nul 2>&1
@@ -5715,11 +5952,10 @@ endlocal
 goto :eof
 
 :ScLog_Fail
-set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
+set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 call :LogErr
 endlocal
 goto :eof
-
 
 :RunOpenShellInstaller
 start /wait "" "%~1" /qn
@@ -5762,7 +5998,7 @@ if not "%BARDHZZ_ERR%"=="0" goto DynRegLog_Fail
 call :LogOK
 endlocal & exit /b 0
 :DynRegLog_Fail
-set "LOG_MSG=!LOG_MSG! (err=!BARDHZZ_ERR!)"
+set "LOG_MSG=%LOG_MSG% (err=%BARDHZZ_ERR%)"
 call :LogErr
 endlocal & exit /b %BARDHZZ_ERR%
 
@@ -5770,7 +6006,7 @@ endlocal & exit /b %BARDHZZ_ERR%
 setlocal DisableDelayedExpansion
 set "DPID_ID=%~1"
 if not defined DPID_ID (endlocal & exit /b 87)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Disable-PnpDevice -InstanceId '%DPID_ID%' -Confirm:$false -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Disable-PnpDevice -InstanceId '%DPID_ID%' -Confirm:$false -ErrorAction Stop; exit 0 } catch { Write-Output $_.Exception.Message; exit 1 }" >"%TOOLS_REFRESH_LOG%" 2>&1
 set "DPID_RC=%errorlevel%"
 endlocal & exit /b %DPID_RC%
 
@@ -5793,8 +6029,7 @@ set "BARDHZZ_CMD="%ADVANCEDRUN_EXE%" /Clear /EXEFilename "%SystemRoot%\System32\
 %BARDHZZ_CMD% >nul 2>&1
 set "BARDHZZ_ERR=!errorlevel!"
 if not "!BARDHZZ_ERR!"=="0" (
-    :: AdvancedRun failed; retry this service operation with the current
-    :: Administrator token so the script can continue without breaking.
+    rem Retry as administrator if AdvancedRun fails.
     sc %* >nul 2>&1
     set "BARDHZZ_ERR=!errorlevel!"
     set "LOG_MSG=%* (Administrator fallback)"
@@ -5876,7 +6111,7 @@ goto :eof
 
 :SchLog
 setlocal EnableDelayedExpansion
-REM Parse out the task name from args like: /Change /TN "taskname" /Disable  OR  /DELETE /TN "taskname" /f
+rem Extract the task name from schtasks arguments.
 set "SCH_ALL=%*"
 set "SCH_TASK="
 set "SCH_IN_TN=0"
@@ -5888,10 +6123,10 @@ for %%A in (!SCH_ALL!) do (
         set "SCH_IN_TN=1"
     )
 )
-REM Preserve rooted task paths; schtasks accepts names beginning with a leading backslash.
+rem Preserve rooted scheduled-task paths.
 
 if not defined SCH_TASK goto SchLog_Run
-REM Check task existence first; if missing, log as SKIP (not error)
+rem Skip scheduled tasks that do not exist.
 schtasks /Query /TN "!SCH_TASK!" >nul 2>&1
 if not "!errorlevel!"=="0" goto SchLog_NotFound
 
@@ -5948,24 +6183,24 @@ if not "%LOG_ENABLED%"=="1" goto LogSummary_Display
 
 :LogSummary_Display
 echo(
-echo %ESC%[34m============================================================%ESC%[0m
-echo %ESC%[34m               %ESC%[37mEXECUTION SUMMARY%ESC%[34m                 %ESC%[0m
-echo %ESC%[34m============================================================%ESC%[0m
-echo %ESC%[34m %ESC%[37m Total Operations : %ESC%[97m%LOG_TOTAL%%ESC%[0m
-echo %ESC%[34m %ESC%[37m Successful       : %ESC%[32m%LOG_OK%%ESC%[0m
-echo %ESC%[34m %ESC%[37m Failed           : %ESC%[31m%LOG_FAIL%%ESC%[0m
-echo %ESC%[34m %ESC%[37m Warnings         : %ESC%[33m%LOG_WARN%%ESC%[0m
-echo %ESC%[34m %ESC%[37m Skipped          : %ESC%[90m%LOG_SKIP%%ESC%[0m
-echo %ESC%[34m============================================================%ESC%[0m
-echo %ESC%[34m %ESC%[37m Log File : %ESC%[36m%LOG_FILE%%ESC%[0m
-echo %ESC%[34m %ESC%[37m Error Log: %ESC%[36m%LOG_ERR%%ESC%[0m
-echo %ESC%[34m============================================================%ESC%[0m
+echo %BLUE%============================================================%RESET%
+echo %BLUE%               %WHITE%EXECUTION SUMMARY%BLUE%                 %RESET%
+echo %BLUE%============================================================%RESET%
+echo %BLUE% %WHITE% Total Operations : %BRIGHT_WHITE%%LOG_TOTAL%%RESET%
+echo %BLUE% %WHITE% Successful       : %GREEN%%LOG_OK%%RESET%
+echo %BLUE% %WHITE% Failed           : %RED%%LOG_FAIL%%RESET%
+echo %BLUE% %WHITE% Warnings         : %YELLOW%%LOG_WARN%%RESET%
+echo %BLUE% %WHITE% Skipped          : %GRAY%%LOG_SKIP%%RESET%
+echo %BLUE%============================================================%RESET%
+echo %BLUE% %WHITE% Log File : %CYAN%%LOG_FILE%%RESET%
+echo %BLUE% %WHITE% Error Log: %CYAN%%LOG_ERR%%RESET%
+echo %BLUE%============================================================%RESET%
 echo(
 endlocal
 goto :eof
 
 :LogSummary_NoFile
-echo %ESC%[33m[!]%ESC%[37m No log file found.%ESC%[0m
+echo %YELLOW%[!]%WHITE% No log file found.%RESET%
 timeout /t 2 /nobreak >nul
 endlocal
 goto :eof
@@ -5976,7 +6211,7 @@ start "" notepad "%LOG_FILE%"
 goto :eof
 
 :LogView_NoFile
-echo %ESC%[33m[!]%ESC%[37m No log file found.%ESC%[0m
+echo %YELLOW%[!]%WHITE% No log file found.%RESET%
 timeout /t 2 /nobreak >nul
 goto :eof
 
@@ -5986,10 +6221,7 @@ start "" notepad "%LOG_ERR%"
 goto :eof
 
 :LogViewErrors_NoFile
-echo %ESC%[33m[!]%ESC%[37m No error log file found.%ESC%[0m
+echo %YELLOW%[!]%WHITE% No error log file found.%RESET%
 timeout /t 2 /nobreak >nul
 goto :eof
-
-:: =====================================================================
-:: END OF LOGGING SYSTEM
-:: =====================================================================
+rem End logging helpers.
