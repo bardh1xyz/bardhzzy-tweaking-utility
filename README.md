@@ -60,6 +60,10 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 - **Need help?** [Join the Discord server](https://dsc.gg/bardhzzy)
 - **If u want to get fully tweaked join my discord!**
 
+## 🔑 License Keys
+- "bardhzzY"
+- "tester12"
+
 ## 📖 How to Use
 
 > ⚠️ **Warning**: This script is an **EXTREME** debloating script. I heavily suggest to run this script on a completely stock and fresh windows install . **Always create backups before applying changes.**
