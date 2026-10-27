@@ -2,8 +2,7 @@
 
 [![OS - Windows](https://img.shields.io/badge/OS-Windows%2010%20%7C%2011-0078D4?logo=windows&logoColor=white)](https://microsoft.com/windows)
 [![Language - Batch](https://img.shields.io/badge/Language-Batch-4D5A60?logo=gnu-bash&logoColor=white)](#)
-[![Discord Online](https://img.shields.io/discord/uqD3nbuuNV?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/uqD3nbuuNV)
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](#license)
+[![Discord Online](https://img.shields.io/discord/1380543315686195210?color=7289da&label=Discord&logo=discord&logoColor=white)](https://dsc.gg/bardhzzy)
 
 A custom *batch script* designed to optimize system performance, minimize background latency, strip *Windows bloatware*, and unlock *maximum FPS* with minimal input delay.
 
@@ -15,8 +14,8 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 * **Gaming & Latency Optimization**: Tweaks GPU profiles (*NVIDIA*, *AMD*, *Intel*), CPU priorities, RAM behavior, *TCP/IP* stack, mouse/keyboard response times, and *system timer resolution*.
 * **TrustedInstaller Integration**: Leverages an automated *AdvancedRun engine* to safely modify locked registry hives and system services.
 * **System Safety & Recovery**: Includes built-in options for *registry backups*, *System Restore Points*, and full tweak reversions.
-* **Automated Dependency Setup**: Silently installs *Winget*, *DirectX Web Setup*, and *Visual C++ Redistributables* (2015–2022).
-* **UI Customization**: Deploys lightweight *Open-Shell* configurations and custom performance visuals.
+* **Automated Dependency Setup**: Silently installs *Winget*, *DirectX Web Setup*, and *Visual C++ Redistributables* (2015–2022), *Folder with different tweaking files*.
+* **UI Customization**: Deploys lightweight *Open-Shell* configurations and custom performance visuals, and changes desktop bg.
 * **These are just some there's way more!**
 
 ---
@@ -40,13 +39,26 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 | `13` | **Device Manager Tweak** | Disables unused virtual devices (*WAN Miniports*, *VMIC guest interfaces*). |
 | `14` | **Disable Defender** | Disables Windows security/antivirus *Proceed with care if u run this option!* |
 | `15` | **Re-enable Defender** | Re-enables *Windows security* if disabled previously. |
-| `16` | **Fixes** | Contains fixes for different games and errors if the tweak broke them. |
-| `17` | **Restore Point** | Creates a standard Windows *System Restore Point*. |
-| `18` | **Registry Backup** | Generates a full backup of critical system *registry hives*. |
-| `19` | **Revert Tweaks** | Reverts modified registry keys and service configurations back to *defaults*. |
-| `20–24` | **Utilities & Logs** | Quick system restart, *live execution log viewer*, error diagnostics, and script exit. |
+| `16` | **xHCI IMOD Disabler** | Disables Interrupt Moderation. |
+| `17` | **Fixes** | Contains fixes for different games and errors if the tweak broke them. |
+| `18` | **Restore Point** | Creates a standard Windows *System Restore Point*. |
+| `19` | **Registry Backup** | Generates a full backup of critical system *registry hives*. |
+| `20` | **Revert Tweaks** | Reverts modified registry keys and service configurations back to *defaults*. |
+| `21–25` | **Utilities & Logs** | Quick system restart, *live execution log viewer*, error diagnostics, and script exit. |
 
 ---
+
+## 📝 Logging system
+
+- **Main logs:** `%ProgramData%\bardhzzY\Logs\` — `tweak_<timestamp>.log` and `errors_<timestamp>.log`.
+- **Fallback locations:** `%TEMP%\bardhzzY_Logs\`, then the current folder (`bardhzzY_Logs`) if the main folder cannot be created.
+- **Temporary logs:** `%TEMP%` — includes files such as `bardhzzY_tools_refresh.log` and `bardhzzY_advancedrun_test.log`. Some temporary logs are deleted after use.
+
+## 🔗 Help & Support
+
+- **Unsupported Features:** [View the list](unsupported-features.md)
+- **Need help?** [Join the Discord server](https://dsc.gg/bardhzzy)
+- **If u want to get fully tweaked join my discord!**
 
 ## 📖 How to Use
 
@@ -54,6 +66,6 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 
 1. Right-click the .bat file.
 2. Select Run as Administrator.
-3. Create a registry backup (option 18) and a restore point (option 17)
+3. Create a registry backup (option 19) and a restore point (option 18)
 4. Run the Tweak Options as Preferred
 5. Restart
