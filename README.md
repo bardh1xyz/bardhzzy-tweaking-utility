@@ -62,7 +62,8 @@ A custom *batch script* designed to optimize system performance, minimize backgr
 
 ## 📖 How to Use
 
-> ⚠️ **Warning**: Modifying system registry values and services carries inherent risk. Always create backups before applying changes.
+> ⚠️ **Warning**: This script is an **EXTREME** debloating script. I heavily suggest to run this script on a completely stock and fresh windows install . **Always create backups before applying changes.**
+
 
 1. Right-click the .bat file.
 2. Select Run as Administrator.
